@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { authButtonMotionProps } from "@/features/auth/motion/auth-motion-variants";
-import { setCredentials } from '@/features/auth/authSlice';
+import { setCredentials } from "@/features/auth/authSlice";
 import { useAppDispatch } from "@/app/hooks";
 import { AuthCard } from "../components/AuthCard";
 import { AuthHeader } from "../components/AuthHeader";
@@ -11,7 +11,7 @@ import { InputField } from "../components/InputField";
 import { PasswordInput } from "../components/PasswordInput";
 import { SubmitButton } from "../components/SubmitButton";
 import { Button } from "@/components/ui/button";
-import type { UserRole } from '@/features/auth/types/authTypes';
+import type { UserRole } from "@/features/auth/types/authTypes";
 import { useLoginMutation } from "@/services/authApi";
 
 function GoogleIcon(props: { className?: string }) {

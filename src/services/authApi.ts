@@ -56,12 +56,49 @@ export const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
-    register: build.mutation<{ success: boolean; message: string; data?: any }, { name: string; email: string; phone: string; password: string; role: string }>({
+    register: build.mutation<
+      { success: boolean; message: string; data?: any },
+      {
+        name: string;
+        email: string;
+        phone: string;
+        password: string;
+        role: string;
+      }
+    >({
       query: (body) => ({ url: "/users/", method: "POST", body }),
     }),
-    verifyOtp: build.mutation<{ ok: true }, { email: string; otp: string }>({
-      query: (body) => ({ url: "/auth/verify-otp", method: "POST", body }),
-      transformResponse: () => ({ ok: true as const }),
+    verifyOtp: build.mutation<
+      { success: boolean; message: string; data: { token: string } },
+      { email: string; otp: string }
+    >({
+      query: (body) => ({
+        url: "/auth/verify-email",
+        method: "POST",
+        body: { email: body.email, oneTimeCode: Number(body.otp) },
+      }),
+    }),
+    resetPassword: build.mutation<
+      { success: boolean; message: string },
+      {
+        email?: string;
+        otp?: string;
+        newPassword: string;
+        confirmPassword: string;
+        token: string;
+      }
+    >({
+      query: (body) => ({
+        url: "/auth/reset-password",
+        method: "POST",
+        headers: {
+          Authorization: `${body.token}`,
+        },
+        body: {
+          newPassword: body.newPassword,
+          confirmPassword: body.confirmPassword,
+        },
+      }),
     }),
   }),
 });
@@ -74,4 +111,5 @@ export const {
   useChangePasswordMutation,
   useRegisterMutation,
   useVerifyOtpMutation,
+  useResetPasswordMutation,
 } = authApi;

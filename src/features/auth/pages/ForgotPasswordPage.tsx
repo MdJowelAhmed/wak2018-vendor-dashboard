@@ -8,10 +8,11 @@ import { InputField } from "../components/InputField";
 import { SubmitButton } from "../components/SubmitButton";
 import { isValidEmail } from "@/utils/auth-validation";
 import { fetchErrorMessage } from "@/utils/fetch-error";
+import { useForgotPasswordMutation } from "@/services/authApi";
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
-  const [sendOtp, { isLoading }] = useSendOtpMutation();
+  const [sendOtp, { isLoading }] = useForgotPasswordMutation();
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | undefined>();
 

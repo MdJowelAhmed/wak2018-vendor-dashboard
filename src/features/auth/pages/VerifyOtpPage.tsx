@@ -12,6 +12,7 @@ import { fetchErrorMessage } from "@/utils/fetch-error";
 import {
   useVerifyEmailMutation,
   useVerifyOtpMutation,
+  useResendOtpMutation,
 } from "@/services/authApi";
 
 type LocationState = {
@@ -43,8 +44,33 @@ export function VerifyOtpPage() {
   const [verifyForgot, { isLoading: forgotLoading }] = useVerifyOtpMutation();
   const [verifyEmailMutation, { isLoading: emailLoading }] =
     useVerifyEmailMutation();
-  const isLoading = forgotLoading || emailLoading;
+  const [resendOtp, { isLoading: resendLoading }] = useResendOtpMutation();
+  const isLoading = forgotLoading || emailLoading || resendLoading;
 
+  const [countdown, setCountdown] = useState(60);
+
+  useEffect(() => {
+    let timer: number;
+    if (countdown > 0) {
+      timer = window.setInterval(() => {
+        setCountdown((c) => c - 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) window.clearInterval(timer);
+    };
+  }, [countdown]);
+
+  async function handleResend() {
+    if (!email) return;
+    try {
+      await resendOtp({ email }).unwrap();
+      setCountdown(60);
+      toast.success("Verification code resent to your email");
+    } catch (err) {
+      toast.error(fetchErrorMessage(err) ?? "Failed to resend code");
+    }
+  }
   useEffect(() => {
     if (fromState) {
       sessionStorage.setItem(OTP_EMAIL_KEY, fromState);
@@ -84,11 +110,15 @@ export function VerifyOtpPage() {
           replace: true,
         });
       } else {
-        await verifyForgot({ email, otp }).unwrap();
+        const res = await verifyForgot({ email, otp }).unwrap();
+        const token = res.data?.token;
         toast.success("Code verified");
-        sessionStorage.setItem("auth_reset", JSON.stringify({ email, otp }));
+        sessionStorage.setItem(
+          "auth_reset",
+          JSON.stringify({ email, otp, token }),
+        );
         void navigate("/auth/reset-password", {
-          state: { email, otp },
+          state: { email, otp, token },
           replace: true,
         });
       }
@@ -116,14 +146,23 @@ export function VerifyOtpPage() {
           Paste or type — it auto-advances on each digit.
         </p>
         <SubmitButton loading={isLoading}>Verify</SubmitButton>
-        <p className="text-center text-sm text-zinc-600">
+        <div className="flex items-center justify-center gap-4 text-sm text-zinc-600">
+          <button
+            type="button"
+            onClick={handleResend}
+            disabled={resendLoading || countdown > 0}
+            className="font-semibold text-[#895129] transition-colors hover:text-[#6f3f1f] disabled:opacity-50"
+          >
+            {countdown > 0 ? `Resend in ${countdown}s` : "Resend Code"}
+          </button>
+          <span>•</span>
           <Link
             to="/auth/forgot-password"
             className="font-semibold text-[#895129] transition-colors hover:text-[#6f3f1f]"
           >
             Change email
           </Link>
-        </p>
+        </div>
       </form>
     </AuthCard>
   );

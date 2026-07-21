@@ -8,13 +8,14 @@ import { PasswordInput } from "../components/PasswordInput";
 import { SubmitButton } from "../components/SubmitButton";
 import { isValidOtp6, PASSWORD_MIN } from "@/utils/auth-validation";
 import { fetchErrorMessage } from "@/utils/fetch-error";
+import { useResetPasswordMutation } from "@/services/authApi";
 
-type St = { email: string; otp: string };
+type St = { email: string; otp: string; token: string };
 
 function readResetState(locationState: unknown): St | null {
   const s = locationState as Partial<St> | null;
-  if (s?.email && s?.otp && isValidOtp6(s.otp)) {
-    return { email: s.email, otp: s.otp };
+  if (s?.email && s?.otp && isValidOtp6(s.otp) && s?.token) {
+    return { email: s.email, otp: s.otp, token: s.token };
   }
   try {
     const raw = sessionStorage.getItem("auth_reset");
@@ -22,7 +23,7 @@ function readResetState(locationState: unknown): St | null {
       return null;
     }
     const j = JSON.parse(raw) as St;
-    if (j?.email && j?.otp && isValidOtp6(j.otp)) {
+    if (j?.email && j?.otp && isValidOtp6(j.otp) && j?.token) {
       return j;
     }
   } catch {
@@ -68,7 +69,13 @@ export function ResetPasswordPage() {
       return;
     }
     try {
-      await reset({ email: creds.email, otp: creds.otp, password }).unwrap();
+      await reset({
+        email: creds.email,
+        otp: creds.otp,
+        newPassword: password,
+        confirmPassword: confirm,
+        token: creds.token,
+      }).unwrap();
       sessionStorage.removeItem("auth_reset");
       toast.success("Password updated. Sign in with your new password.");
       void navigate("/auth/login", { replace: true });

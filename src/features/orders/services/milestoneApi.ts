@@ -1,5 +1,5 @@
-import { baseApi } from '@/shared/api/baseApi'
-import type { Milestone, MilestoneStatus } from '@/shared/types/api'
+import { baseApi } from '@/services/baseApi'
+import type { Milestone, MilestoneStatus } from '@/types/api'
 
 const listTag = { type: 'Milestone' as const, id: 'LIST' as const }
 

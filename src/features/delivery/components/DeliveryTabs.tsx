@@ -1,7 +1,7 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import type { Delivery } from '@/shared/types/api'
-import { InternationalDeliveryList } from './InternationalDeliveryList'
-import { LocalDeliveryList } from './LocalDeliveryList'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { Delivery } from "@/types/api";
+import { InternationalDeliveryList } from "./InternationalDeliveryList";
+import { LocalDeliveryList } from "./LocalDeliveryList";
 
 export function DeliveryTabs({
   local,
@@ -15,19 +15,23 @@ export function DeliveryTabs({
   onStep,
   busy,
 }: {
-  local: Delivery[]
-  international: Delivery[]
-  isDriver: boolean
-  value: 'local' | 'international'
-  onValueChange: (v: 'local' | 'international') => void
-  onViewDetails: (d: Delivery) => void
-  onAccept: (d: Delivery) => void
-  onReject: (d: Delivery) => void
-  onStep: (d: Delivery) => void
-  busy?: boolean
+  local: Delivery[];
+  international: Delivery[];
+  isDriver: boolean;
+  value: "local" | "international";
+  onValueChange: (v: "local" | "international") => void;
+  onViewDetails: (d: Delivery) => void;
+  onAccept: (d: Delivery) => void;
+  onReject: (d: Delivery) => void;
+  onStep: (d: Delivery) => void;
+  busy?: boolean;
 }) {
   return (
-    <Tabs value={value} onValueChange={(v) => onValueChange(v as 'local' | 'international')} className="w-full">
+    <Tabs
+      value={value}
+      onValueChange={(v) => onValueChange(v as "local" | "international")}
+      className="w-full"
+    >
       <TabsList className="w-full sm:w-fit">
         <TabsTrigger value="local" className="min-w-[10rem]">
           Local Delivery
@@ -49,9 +53,11 @@ export function DeliveryTabs({
         />
       </TabsContent>
       <TabsContent value="international" className="mt-4">
-        <InternationalDeliveryList deliveries={international} onViewDetails={onViewDetails} />
+        <InternationalDeliveryList
+          deliveries={international}
+          onViewDetails={onViewDetails}
+        />
       </TabsContent>
     </Tabs>
-  )
+  );
 }
-

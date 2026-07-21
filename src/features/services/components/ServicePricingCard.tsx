@@ -1,19 +1,26 @@
-import type { Service } from '@/shared/types/api'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import type { Service } from "@/types/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const fmt = (n: number) =>
-  new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
+  new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "USD",
+  }).format(n);
 
 export function ServicePricingCard({
   service,
   onEdit,
 }: {
-  service: Service
-  onEdit: () => void
+  service: Service;
+  onEdit: () => void;
 }) {
-  const price = service.price ?? (service.packages?.length ? Math.min(...service.packages.map((p) => p.price)) : 0)
-  const type = service.pricingType ?? 'fixed'
+  const price =
+    service.price ??
+    (service.packages?.length
+      ? Math.min(...service.packages.map((p) => p.price))
+      : 0);
+  const type = service.pricingType ?? "fixed";
 
   return (
     <Card className="rounded-xl border-border/60 shadow-sm">
@@ -25,11 +32,14 @@ export function ServicePricingCard({
           <div className="text-2xl font-semibold">{fmt(price)}</div>
           <div className="text-muted-foreground text-sm capitalize">{type}</div>
         </div>
-        <Button type="button" className="w-full bg-[#895129] hover:bg-[#7b4723]" onClick={onEdit}>
+        <Button
+          type="button"
+          className="w-full bg-[#895129] hover:bg-[#7b4723]"
+          onClick={onEdit}
+        >
           Edit Service
         </Button>
       </CardContent>
     </Card>
-  )
+  );
 }
-

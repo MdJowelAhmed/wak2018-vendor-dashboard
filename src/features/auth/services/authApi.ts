@@ -1,4 +1,4 @@
-import { baseApi } from '@/shared/api/baseApi'
+import { baseApi } from '@/services/baseApi'
 import type { AuthResponse, AuthUser, UserRole } from '../types/authTypes'
 
 function asRecord(v: unknown): Record<string, unknown> | null {

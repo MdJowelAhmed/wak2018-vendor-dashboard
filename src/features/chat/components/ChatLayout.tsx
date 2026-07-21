@@ -1,12 +1,12 @@
-import type { ReactNode } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import type { ReactNode } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function ChatLayout({
   sidebar,
   window,
 }: {
-  sidebar: ReactNode
-  window: ReactNode
+  sidebar: ReactNode;
+  window: ReactNode;
 }) {
   return (
     <div className="grid min-h-[560px] gap-4 lg:grid-cols-5">
@@ -21,9 +21,10 @@ export function ChatLayout({
         <CardHeader>
           <CardTitle className="text-base">Chat</CardTitle>
         </CardHeader>
-        <CardContent className="flex min-h-0 flex-1 flex-col gap-3">{window}</CardContent>
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-3">
+          {window}
+        </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

@@ -1,9 +1,15 @@
-import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Textarea } from '@/shared/ui/textarea'
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
-export type CourierKey = 'dhl' | 'fedex' | 'ups'
+export type CourierKey = "dhl" | "fedex" | "ups";
 
 export function InternationalDeliveryForm({
   courier,
@@ -17,22 +23,25 @@ export function InternationalDeliveryForm({
   onChangePickup,
   onChangeDrop,
 }: {
-  courier: CourierKey
-  weight: string
-  dimensions: string
-  pickup: string
-  drop: string
-  onChangeCourier: (v: CourierKey) => void
-  onChangeWeight: (v: string) => void
-  onChangeDimensions: (v: string) => void
-  onChangePickup: (v: string) => void
-  onChangeDrop: (v: string) => void
+  courier: CourierKey;
+  weight: string;
+  dimensions: string;
+  pickup: string;
+  drop: string;
+  onChangeCourier: (v: CourierKey) => void;
+  onChangeWeight: (v: string) => void;
+  onChangeDimensions: (v: string) => void;
+  onChangePickup: (v: string) => void;
+  onChangeDrop: (v: string) => void;
 }) {
   return (
     <div className="grid gap-4">
       <div className="grid gap-2">
         <Label>Courier</Label>
-        <Select value={courier} onValueChange={(v) => onChangeCourier(v as CourierKey)}>
+        <Select
+          value={courier}
+          onValueChange={(v) => onChangeCourier(v as CourierKey)}
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -59,19 +68,33 @@ export function InternationalDeliveryForm({
         </div>
         <div className="grid gap-2">
           <Label htmlFor="dims">Dimensions</Label>
-          <Input id="dims" value={dimensions} onChange={(e) => onChangeDimensions(e.target.value)} placeholder="L x W x H" />
+          <Input
+            id="dims"
+            value={dimensions}
+            onChange={(e) => onChangeDimensions(e.target.value)}
+            placeholder="L x W x H"
+          />
         </div>
       </div>
 
       <div className="grid gap-2">
         <Label htmlFor="pickup">Pickup address</Label>
-        <Textarea id="pickup" value={pickup} onChange={(e) => onChangePickup(e.target.value)} rows={2} />
+        <Textarea
+          id="pickup"
+          value={pickup}
+          onChange={(e) => onChangePickup(e.target.value)}
+          rows={2}
+        />
       </div>
       <div className="grid gap-2">
         <Label htmlFor="drop">Delivery address</Label>
-        <Textarea id="drop" value={drop} onChange={(e) => onChangeDrop(e.target.value)} rows={2} />
+        <Textarea
+          id="drop"
+          value={drop}
+          onChange={(e) => onChangeDrop(e.target.value)}
+          rows={2}
+        />
       </div>
     </div>
-  )
+  );
 }
-

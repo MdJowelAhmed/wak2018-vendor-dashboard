@@ -1,19 +1,19 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export type SettingsTabKey = 'profile' | 'security' | 'legal' | 'support'
+export type SettingsTabKey = "profile" | "security" | "legal" | "support";
 
 export function SettingsTabs({
-  defaultValue = 'profile',
+  defaultValue = "profile",
   profile,
   security,
   legal,
   support,
 }: {
-  defaultValue?: SettingsTabKey
-  profile: React.ReactNode
-  security: React.ReactNode
-  legal: React.ReactNode
-  support: React.ReactNode
+  defaultValue?: SettingsTabKey;
+  profile: React.ReactNode;
+  security: React.ReactNode;
+  legal: React.ReactNode;
+  support: React.ReactNode;
 }) {
   return (
     <Tabs defaultValue={defaultValue} className="w-full">
@@ -45,6 +45,5 @@ export function SettingsTabs({
         {support}
       </TabsContent>
     </Tabs>
-  )
+  );
 }
-

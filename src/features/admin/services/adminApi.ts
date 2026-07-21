@@ -1,5 +1,5 @@
-import { baseApi } from '@/shared/api/baseApi'
-import type { AdminUser, Delivery, Order, Product, Service } from '@/shared/types/api'
+import { baseApi } from '@/services/baseApi'
+import type { AdminUser, Delivery, Order, Product, Service } from '@/types/api'
 
 const list = (t: string) => ({ type: t as any, id: 'LIST' as const })
 

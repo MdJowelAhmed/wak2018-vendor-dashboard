@@ -1,4 +1,4 @@
-import { baseApi } from '@/shared/api/baseApi'
+import { baseApi } from '@/services/baseApi'
 
 const tag = { type: 'Settings' as const, id: 'LEGAL' as const }
 

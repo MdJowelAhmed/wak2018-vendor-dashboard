@@ -1,5 +1,5 @@
-import { baseApi } from '@/shared/api/baseApi'
-import type { CustomerDetails, CustomerListRow } from '@/shared/types/api'
+import { baseApi } from '@/services/baseApi'
+import type { CustomerDetails, CustomerListRow } from '@/types/api'
 
 const tag = { type: 'Customer' as const, id: 'DETAIL' as const }
 

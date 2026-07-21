@@ -1,5 +1,5 @@
-import { baseApi } from '@/shared/api/baseApi'
-import type { Conversation, Message } from '@/shared/types/api'
+import { baseApi } from '@/services/baseApi'
+import type { Conversation, Message } from '@/types/api'
 
 export const messageApi = baseApi.injectEndpoints({
   endpoints: (build) => ({

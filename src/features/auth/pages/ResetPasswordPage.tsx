@@ -1,82 +1,84 @@
-import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { useResetPasswordMutation } from '@/features/auth'
-import { AuthCard } from '../components/AuthCard'
-import { AuthHeader } from '../components/AuthHeader'
-import { PasswordInput } from '../components/PasswordInput'
-import { SubmitButton } from '../components/SubmitButton'
-import { isValidOtp6, PASSWORD_MIN } from '@/shared/utils/auth-validation'
-import { fetchErrorMessage } from '@/shared/utils/fetch-error'
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useResetPasswordMutation } from "@/features/auth";
+import { AuthCard } from "../components/AuthCard";
+import { AuthHeader } from "../components/AuthHeader";
+import { PasswordInput } from "../components/PasswordInput";
+import { SubmitButton } from "../components/SubmitButton";
+import { isValidOtp6, PASSWORD_MIN } from "@/utils/auth-validation";
+import { fetchErrorMessage } from "@/utils/fetch-error";
 
-type St = { email: string; otp: string }
+type St = { email: string; otp: string };
 
 function readResetState(locationState: unknown): St | null {
-  const s = locationState as Partial<St> | null
+  const s = locationState as Partial<St> | null;
   if (s?.email && s?.otp && isValidOtp6(s.otp)) {
-    return { email: s.email, otp: s.otp }
+    return { email: s.email, otp: s.otp };
   }
   try {
-    const raw = sessionStorage.getItem('auth_reset')
+    const raw = sessionStorage.getItem("auth_reset");
     if (!raw) {
-      return null
+      return null;
     }
-    const j = JSON.parse(raw) as St
+    const j = JSON.parse(raw) as St;
     if (j?.email && j?.otp && isValidOtp6(j.otp)) {
-      return j
+      return j;
     }
   } catch {
-    return null
+    return null;
   }
-  return null
+  return null;
 }
 
 export function ResetPasswordPage() {
-  const navigate = useNavigate()
-  const { state: locState } = useLocation() as { state: unknown }
-  const [creds, setCreds] = useState<St | null>(null)
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [errors, setErrors] = useState<{ password?: string; confirm?: string }>({})
-  const [reset, { isLoading }] = useResetPasswordMutation()
+  const navigate = useNavigate();
+  const { state: locState } = useLocation() as { state: unknown };
+  const [creds, setCreds] = useState<St | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [errors, setErrors] = useState<{ password?: string; confirm?: string }>(
+    {},
+  );
+  const [reset, { isLoading }] = useResetPasswordMutation();
 
   useEffect(() => {
-    const c = readResetState(locState)
+    const c = readResetState(locState);
     if (c) {
-      setCreds(c)
+      setCreds(c);
     } else {
-      void navigate('/auth/forgot-password', { replace: true })
+      void navigate("/auth/forgot-password", { replace: true });
     }
-  }, [locState, navigate])
+  }, [locState, navigate]);
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     if (!creds) {
-      return
+      return;
     }
-    const e2: typeof errors = {}
+    const e2: typeof errors = {};
     if (password.length < PASSWORD_MIN) {
-      e2.password = `At least ${PASSWORD_MIN} characters`
+      e2.password = `At least ${PASSWORD_MIN} characters`;
     }
     if (password !== confirm) {
-      e2.confirm = 'Passwords do not match'
+      e2.confirm = "Passwords do not match";
     }
-    setErrors(e2)
+    setErrors(e2);
     if (Object.keys(e2).length) {
-      return
+      return;
     }
     try {
-      await reset({ email: creds.email, otp: creds.otp, password }).unwrap()
-      sessionStorage.removeItem('auth_reset')
-      toast.success('Password updated. Sign in with your new password.')
-      void navigate('/auth/login', { replace: true })
+      await reset({ email: creds.email, otp: creds.otp, password }).unwrap();
+      sessionStorage.removeItem("auth_reset");
+      toast.success("Password updated. Sign in with your new password.");
+      void navigate("/auth/login", { replace: true });
     } catch (err) {
-      toast.error(fetchErrorMessage(err) ?? 'Reset failed')
+      toast.error(fetchErrorMessage(err) ?? "Reset failed");
     }
   }
 
   if (!creds) {
-    return null
+    return null;
   }
 
   return (
@@ -103,11 +105,14 @@ export function ResetPasswordPage() {
         />
         <SubmitButton loading={isLoading}>Reset password</SubmitButton>
         <p className="text-center text-sm text-zinc-600">
-          <Link to="/auth/login" className="font-semibold text-[#895129] transition-colors hover:text-[#6f3f1f]">
+          <Link
+            to="/auth/login"
+            className="font-semibold text-[#895129] transition-colors hover:text-[#6f3f1f]"
+          >
             Back to sign in
           </Link>
         </p>
       </form>
     </AuthCard>
-  )
+  );
 }

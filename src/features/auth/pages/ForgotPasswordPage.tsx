@@ -1,45 +1,48 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { useSendOtpMutation } from '@/features/auth'
-import { AuthCard } from '../components/AuthCard'
-import { AuthHeader } from '../components/AuthHeader'
-import { InputField } from '../components/InputField'
-import { SubmitButton } from '../components/SubmitButton'
-import { isValidEmail } from '@/shared/utils/auth-validation'
-import { fetchErrorMessage } from '@/shared/utils/fetch-error'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useSendOtpMutation } from "@/features/auth";
+import { AuthCard } from "../components/AuthCard";
+import { AuthHeader } from "../components/AuthHeader";
+import { InputField } from "../components/InputField";
+import { SubmitButton } from "../components/SubmitButton";
+import { isValidEmail } from "@/utils/auth-validation";
+import { fetchErrorMessage } from "@/utils/fetch-error";
 
 export function ForgotPasswordPage() {
-  const navigate = useNavigate()
-  const [sendOtp, { isLoading }] = useSendOtpMutation()
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState<string | undefined>()
+  const navigate = useNavigate();
+  const [sendOtp, { isLoading }] = useSendOtpMutation();
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState<string | undefined>();
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     if (!email) {
-      setError('Email is required')
-      return
+      setError("Email is required");
+      return;
     }
     if (!isValidEmail(email)) {
-      setError('Enter a valid email')
-      return
+      setError("Enter a valid email");
+      return;
     }
-    setError(undefined)
+    setError(undefined);
     try {
-      const em = email.trim().toLowerCase()
-      await sendOtp({ email: em }).unwrap()
-      sessionStorage.setItem('otp_email', em)
-      toast.success('We sent a 6-digit code to your email')
-      void navigate('/auth/verify-otp', { state: { email: em } })
+      const em = email.trim().toLowerCase();
+      await sendOtp({ email: em }).unwrap();
+      sessionStorage.setItem("otp_email", em);
+      toast.success("We sent a 6-digit code to your email");
+      void navigate("/auth/verify-otp", { state: { email: em } });
     } catch (err) {
-      toast.error(fetchErrorMessage(err) ?? 'Could not send code')
+      toast.error(fetchErrorMessage(err) ?? "Could not send code");
     }
   }
 
   return (
     <AuthCard>
-      <AuthHeader title="Forgot password" subtitle="We’ll email a 6-digit code — no links." />
+      <AuthHeader
+        title="Forgot password"
+        subtitle="We’ll email a 6-digit code — no links."
+      />
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
         <InputField
           id="email"
@@ -53,11 +56,14 @@ export function ForgotPasswordPage() {
         />
         <SubmitButton loading={isLoading}>Send OTP</SubmitButton>
         <p className="text-center text-sm text-zinc-600">
-          <Link to="/auth/login" className="font-semibold text-[#895129] transition-colors hover:text-[#6f3f1f]">
+          <Link
+            to="/auth/login"
+            className="font-semibold text-[#895129] transition-colors hover:text-[#6f3f1f]"
+          >
             Back to sign in
           </Link>
         </p>
       </form>
     </AuthCard>
-  )
+  );
 }

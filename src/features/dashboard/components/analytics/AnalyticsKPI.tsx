@@ -1,19 +1,22 @@
-import { Activity, TrendingDown, TrendingUp } from 'lucide-react'
-import { motion } from 'framer-motion'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Skeleton } from '@/shared/ui/skeleton'
-import { AnimatedNumber } from '@/shared/ui/AnimatedNumber'
-import { cn } from '@/shared/utils/utils'
-import { fadeUp, hoverLift } from '@/shared/ui/motion'
+import { Activity, TrendingDown, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { cn } from "@/utils/utils";
+import { fadeUp, hoverLift } from "@/components/ui/motion";
 
 function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(n)
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "USD",
+  }).format(n);
 }
 
 function fmtPct(n: number) {
-  const v = Math.abs(n)
-  const s = v >= 10 ? v.toFixed(0) : v.toFixed(1)
-  return `${n >= 0 ? '+' : '-'}${s}%`
+  const v = Math.abs(n);
+  const s = v >= 10 ? v.toFixed(0) : v.toFixed(1);
+  return `${n >= 0 ? "+" : "-"}${s}%`;
 }
 
 export function AnalyticsKPI({
@@ -21,27 +24,33 @@ export function AnalyticsKPI({
   value,
   changePct,
   loading,
-  format = 'number',
+  format = "number",
   suffix,
 }: {
-  title: string
-  value: number | undefined
-  changePct: number | undefined
-  loading?: boolean
-  format?: 'number' | 'currency' | 'percent'
-  suffix?: string
+  title: string;
+  value: number | undefined;
+  changePct: number | undefined;
+  loading?: boolean;
+  format?: "number" | "currency" | "percent";
+  suffix?: string;
 }) {
-  const up = (changePct ?? 0) >= 0
-  const TrendIcon = up ? TrendingUp : TrendingDown
+  const up = (changePct ?? 0) >= 0;
+  const TrendIcon = up ? TrendingUp : TrendingDown;
 
   const fmtValue = (n: number) => {
-    if (format === 'currency') return fmtMoney(n)
-    if (format === 'percent') return `${n.toFixed(1)}%`
-    return `${new Intl.NumberFormat().format(n)}${suffix ?? ''}`
-  }
+    if (format === "currency") return fmtMoney(n);
+    if (format === "percent") return `${n.toFixed(1)}%`;
+    return `${new Intl.NumberFormat().format(n)}${suffix ?? ""}`;
+  };
 
   return (
-    <motion.div variants={fadeUp} initial="hidden" animate="show" whileHover={hoverLift.whileHover} transition={hoverLift.transition}>
+    <motion.div
+      variants={fadeUp}
+      initial="hidden"
+      animate="show"
+      whileHover={hoverLift.whileHover}
+      transition={hoverLift.transition}
+    >
       <Card className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition-shadow duration-300 hover:shadow-xl">
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10" />
@@ -60,7 +69,9 @@ export function AnalyticsKPI({
           {loading ? (
             <Skeleton className="h-9 w-28" />
           ) : value === undefined ? (
-            <div className="text-3xl font-bold tracking-tight text-gray-900">—</div>
+            <div className="text-3xl font-bold tracking-tight text-gray-900">
+              —
+            </div>
           ) : (
             <div className="text-3xl font-bold tracking-tight text-gray-900">
               <AnimatedNumber value={value} format={fmtValue} />
@@ -75,8 +86,10 @@ export function AnalyticsKPI({
             <div className="inline-flex items-center gap-2 text-xs">
               <span
                 className={cn(
-                  'inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium ring-1',
-                  up ? 'bg-emerald-500/10 text-emerald-700 ring-emerald-600/20' : 'bg-rose-500/10 text-rose-700 ring-rose-600/20',
+                  "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium ring-1",
+                  up
+                    ? "bg-emerald-500/10 text-emerald-700 ring-emerald-600/20"
+                    : "bg-rose-500/10 text-rose-700 ring-rose-600/20",
                 )}
               >
                 <TrendIcon className="size-4" />
@@ -88,6 +101,5 @@ export function AnalyticsKPI({
         </CardContent>
       </Card>
     </motion.div>
-  )
+  );
 }
-

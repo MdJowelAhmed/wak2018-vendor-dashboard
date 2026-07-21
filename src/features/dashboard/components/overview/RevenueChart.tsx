@@ -1,5 +1,5 @@
-import { RevenueChart as BaseRevenueChart } from '@/features/dashboard/components/DashboardOverviewRevenueChart'
-import type { RevenueChartPoint } from '@/shared/types/api'
+import { RevenueChart as BaseRevenueChart } from "@/features/dashboard/components/DashboardOverviewRevenueChart";
+import type { RevenueChartPoint } from "@/types/api";
 
 export function RevenueChart({
   weekly,
@@ -8,12 +8,19 @@ export function RevenueChart({
   isLoading,
   className,
 }: {
-  weekly: RevenueChartPoint[]
-  monthly: RevenueChartPoint[]
-  mode?: 'product' | 'service' | 'both'
-  isLoading?: boolean
-  className?: string
+  weekly: RevenueChartPoint[];
+  monthly: RevenueChartPoint[];
+  mode?: "product" | "service" | "both";
+  isLoading?: boolean;
+  className?: string;
 }) {
-  return <BaseRevenueChart weekly={weekly} monthly={monthly} mode={mode} isLoading={isLoading} className={className} />
+  return (
+    <BaseRevenueChart
+      weekly={weekly}
+      monthly={monthly}
+      mode={mode}
+      isLoading={isLoading}
+      className={className}
+    />
+  );
 }
-

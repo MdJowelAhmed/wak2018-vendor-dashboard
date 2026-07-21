@@ -1,94 +1,127 @@
-import { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
-import { Button } from '@/shared/ui/button'
-import { Textarea } from '@/shared/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import type { UserProfile } from '@/shared/types/api'
-import { useUpdateProfileMutation } from '@/features/auth'
-import { CountryMultiSelect, type ServiceCountrySelection } from '@/shared/components/CountryMultiSelect'
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import type { UserProfile } from "@/types/api";
+import { useUpdateProfileMutation } from "@/features/auth";
+import {
+  CountryMultiSelect,
+  type ServiceCountrySelection,
+} from "@/components/CountryMultiSelect";
 import {
   readVendorServiceLocationFromLocalStorage,
   writeVendorServiceLocationToLocalStorage,
-} from '@/shared/utils/service-provider-profile-storage'
+} from "@/utils/service-provider-profile-storage";
 
-const VENDOR_ONBOARDING_STORAGE_KEY = 'vendor_onboarding_v1'
+const VENDOR_ONBOARDING_STORAGE_KEY = "vendor_onboarding_v1";
 
 const categoryOptions = [
-  'Grocery',
-  'Restaurant',
-  'Fashion',
-  'Electronics',
-  'Beauty',
-  'Home & Kitchen',
-  'Kids',
-  'Health',
-  'Books',
-  'Sports',
-] as const
+  "Grocery",
+  "Restaurant",
+  "Fashion",
+  "Electronics",
+  "Beauty",
+  "Home & Kitchen",
+  "Kids",
+  "Health",
+  "Books",
+  "Sports",
+] as const;
 
-const shopTypeOptions = ['Retail', 'Online-only', 'Restaurant', 'Grocery', 'Wholesale', 'Other'] as const
+const shopTypeOptions = [
+  "Retail",
+  "Online-only",
+  "Restaurant",
+  "Grocery",
+  "Wholesale",
+  "Other",
+] as const;
 
 function safeReadOnboarding(): Partial<Record<string, any>> | null {
-  if (typeof localStorage === 'undefined') return null
+  if (typeof localStorage === "undefined") return null;
   try {
-    const raw = localStorage.getItem(VENDOR_ONBOARDING_STORAGE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw) as Partial<Record<string, any>>
+    const raw = localStorage.getItem(VENDOR_ONBOARDING_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as Partial<Record<string, any>>;
   } catch {
-    return null
+    return null;
   }
 }
 
 function fullNameFromProfile(p: UserProfile | undefined) {
-  const first = p?.firstName ?? ''
-  const last = p?.lastName ?? ''
-  return `${first} ${last}`.trim()
+  const first = p?.firstName ?? "";
+  const last = p?.lastName ?? "";
+  return `${first} ${last}`.trim();
 }
 
-export function ProfileSettings({ profile }: { profile: UserProfile | undefined }) {
-  const [update, { isLoading }] = useUpdateProfileMutation()
+export function ProfileSettings({
+  profile,
+}: {
+  profile: UserProfile | undefined;
+}) {
+  const [update, { isLoading }] = useUpdateProfileMutation();
 
-  const onboarding = useMemo(() => safeReadOnboarding(), [])
+  const onboarding = useMemo(() => safeReadOnboarding(), []);
 
   const initial = useMemo(
     () => ({
-      businessName: String(onboarding?.businessName ?? ''),
+      businessName: String(onboarding?.businessName ?? ""),
       ownerName: String(onboarding?.ownerName ?? fullNameFromProfile(profile)),
-      email: profile?.email ?? '',
-      phone: String(onboarding?.phone ?? profile?.phone ?? ''),
-      streetAddress: String(onboarding?.address ?? profile?.address ?? ''),
-      category: Array.isArray(onboarding?.category) ? String(onboarding?.category?.[0] ?? '') : String(onboarding?.category ?? ''),
-      shopType: String(onboarding?.shopType ?? ''),
-      approxProductCount: String(onboarding?.productCount ?? ''),
-      description: String(onboarding?.description ?? ''),
+      email: profile?.email ?? "",
+      phone: String(onboarding?.phone ?? profile?.phone ?? ""),
+      streetAddress: String(onboarding?.address ?? profile?.address ?? ""),
+      category: Array.isArray(onboarding?.category)
+        ? String(onboarding?.category?.[0] ?? "")
+        : String(onboarding?.category ?? ""),
+      shopType: String(onboarding?.shopType ?? ""),
+      approxProductCount: String(onboarding?.productCount ?? ""),
+      description: String(onboarding?.description ?? ""),
     }),
     [profile, onboarding],
-  )
+  );
 
-  const [email, setEmail] = useState(initial.email)
-  const [businessName, setBusinessName] = useState(initial.businessName)
-  const [ownerName, setOwnerName] = useState(initial.ownerName)
-  const [phone, setPhone] = useState(initial.phone)
-  const [streetAddress, setStreetAddress] = useState(initial.streetAddress)
-  const [serviceLocation, setServiceLocation] = useState<ServiceCountrySelection>(() => readVendorServiceLocationFromLocalStorage())
-  const [category, setCategory] = useState(initial.category)
-  const [shopType, setShopType] = useState(initial.shopType)
-  const [approxProductCount, setApproxProductCount] = useState(initial.approxProductCount)
-  const [description, setDescription] = useState(initial.description)
+  const [email, setEmail] = useState(initial.email);
+  const [businessName, setBusinessName] = useState(initial.businessName);
+  const [ownerName, setOwnerName] = useState(initial.ownerName);
+  const [phone, setPhone] = useState(initial.phone);
+  const [streetAddress, setStreetAddress] = useState(initial.streetAddress);
+  const [serviceLocation, setServiceLocation] =
+    useState<ServiceCountrySelection>(() =>
+      readVendorServiceLocationFromLocalStorage(),
+    );
+  const [category, setCategory] = useState(initial.category);
+  const [shopType, setShopType] = useState(initial.shopType);
+  const [approxProductCount, setApproxProductCount] = useState(
+    initial.approxProductCount,
+  );
+  const [description, setDescription] = useState(initial.description);
 
   useEffect(() => {
-    setEmail(initial.email)
-    setBusinessName(initial.businessName)
-    setOwnerName(initial.ownerName)
-    setPhone(initial.phone)
-    setStreetAddress(initial.streetAddress)
-    setCategory(initial.category)
-    setShopType(initial.shopType)
-    setApproxProductCount(initial.approxProductCount)
-    setDescription(initial.description)
+    setEmail(initial.email);
+    setBusinessName(initial.businessName);
+    setOwnerName(initial.ownerName);
+    setPhone(initial.phone);
+    setStreetAddress(initial.streetAddress);
+    setCategory(initial.category);
+    setShopType(initial.shopType);
+    setApproxProductCount(initial.approxProductCount);
+    setDescription(initial.description);
   }, [
     initial.email,
     initial.businessName,
@@ -99,23 +132,25 @@ export function ProfileSettings({ profile }: { profile: UserProfile | undefined 
     initial.shopType,
     initial.approxProductCount,
     initial.description,
-  ])
+  ]);
 
   useEffect(() => {
-    setServiceLocation(readVendorServiceLocationFromLocalStorage())
-  }, [profile?.id])
+    setServiceLocation(readVendorServiceLocationFromLocalStorage());
+  }, [profile?.id]);
 
   const canSave =
-    businessName.trim().length > 0 && ownerName.trim().length > 0 && (!email || email.includes('@'))
+    businessName.trim().length > 0 &&
+    ownerName.trim().length > 0 &&
+    (!email || email.includes("@"));
 
   async function onSave() {
     if (!businessName.trim() || !ownerName.trim()) {
-      toast.error('Please fill required fields.')
-      return
+      toast.error("Please fill required fields.");
+      return;
     }
-    if (email && !email.includes('@')) {
-      toast.error('Please use a valid email.')
-      return
+    if (email && !email.includes("@")) {
+      toast.error("Please use a valid email.");
+      return;
     }
     try {
       // Current API supports only basic profile fields; keep business fields in UI for now.
@@ -124,11 +159,11 @@ export function ProfileSettings({ profile }: { profile: UserProfile | undefined 
         email: undefined, // email is readonly in this UI
         phone: phone.trim() || undefined,
         address: streetAddress.trim() || undefined,
-      }).unwrap()
-      writeVendorServiceLocationToLocalStorage(serviceLocation)
-      toast.success('Profile updated')
+      }).unwrap();
+      writeVendorServiceLocationToLocalStorage(serviceLocation);
+      toast.success("Profile updated");
     } catch {
-      toast.error('Could not update profile')
+      toast.error("Could not update profile");
     }
   }
 
@@ -137,28 +172,51 @@ export function ProfileSettings({ profile }: { profile: UserProfile | undefined 
       <Card className="rounded-xl border-border/60 shadow-sm">
         <CardHeader>
           <CardTitle>Business Information</CardTitle>
-          <CardDescription>Update the core business details shown to customers.</CardDescription>
+          <CardDescription>
+            Update the core business details shown to customers.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="businessName">Business Name</Label>
-              <Input id="businessName" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="e.g. Wak Mart" />
+              <Input
+                id="businessName"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="e.g. Wak Mart"
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="ownerName">Owner Name</Label>
-              <Input id="ownerName" value={ownerName} onChange={(e) => setOwnerName(e.target.value)} placeholder="e.g. John Doe" />
+              <Input
+                id="ownerName"
+                value={ownerName}
+                onChange={(e) => setOwnerName(e.target.value)}
+                placeholder="e.g. John Doe"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+880..." />
+              <Input
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+880..."
+              />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" value={email} readOnly placeholder="email@example.com" className="bg-muted/30" />
+              <Input
+                id="email"
+                value={email}
+                readOnly
+                placeholder="email@example.com"
+                className="bg-muted/30"
+              />
             </div>
           </div>
         </CardContent>
@@ -168,14 +226,19 @@ export function ProfileSettings({ profile }: { profile: UserProfile | undefined 
         <CardHeader>
           <CardTitle>Address</CardTitle>
           <CardDescription>
-            Where you operate from (used for delivery and invoices). Service location sets where you sell — same options as Add
-            Product.
+            Where you operate from (used for delivery and invoices). Service
+            location sets where you sell — same options as Add Product.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="grid gap-2">
             <Label htmlFor="streetAddress">Street Address</Label>
-            <Input id="streetAddress" value={streetAddress} onChange={(e) => setStreetAddress(e.target.value)} placeholder="Street address" />
+            <Input
+              id="streetAddress"
+              value={streetAddress}
+              onChange={(e) => setStreetAddress(e.target.value)}
+              placeholder="Street address"
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="vendor-service-location">Service Location</Label>
@@ -191,7 +254,9 @@ export function ProfileSettings({ profile }: { profile: UserProfile | undefined 
       <Card className="rounded-xl border-border/60 shadow-sm">
         <CardHeader>
           <CardTitle>Shop Details</CardTitle>
-          <CardDescription>Help customers understand what you sell.</CardDescription>
+          <CardDescription>
+            Help customers understand what you sell.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -232,7 +297,9 @@ export function ProfileSettings({ profile }: { profile: UserProfile | undefined 
               <Input
                 id="approxProductCount"
                 value={approxProductCount}
-                onChange={(e) => setApproxProductCount(e.target.value.replace(/[^\d]/g, ''))}
+                onChange={(e) =>
+                  setApproxProductCount(e.target.value.replace(/[^\d]/g, ""))
+                }
                 inputMode="numeric"
                 placeholder="e.g. 50"
               />
@@ -244,7 +311,9 @@ export function ProfileSettings({ profile }: { profile: UserProfile | undefined 
       <Card className="rounded-xl border-border/60 shadow-sm">
         <CardHeader>
           <CardTitle>Description</CardTitle>
-          <CardDescription>A short description that appears on your shop profile.</CardDescription>
+          <CardDescription>
+            A short description that appears on your shop profile.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
@@ -264,12 +333,11 @@ export function ProfileSettings({ profile }: { profile: UserProfile | undefined 
               disabled={!canSave || isLoading}
               onClick={() => void onSave()}
             >
-              {isLoading ? 'Saving…' : 'Save Changes'}
+              {isLoading ? "Saving…" : "Save Changes"}
             </Button>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

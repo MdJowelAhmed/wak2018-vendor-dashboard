@@ -1,23 +1,38 @@
-import { useId, useState, type InputHTMLAttributes, type ReactNode } from 'react'
-import { motion } from 'framer-motion'
-import { Eye, EyeOff } from 'lucide-react'
-import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
-import { Button } from '@/shared/ui/button'
-import { cn } from '@/shared/utils/utils'
-import { authInputFocusClass, authInputShakeTransition } from '@/features/auth/motion/auth-motion-variants'
+import {
+  useId,
+  useState,
+  type InputHTMLAttributes,
+  type ReactNode,
+} from "react";
+import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/utils/utils";
+import {
+  authInputFocusClass,
+  authInputShakeTransition,
+} from "@/features/auth/motion/auth-motion-variants";
 
-type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
-  label?: string
-  error?: string
+type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
+  label?: string;
+  error?: string;
   /** Renders on the same row as the label (e.g. forgot-password link) */
-  labelRight?: ReactNode
-}
+  labelRight?: ReactNode;
+};
 
-export function PasswordInput({ label, id: idProp, className, error, labelRight, ...inputProps }: Props) {
-  const autoId = useId()
-  const id = idProp ?? `pwd-${autoId}`
-  const [show, setShow] = useState(false)
+export function PasswordInput({
+  label,
+  id: idProp,
+  className,
+  error,
+  labelRight,
+  ...inputProps
+}: Props) {
+  const autoId = useId();
+  const id = idProp ?? `pwd-${autoId}`;
+  const [show, setShow] = useState(false);
 
   return (
     <motion.div
@@ -44,13 +59,13 @@ export function PasswordInput({ label, id: idProp, className, error, labelRight,
       <div className="relative">
         <Input
           id={id}
-          type={show ? 'text' : 'password'}
+          type={show ? "text" : "password"}
           className={cn(
             // Premium input
-            'h-12 rounded-xl border border-gray-200 bg-white/80 pr-10 text-zinc-900 shadow-sm',
-            'placeholder:text-zinc-400',
+            "h-12 rounded-xl border border-gray-200 bg-white/80 pr-10 text-zinc-900 shadow-sm",
+            "placeholder:text-zinc-400",
             authInputFocusClass,
-            error && 'border-destructive',
+            error && "border-destructive",
             className,
           )}
           aria-invalid={!!error}
@@ -63,7 +78,7 @@ export function PasswordInput({ label, id: idProp, className, error, labelRight,
           size="icon"
           className="absolute end-0 top-0 h-12 w-12 text-zinc-500 hover:bg-transparent"
           onClick={() => setShow((v) => !v)}
-          aria-label={show ? 'Hide password' : 'Show password'}
+          aria-label={show ? "Hide password" : "Show password"}
         >
           {show ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
         </Button>
@@ -74,5 +89,5 @@ export function PasswordInput({ label, id: idProp, className, error, labelRight,
         </p>
       ) : null}
     </motion.div>
-  )
+  );
 }

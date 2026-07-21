@@ -1,4 +1,4 @@
-import type { CustomerDetails, CustomerListRow, CustomerTag } from '@/shared/types/api'
+import type { CustomerDetails, CustomerListRow, CustomerTag } from '@/types/api'
 
 export type ServiceBooking = {
   id: number

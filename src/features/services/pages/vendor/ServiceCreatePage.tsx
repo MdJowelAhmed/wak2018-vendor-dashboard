@@ -1,79 +1,90 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
-import { toast } from 'sonner'
-import { useCreateServiceMutation } from '@/features/services'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
-import { Textarea } from '@/shared/ui/textarea'
-import type { RootState } from '@/app/store'
-import { useGetProfileQuery } from '@/features/auth'
-import { ServiceFormPage } from '@/features/services/pages/vendor/ServiceFormPage'
-import type { UserRole } from '@/features/auth'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
+import { useCreateServiceMutation } from "@/features/services";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import type { RootState } from "@/app/store";
+import { useGetProfileQuery } from "@/features/auth";
+import { ServiceFormPage } from "@/features/services/pages/vendor/ServiceFormPage";
+import type { UserRole } from "@/features/auth";
 
 type PkgState = {
-  name: 'basic' | 'standard' | 'premium'
-  price: number
-  deliveryTimeDays: number
-  description: string
-}
+  name: "basic" | "standard" | "premium";
+  price: number;
+  deliveryTimeDays: number;
+  description: string;
+};
 
-const emptyPkg = (name: PkgState['name']): PkgState => ({
+const emptyPkg = (name: PkgState["name"]): PkgState => ({
   name,
   price: 0,
   deliveryTimeDays: 1,
-  description: '',
-})
+  description: "",
+});
 
 export function ServiceCreatePage() {
-  const authRole: UserRole | undefined = useSelector((s: RootState) => s.auth.user?.role)
-  const { data: profile } = useGetProfileQuery()
-  const role: UserRole | null = authRole ?? profile?.role ?? null
-  if (role === 'service') {
-    return <ServiceFormPage mode="create" />
+  const authRole: UserRole | undefined = useSelector(
+    (s: RootState) => s.auth.user?.role,
+  );
+  const { data: profile } = useGetProfileQuery();
+  const role: UserRole | null = authRole ?? profile?.role ?? null;
+  if (role === "service") {
+    return <ServiceFormPage mode="create" />;
   }
 
-  const navigate = useNavigate()
-  const [submit, { isLoading }] = useCreateServiceMutation()
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [basic, setBasic] = useState(emptyPkg('basic'))
-  const [standard, setStandard] = useState(emptyPkg('standard'))
-  const [premium, setPremium] = useState(emptyPkg('premium'))
+  const navigate = useNavigate();
+  const [submit, { isLoading }] = useCreateServiceMutation();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [basic, setBasic] = useState(emptyPkg("basic"));
+  const [standard, setStandard] = useState(emptyPkg("standard"));
+  const [premium, setPremium] = useState(emptyPkg("premium"));
 
   async function handleSave(e: React.FormEvent) {
-    e.preventDefault()
+    e.preventDefault();
     try {
       await submit({
         title: title.trim(),
         description: description.trim(),
         packages: {
           basic: {
-            name: 'basic' as const,
+            name: "basic" as const,
             price: Number(basic.price),
-            deliveryTimeDays: Math.max(0, Math.floor(Number(basic.deliveryTimeDays))),
+            deliveryTimeDays: Math.max(
+              0,
+              Math.floor(Number(basic.deliveryTimeDays)),
+            ),
             description: basic.description,
           },
           standard: {
-            name: 'standard' as const,
+            name: "standard" as const,
             price: Number(standard.price),
-            deliveryTimeDays: Math.max(0, Math.floor(Number(standard.deliveryTimeDays))),
+            deliveryTimeDays: Math.max(
+              0,
+              Math.floor(Number(standard.deliveryTimeDays)),
+            ),
             description: standard.description,
           },
           premium: {
-            name: 'premium' as const,
+            name: "premium" as const,
             price: Number(premium.price),
-            deliveryTimeDays: Math.max(0, Math.floor(Number(premium.deliveryTimeDays))),
+            deliveryTimeDays: Math.max(
+              0,
+              Math.floor(Number(premium.deliveryTimeDays)),
+            ),
             description: premium.description,
           },
         },
-      }).unwrap()
-      toast.success('Service created')
-      void navigate('/vendor/services')
+      }).unwrap();
+      toast.success("Service created");
+      void navigate("/vendor/services");
     } catch {
-      toast.error('Could not create service')
+      toast.error("Could not create service");
     }
   }
 
@@ -81,7 +92,9 @@ export function ServiceCreatePage() {
     <div className="space-y-4 max-w-4xl">
       <div>
         <h1 className="text-2xl font-semibold">Create service</h1>
-        <p className="text-muted-foreground">Add Basic, Standard, and Premium with price and delivery time.</p>
+        <p className="text-muted-foreground">
+          Add Basic, Standard, and Premium with price and delivery time.
+        </p>
       </div>
       <form onSubmit={handleSave} className="space-y-4">
         <Card>
@@ -91,44 +104,52 @@ export function ServiceCreatePage() {
           <CardContent className="space-y-4 max-w-2xl">
             <div className="space-y-2">
               <Label htmlFor="title">Title</Label>
-              <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="desc">Description</Label>
-              <Textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={4} required />
+              <Textarea
+                id="desc"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={4}
+                required
+              />
             </div>
           </CardContent>
         </Card>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <PackageCard
-            label="Basic"
-            value={basic}
-            onChange={setBasic}
-          />
+          <PackageCard label="Basic" value={basic} onChange={setBasic} />
           <PackageCard
             label="Standard"
             value={standard}
             onChange={setStandard}
           />
-          <PackageCard
-            label="Premium"
-            value={premium}
-            onChange={setPremium}
-          />
+          <PackageCard label="Premium" value={premium} onChange={setPremium} />
         </div>
 
         <div className="flex gap-2">
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? 'Saving…' : 'Create service'}
+            {isLoading ? "Saving…" : "Create service"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate(-1)} disabled={isLoading}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate(-1)}
+            disabled={isLoading}
+          >
             Cancel
           </Button>
         </div>
       </form>
     </div>
-  )
+  );
 }
 
 function PackageCard({
@@ -136,9 +157,9 @@ function PackageCard({
   value,
   onChange,
 }: {
-  label: string
-  value: PkgState
-  onChange: (n: PkgState) => void
+  label: string;
+  value: PkgState;
+  onChange: (n: PkgState) => void;
 }) {
   return (
     <Card>
@@ -153,7 +174,9 @@ function PackageCard({
             min={0}
             step="0.01"
             value={value.price}
-            onChange={(e) => onChange({ ...value, price: Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({ ...value, price: Number(e.target.value) })
+            }
             required
           />
         </div>
@@ -163,7 +186,9 @@ function PackageCard({
             type="number"
             min={0}
             value={value.deliveryTimeDays}
-            onChange={(e) => onChange({ ...value, deliveryTimeDays: Number(e.target.value) })}
+            onChange={(e) =>
+              onChange({ ...value, deliveryTimeDays: Number(e.target.value) })
+            }
             required
           />
         </div>
@@ -171,11 +196,13 @@ function PackageCard({
           <Label>Package notes</Label>
           <Textarea
             rows={3}
-            value={value.description ?? ''}
-            onChange={(e) => onChange({ ...value, description: e.target.value })}
+            value={value.description ?? ""}
+            onChange={(e) =>
+              onChange({ ...value, description: e.target.value })
+            }
           />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

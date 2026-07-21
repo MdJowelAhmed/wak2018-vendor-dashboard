@@ -1,15 +1,15 @@
-import { motion } from 'framer-motion'
-import type { Delivery } from '@/shared/types/api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Badge } from '@/shared/ui/badge'
+import { motion } from "framer-motion";
+import type { Delivery } from "@/types/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   orderDetailsDeliveryStatusBodyVariants,
   orderDetailsStatusBadgeVariants,
-} from '@/features/orders/motion/order-details-variants'
+} from "@/features/orders/motion/order-details-variants";
 
 export function DeliveryStatusCard({ delivery }: { delivery: Delivery }) {
-  const isIntl = delivery.type === 'international'
-  const statusKey = `${delivery.deliveryStatus}-${delivery.driverStatus ?? ''}-${delivery.trackingStatus ?? ''}`
+  const isIntl = delivery.type === "international";
+  const statusKey = `${delivery.deliveryStatus}-${delivery.driverStatus ?? ""}-${delivery.trackingStatus ?? ""}`;
 
   return (
     <Card className="rounded-xl border-border/60 shadow-sm">
@@ -25,7 +25,7 @@ export function DeliveryStatusCard({ delivery }: { delivery: Delivery }) {
             animate="animate"
           >
             <Badge variant="secondary" className="capitalize">
-              {delivery.type ?? 'local'}
+              {delivery.type ?? "local"}
             </Badge>
           </motion.div>
           <span className="text-muted-foreground">·</span>
@@ -47,42 +47,49 @@ export function DeliveryStatusCard({ delivery }: { delivery: Delivery }) {
           initial="hidden"
           animate="visible"
         >
-        {!isIntl ? (
-          <>
-            <div>
-              <div className="text-muted-foreground">Driver</div>
-              <div className="font-medium">{delivery.driverName ?? '—'}</div>
-            </div>
+          {!isIntl ? (
+            <>
+              <div>
+                <div className="text-muted-foreground">Driver</div>
+                <div className="font-medium">{delivery.driverName ?? "—"}</div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <div className="text-muted-foreground">ETA</div>
+                  <div className="font-medium">
+                    {delivery.etaMinutes != null
+                      ? `${delivery.etaMinutes} min`
+                      : "—"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Status</div>
+                  <div className="font-medium capitalize">
+                    {delivery.driverStatus}
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <div className="text-muted-foreground">ETA</div>
-                <div className="font-medium">{delivery.etaMinutes != null ? `${delivery.etaMinutes} min` : '—'}</div>
+                <div className="text-muted-foreground">Courier</div>
+                <div className="font-medium">{delivery.courier ?? "—"}</div>
               </div>
               <div>
-                <div className="text-muted-foreground">Status</div>
-                <div className="font-medium capitalize">{delivery.driverStatus}</div>
+                <div className="text-muted-foreground">Tracking ID</div>
+                <div className="font-medium">{delivery.trackingId ?? "—"}</div>
+              </div>
+              <div className="sm:col-span-2">
+                <div className="text-muted-foreground">Tracking status</div>
+                <div className="font-medium">
+                  {delivery.trackingStatus ?? "—"}
+                </div>
               </div>
             </div>
-          </>
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <div className="text-muted-foreground">Courier</div>
-              <div className="font-medium">{delivery.courier ?? '—'}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">Tracking ID</div>
-              <div className="font-medium">{delivery.trackingId ?? '—'}</div>
-            </div>
-            <div className="sm:col-span-2">
-              <div className="text-muted-foreground">Tracking status</div>
-              <div className="font-medium">{delivery.trackingStatus ?? '—'}</div>
-            </div>
-          </div>
-        )}
+          )}
         </motion.div>
       </CardContent>
     </Card>
-  )
+  );
 }
-

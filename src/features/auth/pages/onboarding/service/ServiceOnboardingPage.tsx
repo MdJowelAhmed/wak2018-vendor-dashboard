@@ -1,176 +1,205 @@
-import { useEffect, useMemo, useState, type KeyboardEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { ChevronLeft, ChevronRight, ChevronsUpDown, X } from 'lucide-react'
-import { cn } from '@/shared/utils/utils'
-import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
-import { Textarea } from '@/shared/ui/textarea'
-import { Badge } from '@/shared/ui/badge'
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { ChevronLeft, ChevronRight, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/utils/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/shared/ui/select'
+} from "@/components/ui/select";
 
-const STORAGE_KEY = 'service_onboarding_v1'
+const STORAGE_KEY = "service_onboarding_v1";
 
-type ExperienceLevel = 'beginner' | 'intermediate' | 'expert'
-type Availability = 'full_time' | 'part_time' | 'weekends'
+type ExperienceLevel = "beginner" | "intermediate" | "expert";
+type Availability = "full_time" | "part_time" | "weekends";
 
 type OnboardingData = {
   // Step 2
-  businessName: string
-  ownerName: string
-  phone: string
-  email: string
-  address: string
-  serviceCategories: string[]
-  serviceArea: string
+  businessName: string;
+  ownerName: string;
+  phone: string;
+  email: string;
+  address: string;
+  serviceCategories: string[];
+  serviceArea: string;
 
   // Step 3
-  experienceLevel: ExperienceLevel | ''
-  yearsExperience: string
-  skills: string[]
-  portfolioLinks: string[]
-  languages: string[]
-  availability: Availability | ''
+  experienceLevel: ExperienceLevel | "";
+  yearsExperience: string;
+  skills: string[];
+  portfolioLinks: string[];
+  languages: string[];
+  availability: Availability | "";
 
   // Step 4
-  serviceTitle: string
-  serviceCategory: string
-  price: string
-  deliveryTime: string
-  description: string
-  features: string[]
-}
+  serviceTitle: string;
+  serviceCategory: string;
+  price: string;
+  deliveryTime: string;
+  description: string;
+  features: string[];
+};
 
 const defaultData: OnboardingData = {
-  businessName: '',
-  ownerName: '',
-  phone: '',
-  email: '',
-  address: '',
+  businessName: "",
+  ownerName: "",
+  phone: "",
+  email: "",
+  address: "",
   serviceCategories: [],
-  serviceArea: '',
-  experienceLevel: '',
-  yearsExperience: '',
+  serviceArea: "",
+  experienceLevel: "",
+  yearsExperience: "",
   skills: [],
   portfolioLinks: [],
   languages: [],
-  availability: '',
+  availability: "",
 
-  serviceTitle: '',
-  serviceCategory: '',
-  price: '',
-  deliveryTime: '',
-  description: '',
+  serviceTitle: "",
+  serviceCategory: "",
+  price: "",
+  deliveryTime: "",
+  description: "",
   features: [],
-}
+};
 
 const categoryOptions = [
-  'Home Services',
-  'Cleaning',
-  'Plumbing',
-  'Electrical',
-  'Carpentry',
-  'Painting',
-  'Appliance Repair',
-  'Beauty & Wellness',
-  'Fitness',
-  'Tutoring',
-  'IT Support',
-  'Design',
-]
+  "Home Services",
+  "Cleaning",
+  "Plumbing",
+  "Electrical",
+  "Carpentry",
+  "Painting",
+  "Appliance Repair",
+  "Beauty & Wellness",
+  "Fitness",
+  "Tutoring",
+  "IT Support",
+  "Design",
+];
 
-const languageOptions = ['English', 'Arabic', 'French', 'Spanish', 'Hindi', 'Bengali', 'Urdu']
+const languageOptions = [
+  "English",
+  "Arabic",
+  "French",
+  "Spanish",
+  "Hindi",
+  "Bengali",
+  "Urdu",
+];
 
-type StepId = 2 | 3 | 4 | 5 | 6
+type StepId = 2 | 3 | 4 | 5 | 6;
 
 function readStored(): Partial<OnboardingData> | null {
-  if (typeof localStorage === 'undefined') return null
+  if (typeof localStorage === "undefined") return null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw) as Partial<OnboardingData>
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as Partial<OnboardingData>;
   } catch {
-    return null
+    return null;
   }
 }
 
 function store(data: OnboardingData) {
-  if (typeof localStorage === 'undefined') return
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  if (typeof localStorage === "undefined") return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 
-function OnboardingCard(props: { children: React.ReactNode; className?: string }) {
+function OnboardingCard(props: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div
       className={cn(
-        'w-full max-w-2xl rounded-2xl bg-white p-8 text-gray-900 shadow-lg',
+        "w-full max-w-2xl rounded-2xl bg-white p-8 text-gray-900 shadow-lg",
         props.className,
       )}
     >
       {props.children}
     </div>
-  )
+  );
 }
 
 function StepIndicator({ current }: { current: StepId }) {
   const steps = [
-    { id: 1, title: 'Account' },
-    { id: 2, title: 'Business' },
-    { id: 3, title: 'Professional' },
-    { id: 4, title: 'Service Setup' },
-    { id: 5, title: 'Payment' },
-    { id: 6, title: 'Done' },
-  ] as const
+    { id: 1, title: "Account" },
+    { id: 2, title: "Business" },
+    { id: 3, title: "Professional" },
+    { id: 4, title: "Service Setup" },
+    { id: 5, title: "Payment" },
+    { id: 6, title: "Done" },
+  ] as const;
 
   return (
     <div className="mb-8">
       <div className="flex flex-wrap items-center justify-center gap-2">
         {steps.map((s) => {
-          const active = s.id === current
-          const completed = s.id < current
+          const active = s.id === current;
+          const completed = s.id < current;
           return (
             <div key={s.id} className="flex items-center gap-2">
               <div
                 className={cn(
-                  'flex size-8 items-center justify-center rounded-full border text-sm font-semibold',
-                  completed && 'border-[#895129] bg-[#895129]/10 text-[#895129]',
-                  active && 'border-[#895129] bg-[#895129] text-white',
-                  !completed && !active && 'border-gray-200 bg-white text-gray-500',
+                  "flex size-8 items-center justify-center rounded-full border text-sm font-semibold",
+                  completed &&
+                    "border-[#895129] bg-[#895129]/10 text-[#895129]",
+                  active && "border-[#895129] bg-[#895129] text-white",
+                  !completed &&
+                    !active &&
+                    "border-gray-200 bg-white text-gray-500",
                 )}
               >
                 {s.id}
               </div>
-              <span className={cn('text-xs font-medium', active ? 'text-gray-900' : 'text-gray-400')}>{s.title}</span>
-              {s.id !== 6 ? <div className="mx-1 hidden h-px w-10 bg-gray-200 sm:block" /> : null}
+              <span
+                className={cn(
+                  "text-xs font-medium",
+                  active ? "text-gray-900" : "text-gray-400",
+                )}
+              >
+                {s.title}
+              </span>
+              {s.id !== 6 ? (
+                <div className="mx-1 hidden h-px w-10 bg-gray-200 sm:block" />
+              ) : null}
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }
 
-function Field(props: { label: string; children: React.ReactNode; hint?: string }) {
+function Field(props: {
+  label: string;
+  children: React.ReactNode;
+  hint?: string;
+}) {
   return (
     <div className="grid gap-2">
       <Label className="text-sm text-gray-700">{props.label}</Label>
       {props.children}
-      {props.hint ? <p className="text-xs text-gray-500">{props.hint}</p> : null}
+      {props.hint ? (
+        <p className="text-xs text-gray-500">{props.hint}</p>
+      ) : null}
     </div>
-  )
+  );
 }
 
 function LightInput(props: React.ComponentProps<typeof Input>) {
@@ -178,12 +207,12 @@ function LightInput(props: React.ComponentProps<typeof Input>) {
     <Input
       {...props}
       className={cn(
-        'h-11 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400',
-        'transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#895129] focus-visible:ring-offset-0',
+        "h-11 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400",
+        "transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#895129] focus-visible:ring-offset-0",
         props.className,
       )}
     />
-  )
+  );
 }
 
 function LightTextarea(props: React.ComponentProps<typeof Textarea>) {
@@ -191,12 +220,12 @@ function LightTextarea(props: React.ComponentProps<typeof Textarea>) {
     <Textarea
       {...props}
       className={cn(
-        'min-h-24 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400',
-        'transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#895129] focus-visible:ring-offset-0',
+        "min-h-24 rounded-xl border border-gray-200 bg-white text-gray-900 placeholder:text-gray-400",
+        "transition-all duration-200 focus-visible:ring-2 focus-visible:ring-[#895129] focus-visible:ring-offset-0",
         props.className,
       )}
     />
-  )
+  );
 }
 
 function MultiSelect({
@@ -205,12 +234,12 @@ function MultiSelect({
   options,
   placeholder,
 }: {
-  value: string[]
-  onChange: (v: string[]) => void
-  options: string[]
-  placeholder: string
+  value: string[];
+  onChange: (v: string[]) => void;
+  options: string[];
+  placeholder: string;
 }) {
-  const selectedSet = useMemo(() => new Set(value), [value])
+  const selectedSet = useMemo(() => new Set(value), [value]);
   return (
     <div className="grid gap-2">
       <DropdownMenu>
@@ -219,11 +248,16 @@ function MultiSelect({
             type="button"
             variant="outline"
             className={cn(
-              'h-11 w-full justify-between rounded-xl border-gray-200 bg-white text-gray-900 hover:bg-gray-50',
-              'transition-all duration-200',
+              "h-11 w-full justify-between rounded-xl border-gray-200 bg-white text-gray-900 hover:bg-gray-50",
+              "transition-all duration-200",
             )}
           >
-            <span className={cn('truncate text-left', value.length ? 'text-gray-900' : 'text-gray-400')}>
+            <span
+              className={cn(
+                "truncate text-left",
+                value.length ? "text-gray-900" : "text-gray-400",
+              )}
+            >
               {value.length ? `${value.length} selected` : placeholder}
             </span>
             <ChevronsUpDown className="size-4 text-gray-400" />
@@ -231,20 +265,20 @@ function MultiSelect({
         </DropdownMenuTrigger>
         <DropdownMenuContent className="min-w-[18rem] border-gray-200 bg-white text-gray-900">
           {options.map((o) => {
-            const checked = selectedSet.has(o)
+            const checked = selectedSet.has(o);
             return (
               <DropdownMenuCheckboxItem
                 key={o}
                 checked={checked}
                 onCheckedChange={(next) => {
-                  if (next) onChange([...value, o])
-                  else onChange(value.filter((x) => x !== o))
+                  if (next) onChange([...value, o]);
+                  else onChange(value.filter((x) => x !== o));
                 }}
                 className="focus:bg-gray-100"
               >
                 {o}
               </DropdownMenuCheckboxItem>
-            )
+            );
           })}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -252,7 +286,11 @@ function MultiSelect({
       {value.length ? (
         <div className="flex flex-wrap gap-2">
           {value.map((v) => (
-            <Badge key={v} variant="secondary" className="gap-1 border border-gray-200 bg-gray-50 text-gray-700">
+            <Badge
+              key={v}
+              variant="secondary"
+              className="gap-1 border border-gray-200 bg-gray-50 text-gray-700"
+            >
               {v}
               <button
                 type="button"
@@ -267,7 +305,7 @@ function MultiSelect({
         </div>
       ) : null}
     </div>
-  )
+  );
 }
 
 function TagsInput({
@@ -275,30 +313,30 @@ function TagsInput({
   onChange,
   placeholder,
 }: {
-  value: string[]
-  onChange: (v: string[]) => void
-  placeholder?: string
+  value: string[];
+  onChange: (v: string[]) => void;
+  placeholder?: string;
 }) {
-  const [draft, setDraft] = useState('')
+  const [draft, setDraft] = useState("");
 
   function commit(raw: string) {
     const next = raw
       .split(/[,\n]/g)
       .map((s) => s.trim())
-      .filter(Boolean)
-    if (!next.length) return
-    const set = new Set(value)
-    for (const t of next) set.add(t)
-    onChange(Array.from(set))
-    setDraft('')
+      .filter(Boolean);
+    if (!next.length) return;
+    const set = new Set(value);
+    for (const t of next) set.add(t);
+    onChange(Array.from(set));
+    setDraft("");
   }
 
   function onKeyDown(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
-      commit(draft)
-    } else if (e.key === 'Backspace' && !draft && value.length) {
-      onChange(value.slice(0, -1))
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      commit(draft);
+    } else if (e.key === "Backspace" && !draft && value.length) {
+      onChange(value.slice(0, -1));
     }
   }
 
@@ -306,7 +344,11 @@ function TagsInput({
     <div className="grid gap-2">
       <div className="flex min-h-11 flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 transition-all duration-200 focus-within:ring-2 focus-within:ring-[#895129]">
         {value.map((t) => (
-          <Badge key={t} variant="secondary" className="gap-1 border border-gray-200 bg-gray-50 text-gray-700">
+          <Badge
+            key={t}
+            variant="secondary"
+            className="gap-1 border border-gray-200 bg-gray-50 text-gray-700"
+          >
             {t}
             <button
               type="button"
@@ -326,13 +368,15 @@ function TagsInput({
           className="min-w-[12ch] flex-1 bg-transparent text-sm text-gray-900 placeholder:text-gray-400 outline-none"
         />
       </div>
-      <p className="text-xs text-gray-500">Press Enter or comma to add. Backspace removes the last tag.</p>
+      <p className="text-xs text-gray-500">
+        Press Enter or comma to add. Backspace removes the last tag.
+      </p>
     </div>
-  )
+  );
 }
 
 function isEmail(v: string) {
-  return /^\S+@\S+\.\S+$/.test(v)
+  return /^\S+@\S+\.\S+$/.test(v);
 }
 
 function Step2Business({
@@ -340,39 +384,66 @@ function Step2Business({
   setData,
   errors,
 }: {
-  data: OnboardingData
-  setData: (patch: Partial<OnboardingData>) => void
-  errors: Partial<Record<keyof OnboardingData, string>>
+  data: OnboardingData;
+  setData: (patch: Partial<OnboardingData>) => void;
+  errors: Partial<Record<keyof OnboardingData, string>>;
 }) {
   return (
     <div className="grid gap-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Business details</h1>
-        <p className="mt-1 text-sm text-gray-500">Help customers trust you and find you faster.</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Help customers trust you and find you faster.
+        </p>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
         <Field label="Business name">
-          <LightInput value={data.businessName} onChange={(e) => setData({ businessName: e.target.value })} />
-          {errors.businessName ? <p className="text-xs text-red-600">{errors.businessName}</p> : null}
+          <LightInput
+            value={data.businessName}
+            onChange={(e) => setData({ businessName: e.target.value })}
+          />
+          {errors.businessName ? (
+            <p className="text-xs text-red-600">{errors.businessName}</p>
+          ) : null}
         </Field>
         <Field label="Owner name">
-          <LightInput value={data.ownerName} onChange={(e) => setData({ ownerName: e.target.value })} />
-          {errors.ownerName ? <p className="text-xs text-red-600">{errors.ownerName}</p> : null}
+          <LightInput
+            value={data.ownerName}
+            onChange={(e) => setData({ ownerName: e.target.value })}
+          />
+          {errors.ownerName ? (
+            <p className="text-xs text-red-600">{errors.ownerName}</p>
+          ) : null}
         </Field>
         <Field label="Phone">
-          <LightInput value={data.phone} onChange={(e) => setData({ phone: e.target.value })} />
-          {errors.phone ? <p className="text-xs text-red-600">{errors.phone}</p> : null}
+          <LightInput
+            value={data.phone}
+            onChange={(e) => setData({ phone: e.target.value })}
+          />
+          {errors.phone ? (
+            <p className="text-xs text-red-600">{errors.phone}</p>
+          ) : null}
         </Field>
         <Field label="Email">
-          <LightInput value={data.email} onChange={(e) => setData({ email: e.target.value })} />
-          {errors.email ? <p className="text-xs text-red-600">{errors.email}</p> : null}
+          <LightInput
+            value={data.email}
+            onChange={(e) => setData({ email: e.target.value })}
+          />
+          {errors.email ? (
+            <p className="text-xs text-red-600">{errors.email}</p>
+          ) : null}
         </Field>
       </div>
 
       <Field label="Address">
-        <LightInput value={data.address} onChange={(e) => setData({ address: e.target.value })} />
-        {errors.address ? <p className="text-xs text-red-600">{errors.address}</p> : null}
+        <LightInput
+          value={data.address}
+          onChange={(e) => setData({ address: e.target.value })}
+        />
+        {errors.address ? (
+          <p className="text-xs text-red-600">{errors.address}</p>
+        ) : null}
       </Field>
 
       <Field label="Service category (multi-select)">
@@ -382,15 +453,25 @@ function Step2Business({
           options={categoryOptions}
           placeholder="Select one or more categories"
         />
-        {errors.serviceCategories ? <p className="text-xs text-red-600">{errors.serviceCategories}</p> : null}
+        {errors.serviceCategories ? (
+          <p className="text-xs text-red-600">{errors.serviceCategories}</p>
+        ) : null}
       </Field>
 
-      <Field label="Service area" hint="Example: Dhaka + 10km, Gulshan/Banani, or “Remote/Online”">
-        <LightInput value={data.serviceArea} onChange={(e) => setData({ serviceArea: e.target.value })} />
-        {errors.serviceArea ? <p className="text-xs text-red-600">{errors.serviceArea}</p> : null}
+      <Field
+        label="Service area"
+        hint="Example: Dhaka + 10km, Gulshan/Banani, or “Remote/Online”"
+      >
+        <LightInput
+          value={data.serviceArea}
+          onChange={(e) => setData({ serviceArea: e.target.value })}
+        />
+        {errors.serviceArea ? (
+          <p className="text-xs text-red-600">{errors.serviceArea}</p>
+        ) : null}
       </Field>
     </div>
-  )
+  );
 }
 
 function Step3Professional({
@@ -398,20 +479,27 @@ function Step3Professional({
   setData,
   errors,
 }: {
-  data: OnboardingData
-  setData: (patch: Partial<OnboardingData>) => void
-  errors: Partial<Record<keyof OnboardingData, string>>
+  data: OnboardingData;
+  setData: (patch: Partial<OnboardingData>) => void;
+  errors: Partial<Record<keyof OnboardingData, string>>;
 }) {
   return (
     <div className="grid gap-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Professional info</h1>
-        <p className="mt-1 text-sm text-gray-500">Show your expertise with skills, experience, and availability.</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Show your expertise with skills, experience, and availability.
+        </p>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
         <Field label="Experience level">
-          <Select value={data.experienceLevel} onValueChange={(v) => setData({ experienceLevel: v as ExperienceLevel })}>
+          <Select
+            value={data.experienceLevel}
+            onValueChange={(v) =>
+              setData({ experienceLevel: v as ExperienceLevel })
+            }
+          >
             <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-white text-gray-900">
               <SelectValue placeholder="Select experience level" />
             </SelectTrigger>
@@ -421,28 +509,45 @@ function Step3Professional({
               <SelectItem value="expert">Expert</SelectItem>
             </SelectContent>
           </Select>
-          {errors.experienceLevel ? <p className="text-xs text-red-600">{errors.experienceLevel}</p> : null}
+          {errors.experienceLevel ? (
+            <p className="text-xs text-red-600">{errors.experienceLevel}</p>
+          ) : null}
         </Field>
 
         <Field label="Years of experience">
           <LightInput
             inputMode="numeric"
             value={data.yearsExperience}
-            onChange={(e) => setData({ yearsExperience: e.target.value.replace(/[^\d.]/g, '') })}
+            onChange={(e) =>
+              setData({
+                yearsExperience: e.target.value.replace(/[^\d.]/g, ""),
+              })
+            }
             placeholder="e.g. 3"
           />
-          {errors.yearsExperience ? <p className="text-xs text-red-600">{errors.yearsExperience}</p> : null}
+          {errors.yearsExperience ? (
+            <p className="text-xs text-red-600">{errors.yearsExperience}</p>
+          ) : null}
         </Field>
       </div>
 
       <Field label="Skills" hint="Add your top skills (tags).">
-        <TagsInput value={data.skills} onChange={(v) => setData({ skills: v })} placeholder="Type a skill and press Enter…" />
-        {errors.skills ? <p className="text-xs text-red-600">{errors.skills}</p> : null}
+        <TagsInput
+          value={data.skills}
+          onChange={(v) => setData({ skills: v })}
+          placeholder="Type a skill and press Enter…"
+        />
+        {errors.skills ? (
+          <p className="text-xs text-red-600">{errors.skills}</p>
+        ) : null}
       </Field>
 
-      <Field label="Portfolio links" hint="Paste links separated by commas or new lines.">
+      <Field
+        label="Portfolio links"
+        hint="Paste links separated by commas or new lines."
+      >
         <LightTextarea
-          value={data.portfolioLinks.join('\n')}
+          value={data.portfolioLinks.join("\n")}
           onChange={(e) =>
             setData({
               portfolioLinks: e.target.value
@@ -462,11 +567,16 @@ function Step3Professional({
           options={languageOptions}
           placeholder="Select languages"
         />
-        {errors.languages ? <p className="text-xs text-red-600">{errors.languages}</p> : null}
+        {errors.languages ? (
+          <p className="text-xs text-red-600">{errors.languages}</p>
+        ) : null}
       </Field>
 
       <Field label="Availability">
-        <Select value={data.availability} onValueChange={(v) => setData({ availability: v as Availability })}>
+        <Select
+          value={data.availability}
+          onValueChange={(v) => setData({ availability: v as Availability })}
+        >
           <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-white text-gray-900">
             <SelectValue placeholder="Select availability" />
           </SelectTrigger>
@@ -476,10 +586,12 @@ function Step3Professional({
             <SelectItem value="weekends">Weekends</SelectItem>
           </SelectContent>
         </Select>
-        {errors.availability ? <p className="text-xs text-red-600">{errors.availability}</p> : null}
+        {errors.availability ? (
+          <p className="text-xs text-red-600">{errors.availability}</p>
+        ) : null}
       </Field>
     </div>
-  )
+  );
 }
 
 function Step4ServiceSetup({
@@ -489,33 +601,38 @@ function Step4ServiceSetup({
   images,
   setImages,
 }: {
-  data: OnboardingData
-  setData: (patch: Partial<OnboardingData>) => void
-  errors: Partial<Record<keyof OnboardingData, string>>
-  images: File[]
-  setImages: (files: File[]) => void
+  data: OnboardingData;
+  setData: (patch: Partial<OnboardingData>) => void;
+  errors: Partial<Record<keyof OnboardingData, string>>;
+  images: File[];
+  setImages: (files: File[]) => void;
 }) {
-  const [featureDraft, setFeatureDraft] = useState('')
+  const [featureDraft, setFeatureDraft] = useState("");
 
   function addFeature() {
-    const v = featureDraft.trim()
-    if (!v) return
-    setData({ features: [...data.features, v] })
-    setFeatureDraft('')
+    const v = featureDraft.trim();
+    if (!v) return;
+    setData({ features: [...data.features, v] });
+    setFeatureDraft("");
   }
 
   return (
     <div className="grid gap-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Service setup</h1>
-        <p className="mt-1 text-sm text-gray-500">Create a clear service offering with pricing, delivery time, and media.</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Create a clear service offering with pricing, delivery time, and
+          media.
+        </p>
       </div>
 
       {/* Basic */}
       <div className="grid gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
         <div>
           <div className="text-sm font-semibold text-gray-900">Basic</div>
-          <p className="mt-0.5 text-xs text-gray-500">A title and category help customers find the right provider.</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            A title and category help customers find the right provider.
+          </p>
         </div>
 
         <Field label="Service title">
@@ -524,11 +641,16 @@ function Step4ServiceSetup({
             onChange={(e) => setData({ serviceTitle: e.target.value })}
             placeholder="e.g. AC Repair & Maintenance"
           />
-          {errors.serviceTitle ? <p className="text-xs text-red-600">{errors.serviceTitle}</p> : null}
+          {errors.serviceTitle ? (
+            <p className="text-xs text-red-600">{errors.serviceTitle}</p>
+          ) : null}
         </Field>
 
         <Field label="Category">
-          <Select value={data.serviceCategory} onValueChange={(v) => setData({ serviceCategory: v })}>
+          <Select
+            value={data.serviceCategory}
+            onValueChange={(v) => setData({ serviceCategory: v })}
+          >
             <SelectTrigger className="h-11 rounded-xl border-gray-200 bg-white text-gray-900">
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
@@ -540,7 +662,9 @@ function Step4ServiceSetup({
               ))}
             </SelectContent>
           </Select>
-          {errors.serviceCategory ? <p className="text-xs text-red-600">{errors.serviceCategory}</p> : null}
+          {errors.serviceCategory ? (
+            <p className="text-xs text-red-600">{errors.serviceCategory}</p>
+          ) : null}
         </Field>
       </div>
 
@@ -548,7 +672,9 @@ function Step4ServiceSetup({
       <div className="grid gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
         <div>
           <div className="text-sm font-semibold text-gray-900">Pricing</div>
-          <p className="mt-0.5 text-xs text-gray-500">Set a starting price and estimated delivery time.</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Set a starting price and estimated delivery time.
+          </p>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2">
@@ -556,19 +682,27 @@ function Step4ServiceSetup({
             <LightInput
               inputMode="numeric"
               value={data.price}
-              onChange={(e) => setData({ price: e.target.value.replace(/[^\d.]/g, '') })}
+              onChange={(e) =>
+                setData({ price: e.target.value.replace(/[^\d.]/g, "") })
+              }
               placeholder="e.g. 1500"
             />
-            {errors.price ? <p className="text-xs text-red-600">{errors.price}</p> : null}
+            {errors.price ? (
+              <p className="text-xs text-red-600">{errors.price}</p>
+            ) : null}
           </Field>
           <Field label="Delivery time (days)">
             <LightInput
               inputMode="numeric"
               value={data.deliveryTime}
-              onChange={(e) => setData({ deliveryTime: e.target.value.replace(/[^\d]/g, '') })}
+              onChange={(e) =>
+                setData({ deliveryTime: e.target.value.replace(/[^\d]/g, "") })
+              }
               placeholder="e.g. 2"
             />
-            {errors.deliveryTime ? <p className="text-xs text-red-600">{errors.deliveryTime}</p> : null}
+            {errors.deliveryTime ? (
+              <p className="text-xs text-red-600">{errors.deliveryTime}</p>
+            ) : null}
           </Field>
         </div>
       </div>
@@ -577,7 +711,9 @@ function Step4ServiceSetup({
       <div className="grid gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
         <div>
           <div className="text-sm font-semibold text-gray-900">Description</div>
-          <p className="mt-0.5 text-xs text-gray-500">Explain what’s included. Add feature bullets for clarity.</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Explain what’s included. Add feature bullets for clarity.
+          </p>
         </div>
 
         <Field label="Description">
@@ -586,7 +722,9 @@ function Step4ServiceSetup({
             onChange={(e) => setData({ description: e.target.value })}
             placeholder="Describe your service, what’s included, and what customers should expect…"
           />
-          {errors.description ? <p className="text-xs text-red-600">{errors.description}</p> : null}
+          {errors.description ? (
+            <p className="text-xs text-red-600">{errors.description}</p>
+          ) : null}
         </Field>
 
         <Field label="Features">
@@ -597,9 +735,9 @@ function Step4ServiceSetup({
                 onChange={(e) => setFeatureDraft(e.target.value)}
                 placeholder="e.g. Free inspection"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    addFeature()
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addFeature();
                   }
                 }}
               />
@@ -616,13 +754,20 @@ function Step4ServiceSetup({
             {data.features.length ? (
               <ul className="grid gap-2">
                 {data.features.map((f, idx) => (
-                  <li key={`${f}-${idx}`} className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2">
+                  <li
+                    key={`${f}-${idx}`}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2"
+                  >
                     <span className="text-sm text-gray-800">{f}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       className="h-8 px-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900"
-                      onClick={() => setData({ features: data.features.filter((_, i) => i !== idx) })}
+                      onClick={() =>
+                        setData({
+                          features: data.features.filter((_, i) => i !== idx),
+                        })
+                      }
                     >
                       Remove
                     </Button>
@@ -630,7 +775,9 @@ function Step4ServiceSetup({
                 ))}
               </ul>
             ) : (
-              <p className="text-xs text-gray-500">Add a few bullet points to make your offer easy to scan.</p>
+              <p className="text-xs text-gray-500">
+                Add a few bullet points to make your offer easy to scan.
+              </p>
             )}
           </div>
         </Field>
@@ -640,7 +787,9 @@ function Step4ServiceSetup({
       <div className="grid gap-4 rounded-2xl border border-gray-200 bg-gray-50 p-5">
         <div>
           <div className="text-sm font-semibold text-gray-900">Media</div>
-          <p className="mt-0.5 text-xs text-gray-500">Upload a few images to increase conversions.</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Upload a few images to increase conversions.
+          </p>
         </div>
 
         <Field label="Upload images">
@@ -651,22 +800,28 @@ function Step4ServiceSetup({
               multiple
               className="block w-full text-sm text-gray-700 file:mr-4 file:rounded-xl file:border-0 file:bg-[#895129] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-[#6f3f1f]"
               onChange={(e) => {
-                const files = Array.from(e.target.files ?? [])
-                if (!files.length) return
-                setImages([...images, ...files])
-                e.currentTarget.value = ''
+                const files = Array.from(e.target.files ?? []);
+                if (!files.length) return;
+                setImages([...images, ...files]);
+                e.currentTarget.value = "";
               }}
             />
 
             {images.length ? (
               <div className="flex flex-wrap gap-2">
                 {images.map((f, idx) => (
-                  <Badge key={`${f.name}-${idx}`} variant="secondary" className="gap-1 border border-gray-200 bg-white text-gray-700">
+                  <Badge
+                    key={`${f.name}-${idx}`}
+                    variant="secondary"
+                    className="gap-1 border border-gray-200 bg-white text-gray-700"
+                  >
                     {f.name}
                     <button
                       type="button"
                       className="rounded-sm p-0.5 text-gray-400 hover:text-gray-700"
-                      onClick={() => setImages(images.filter((_, i) => i !== idx))}
+                      onClick={() =>
+                        setImages(images.filter((_, i) => i !== idx))
+                      }
                       aria-label={`Remove ${f.name}`}
                     >
                       <X className="size-3" />
@@ -675,13 +830,15 @@ function Step4ServiceSetup({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-gray-500">PNG/JPG recommended. You can add multiple images.</p>
+              <p className="text-xs text-gray-500">
+                PNG/JPG recommended. You can add multiple images.
+              </p>
             )}
           </div>
         </Field>
       </div>
     </div>
-  )
+  );
 }
 
 function StripeIcon(props: { className?: string }) {
@@ -692,21 +849,23 @@ function StripeIcon(props: { className?: string }) {
         d="M10.18 9.2c0-.61.5-.85 1.32-.85 1.17 0 2.65.36 3.82.99V5.76c-1.29-.51-2.56-.71-3.82-.71-3.13 0-5.21 1.64-5.21 4.39 0 4.28 5.9 3.6 5.9 5.44 0 .73-.63 1.0-1.52 1.0-1.3 0-2.97-.53-4.29-1.24v3.62c1.46.63 2.93.89 4.29.89 3.2 0 5.4-1.58 5.4-4.37 0-4.62-5.89-3.79-5.89-5.58Z"
       />
     </svg>
-  )
+  );
 }
 
 function Step5StripePayment({
   onConnect,
   onSkip,
 }: {
-  onConnect: () => void
-  onSkip: () => void
+  onConnect: () => void;
+  onSkip: () => void;
 }) {
   return (
     <div className="grid gap-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Payment</h1>
-        <p className="mt-1 text-sm text-gray-500">Connect Stripe to receive payouts securely.</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Connect Stripe to receive payouts securely.
+        </p>
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-white p-6">
@@ -715,9 +874,12 @@ function Step5StripePayment({
             <StripeIcon className="size-6" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-base font-semibold text-gray-900">Connect with Stripe</div>
+            <div className="text-base font-semibold text-gray-900">
+              Connect with Stripe
+            </div>
             <p className="mt-1 text-sm text-gray-500">
-              Link your Stripe account to start receiving payments. You can finish setup now or skip and connect later.
+              Link your Stripe account to start receiving payments. You can
+              finish setup now or skip and connect later.
             </p>
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
               <Button
@@ -739,83 +901,104 @@ function Step5StripePayment({
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export function ServiceOnboardingPage() {
-  const navigate = useNavigate()
-  const location = useLocation() as { state?: { email?: string; phone?: string; name?: string } | null }
+  const navigate = useNavigate();
+  const location = useLocation() as {
+    state?: { email?: string; phone?: string; name?: string } | null;
+  };
 
-  const [step, setStep] = useState<StepId>(2)
-  const [images, setImages] = useState<File[]>([])
+  const [step, setStep] = useState<StepId>(2);
+  const [images, setImages] = useState<File[]>([]);
   const [data, setDataState] = useState<OnboardingData>(() => {
-    const stored = readStored()
-    const seed = (location.state ?? {}) as { email?: string; phone?: string; name?: string }
+    const stored = readStored();
+    const seed = (location.state ?? {}) as {
+      email?: string;
+      phone?: string;
+      name?: string;
+    };
     return {
       ...defaultData,
       ...stored,
       email: stored?.email ?? seed.email ?? defaultData.email,
       phone: stored?.phone ?? seed.phone ?? defaultData.phone,
       ownerName: stored?.ownerName ?? seed.name ?? defaultData.ownerName,
-    }
-  })
-  const [errors, setErrors] = useState<Partial<Record<keyof OnboardingData, string>>>({})
+    };
+  });
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof OnboardingData, string>>
+  >({});
 
   useEffect(() => {
-    store(data)
-  }, [data])
+    store(data);
+  }, [data]);
 
   function setData(patch: Partial<OnboardingData>) {
-    setDataState((prev) => ({ ...prev, ...patch }))
+    setDataState((prev) => ({ ...prev, ...patch }));
   }
 
   function validateCurrent(): boolean {
-    const e: Partial<Record<keyof OnboardingData, string>> = {}
+    const e: Partial<Record<keyof OnboardingData, string>> = {};
     if (step === 2) {
-      if (!data.businessName.trim()) e.businessName = 'Business name is required'
-      if (!data.ownerName.trim()) e.ownerName = 'Owner name is required'
-      if (!data.phone.trim()) e.phone = 'Phone is required'
-      if (!data.email.trim()) e.email = 'Email is required'
-      else if (!isEmail(data.email.trim())) e.email = 'Enter a valid email'
-      if (!data.address.trim()) e.address = 'Address is required'
-      if (!data.serviceCategories.length) e.serviceCategories = 'Select at least one category'
-      if (!data.serviceArea.trim()) e.serviceArea = 'Service area is required'
+      if (!data.businessName.trim())
+        e.businessName = "Business name is required";
+      if (!data.ownerName.trim()) e.ownerName = "Owner name is required";
+      if (!data.phone.trim()) e.phone = "Phone is required";
+      if (!data.email.trim()) e.email = "Email is required";
+      else if (!isEmail(data.email.trim())) e.email = "Enter a valid email";
+      if (!data.address.trim()) e.address = "Address is required";
+      if (!data.serviceCategories.length)
+        e.serviceCategories = "Select at least one category";
+      if (!data.serviceArea.trim()) e.serviceArea = "Service area is required";
     }
     if (step === 3) {
-      if (!data.experienceLevel) e.experienceLevel = 'Select experience level'
-      if (!data.yearsExperience.trim()) e.yearsExperience = 'Years of experience is required'
-      if (!data.skills.length) e.skills = 'Add at least one skill'
-      if (!data.languages.length) e.languages = 'Select at least one language'
-      if (!data.availability) e.availability = 'Select availability'
+      if (!data.experienceLevel) e.experienceLevel = "Select experience level";
+      if (!data.yearsExperience.trim())
+        e.yearsExperience = "Years of experience is required";
+      if (!data.skills.length) e.skills = "Add at least one skill";
+      if (!data.languages.length) e.languages = "Select at least one language";
+      if (!data.availability) e.availability = "Select availability";
     }
     if (step === 4) {
-      if (!data.serviceTitle.trim()) e.serviceTitle = 'Service title is required'
-      if (!data.serviceCategory.trim()) e.serviceCategory = 'Select a category'
-      if (!data.price.trim() || Number.isNaN(Number(data.price)) || Number(data.price) <= 0) e.price = 'Enter a valid price'
-      if (!data.deliveryTime.trim() || Number.isNaN(Number(data.deliveryTime)) || Number(data.deliveryTime) <= 0)
-        e.deliveryTime = 'Enter a valid delivery time'
-      if (!data.description.trim()) e.description = 'Description is required'
+      if (!data.serviceTitle.trim())
+        e.serviceTitle = "Service title is required";
+      if (!data.serviceCategory.trim()) e.serviceCategory = "Select a category";
+      if (
+        !data.price.trim() ||
+        Number.isNaN(Number(data.price)) ||
+        Number(data.price) <= 0
+      )
+        e.price = "Enter a valid price";
+      if (
+        !data.deliveryTime.trim() ||
+        Number.isNaN(Number(data.deliveryTime)) ||
+        Number(data.deliveryTime) <= 0
+      )
+        e.deliveryTime = "Enter a valid delivery time";
+      if (!data.description.trim()) e.description = "Description is required";
     }
-    setErrors(e)
-    return Object.keys(e).length === 0
+    setErrors(e);
+    return Object.keys(e).length === 0;
   }
 
   function next() {
-    if (!validateCurrent()) return
-    setErrors({})
-    if (step === 6) return
-    setStep((s) => (s === 2 ? 3 : s === 3 ? 4 : s === 4 ? 5 : 6))
+    if (!validateCurrent()) return;
+    setErrors({});
+    if (step === 6) return;
+    setStep((s) => (s === 2 ? 3 : s === 3 ? 4 : s === 4 ? 5 : 6));
   }
 
   function back() {
-    setErrors({})
-    setStep((s) => (s === 6 ? 5 : s === 5 ? 4 : s === 4 ? 3 : 2))
+    setErrors({});
+    setStep((s) => (s === 6 ? 5 : s === 5 ? 4 : s === 4 ? 3 : 2));
   }
 
   function finish() {
-    toast.success('Onboarding complete')
-    localStorage.removeItem(STORAGE_KEY)
-    void navigate('/vendor/dashboard', { replace: true })
+    toast.success("Onboarding complete");
+    localStorage.removeItem(STORAGE_KEY);
+    void navigate("/vendor/dashboard", { replace: true });
   }
 
   return (
@@ -833,8 +1016,13 @@ export function ServiceOnboardingPage() {
       <div className="relative flex min-h-svh items-center justify-center px-4 py-10 sm:px-6">
         <div className="w-full max-w-2xl">
           <div className="mb-4 flex items-center justify-between">
-            <div className="text-sm font-semibold text-gray-900">Service Provider Onboarding</div>
-            <Link to="/vendor/dashboard" className="text-sm font-medium text-gray-500 hover:text-gray-900">
+            <div className="text-sm font-semibold text-gray-900">
+              Service Provider Onboarding
+            </div>
+            <Link
+              to="/vendor/dashboard"
+              className="text-sm font-medium text-gray-500 hover:text-gray-900"
+            >
               Skip for now
             </Link>
           </div>
@@ -842,8 +1030,16 @@ export function ServiceOnboardingPage() {
           <OnboardingCard>
             <StepIndicator current={step} />
 
-            {step === 2 ? <Step2Business data={data} setData={setData} errors={errors} /> : null}
-            {step === 3 ? <Step3Professional data={data} setData={setData} errors={errors} /> : null}
+            {step === 2 ? (
+              <Step2Business data={data} setData={setData} errors={errors} />
+            ) : null}
+            {step === 3 ? (
+              <Step3Professional
+                data={data}
+                setData={setData}
+                errors={errors}
+              />
+            ) : null}
             {step === 4 ? (
               <Step4ServiceSetup
                 data={data}
@@ -856,16 +1052,23 @@ export function ServiceOnboardingPage() {
             {step === 5 ? (
               <Step5StripePayment
                 onConnect={() => {
-                  toast.message('Stripe connect UI placeholder', { description: 'Wire this to your Stripe Connect flow next.' })
-                  setStep(6)
+                  toast.message("Stripe connect UI placeholder", {
+                    description: "Wire this to your Stripe Connect flow next.",
+                  });
+                  setStep(6);
                 }}
                 onSkip={() => setStep(6)}
               />
             ) : null}
             {step === 6 ? (
               <div className="grid gap-3 text-center">
-                <h1 className="text-2xl font-bold text-gray-900">You’re all set</h1>
-                <p className="text-sm text-gray-500">Your service provider profile is ready. You can edit everything later.</p>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  You’re all set
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Your service provider profile is ready. You can edit
+                  everything later.
+                </p>
                 <div className="mt-4">
                   <Button
                     type="button"
@@ -904,6 +1107,5 @@ export function ServiceOnboardingPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-

@@ -13,7 +13,7 @@ import type {
   ProductOrder,
   RevenueChartPoint,
   ServiceOrder,
-} from '@/shared/types/api'
+} from '@/types/api'
 import { DASHBOARD_STATIC_DEMO } from './static-demo'
 import type { UserRole } from '@/features/auth/types/authTypes'
 

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
-import { useCreateDeliveryRequestMutation } from '@/features/delivery'
-import { useGetProfileQuery } from '@/features/auth'
-import { useUpdateProductOrderStatusMutation } from '@/features/orders'
-import type { ProductOrder } from '@/shared/types/api'
-import { Button } from '@/shared/ui/button'
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { useCreateDeliveryRequestMutation } from "@/features/delivery";
+import { useGetProfileQuery } from "@/features/auth";
+import { useUpdateProductOrderStatusMutation } from "@/features/orders";
+import type { ProductOrder } from "@/types/api";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -13,40 +13,41 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/shared/ui/dialog'
-import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
-import { Textarea } from '@/shared/ui/textarea'
-import { Truck } from 'lucide-react'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Truck } from "lucide-react";
 
 type Props = {
-  order: ProductOrder
-  onSent?: () => void
-  disabled?: boolean
-}
+  order: ProductOrder;
+  onSent?: () => void;
+  disabled?: boolean;
+};
 
 export function RequestDeliveryButton({ order, onSent, disabled }: Props) {
-  const { data: profile } = useGetProfileQuery()
-  const [open, setOpen] = useState(false)
-  const [pickup, setPickup] = useState('')
-  const [drop, setDrop] = useState('')
-  const [createReq, { isLoading }] = useCreateDeliveryRequestMutation()
-  const [updateOrder] = useUpdateProductOrderStatusMutation()
+  const { data: profile } = useGetProfileQuery();
+  const [open, setOpen] = useState(false);
+  const [pickup, setPickup] = useState("");
+  const [drop, setDrop] = useState("");
+  const [createReq, { isLoading }] = useCreateDeliveryRequestMutation();
+  const [updateOrder] = useUpdateProductOrderStatusMutation();
 
-  const vendorId = profile?.id ?? localStorage.getItem('vendor_id') ?? 'demo-vendor'
+  const vendorId =
+    profile?.id ?? localStorage.getItem("vendor_id") ?? "demo-vendor";
 
   useEffect(() => {
     if (open) {
-      setDrop('')
+      setDrop("");
     }
-  }, [open, order.id])
+  }, [open, order.id]);
 
-  const canRequest = order.status === 'ready' || order.status === 'confirmed'
+  const canRequest = order.status === "ready" || order.status === "confirmed";
 
   async function handleSend() {
     if (!pickup.trim() || !drop.trim()) {
-      toast.error('Add pickup and drop locations.')
-      return
+      toast.error("Add pickup and drop locations.");
+      return;
     }
     try {
       await createReq({
@@ -54,19 +55,22 @@ export function RequestDeliveryButton({ order, onSent, disabled }: Props) {
         pickup_location: pickup.trim(),
         drop_location: drop.trim(),
         vendor_id: vendorId,
-      }).unwrap()
+      }).unwrap();
       try {
-        await updateOrder({ id: order.id, status: 'delivery_requested' }).unwrap()
+        await updateOrder({
+          id: order.id,
+          status: "delivery_requested",
+        }).unwrap();
       } catch {
         // Backend may already set status when creating delivery; ignore secondary failure
       }
-      toast.success('Delivery request sent to drivers')
-      setOpen(false)
-      setPickup('')
-      setDrop('')
-      onSent?.()
+      toast.success("Delivery request sent to drivers");
+      setOpen(false);
+      setPickup("");
+      setDrop("");
+      onSent?.();
     } catch {
-      toast.error('Failed to create delivery request')
+      toast.error("Failed to create delivery request");
     }
   }
 
@@ -98,22 +102,38 @@ export function RequestDeliveryButton({ order, onSent, disabled }: Props) {
           </div>
           <div className="grid gap-2">
             <Label htmlFor="pickup">Pickup location</Label>
-            <Textarea id="pickup" value={pickup} onChange={(e) => setPickup(e.target.value)} rows={2} required />
+            <Textarea
+              id="pickup"
+              value={pickup}
+              onChange={(e) => setPickup(e.target.value)}
+              rows={2}
+              required
+            />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="drop">Drop location</Label>
-            <Textarea id="drop" value={drop} onChange={(e) => setDrop(e.target.value)} rows={2} required />
+            <Textarea
+              id="drop"
+              value={drop}
+              onChange={(e) => setDrop(e.target.value)}
+              rows={2}
+              required
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setOpen(false)}
+          >
             Cancel
           </Button>
           <Button type="button" onClick={handleSend} disabled={isLoading}>
-            {isLoading ? 'Sending…' : 'Send request'}
+            {isLoading ? "Sending…" : "Send request"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

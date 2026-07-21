@@ -1,65 +1,97 @@
-import { useMemo } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-import { cn } from '@/shared/utils/utils'
-import { SERVICE_BOOKINGS_DEMO, SERVICE_DEMO } from '@/features/services'
+import { useMemo } from "react";
+import { Link, Navigate, useParams } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { cn } from "@/utils/utils";
+import { SERVICE_BOOKINGS_DEMO, SERVICE_DEMO } from "@/features/services";
 
 const fmtUsd = (n: number) =>
-  new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n)
+  new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(n);
 
-function StatusBadge({ status }: { status: 'Active' | 'Draft' | 'Disabled' }) {
+function StatusBadge({ status }: { status: "Active" | "Draft" | "Disabled" }) {
   const cls =
-    status === 'Active'
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-      : status === 'Draft'
-        ? 'border-zinc-200 bg-zinc-50 text-zinc-700'
-        : 'border-red-200 bg-red-50 text-red-700'
+    status === "Active"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+      : status === "Draft"
+        ? "border-zinc-200 bg-zinc-50 text-zinc-700"
+        : "border-red-200 bg-red-50 text-red-700";
   return (
     <Badge variant="outline" className={cn(cls)}>
       {status}
     </Badge>
-  )
+  );
 }
 
 export function ServiceDetailsPage() {
-  const { id } = useParams()
-  const serviceId = Number(id)
-  const service = useMemo(() => SERVICE_DEMO.find((s) => s.id === serviceId) ?? null, [serviceId])
+  const { id } = useParams();
+  const serviceId = Number(id);
+  const service = useMemo(
+    () => SERVICE_DEMO.find((s) => s.id === serviceId) ?? null,
+    [serviceId],
+  );
 
-  const derivedStatus: 'Active' | 'Draft' | 'Disabled' = service ? (service.isActive ? service.status : 'Disabled') : 'Draft'
+  const derivedStatus: "Active" | "Draft" | "Disabled" = service
+    ? service.isActive
+      ? service.status
+      : "Disabled"
+    : "Draft";
   const bookings = useMemo(
     () => SERVICE_BOOKINGS_DEMO.filter((b) => b.serviceId === serviceId),
     [serviceId],
-  )
+  );
 
   if (!id || Number.isNaN(serviceId)) {
-    return <Navigate to="/service/services" replace />
+    return <Navigate to="/service/services" replace />;
   }
   if (!service) {
     return (
       <div className="w-full space-y-6">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <h1 className="text-2xl font-semibold tracking-tight">Service details</h1>
-            <p className="text-muted-foreground text-sm">Service not found in demo data.</p>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              Service details
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Service not found in demo data.
+            </p>
           </div>
           <Button asChild variant="outline">
             <Link to="/service/services">Back to services</Link>
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="w-full space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{service.title}</h1>
-          <p className="text-muted-foreground text-sm">Service performance and bookings overview.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {service.title}
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Service performance and bookings overview.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="outline">
@@ -81,7 +113,10 @@ export function ServiceDetailsPage() {
             <div>
               <div className="text-muted-foreground">Price</div>
               <div className="font-semibold tabular-nums">
-                {fmtUsd(service.price)} <span className="text-muted-foreground font-medium">/ {service.type}</span>
+                {fmtUsd(service.price)}{" "}
+                <span className="text-muted-foreground font-medium">
+                  / {service.type}
+                </span>
               </div>
             </div>
             <div>
@@ -104,12 +139,20 @@ export function ServiceDetailsPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div>
-              <div className="text-muted-foreground text-sm">Total earnings</div>
-              <div className="text-2xl font-semibold tabular-nums">{fmtUsd(service.earnings)}</div>
+              <div className="text-muted-foreground text-sm">
+                Total earnings
+              </div>
+              <div className="text-2xl font-semibold tabular-nums">
+                {fmtUsd(service.earnings)}
+              </div>
             </div>
             <div>
-              <div className="text-muted-foreground text-sm">Total bookings</div>
-              <div className="text-2xl font-semibold tabular-nums">{service.totalBookings}</div>
+              <div className="text-muted-foreground text-sm">
+                Total bookings
+              </div>
+              <div className="text-2xl font-semibold tabular-nums">
+                {service.totalBookings}
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -134,19 +177,31 @@ export function ServiceDetailsPage() {
               {bookings.length ? (
                 bookings.map((b) => (
                   <TableRow key={b.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium">{b.customerName}</TableCell>
-                    <TableCell className="text-muted-foreground">{b.date}</TableCell>
+                    <TableCell className="font-medium">
+                      {b.customerName}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {b.date}
+                    </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="border-border/60 bg-muted/20">
+                      <Badge
+                        variant="outline"
+                        className="border-border/60 bg-muted/20"
+                      >
                         {b.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">{fmtUsd(b.amount)}</TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {fmtUsd(b.amount)}
+                    </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-muted-foreground py-10 text-center text-sm">
+                  <TableCell
+                    colSpan={4}
+                    className="text-muted-foreground py-10 text-center text-sm"
+                  >
                     No bookings yet.
                   </TableCell>
                 </TableRow>
@@ -156,6 +211,5 @@ export function ServiceDetailsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

@@ -1,4 +1,4 @@
-import type { DashboardOverview } from '@/shared/types/api'
+import type { DashboardOverview } from '@/types/api'
 
 /**
  * Static sample data for local development and API fallbacks.

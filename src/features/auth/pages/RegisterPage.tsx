@@ -1,57 +1,57 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
-import { useRegisterMutation } from '@/features/auth'
-import { AuthCard } from '../components/AuthCard'
-import { AuthHeader } from '../components/AuthHeader'
-import { InputField } from '../components/InputField'
-import { PasswordInput } from '../components/PasswordInput'
-import { RoleSelector } from '../components/RoleSelector'
-import { SubmitButton } from '../components/SubmitButton'
-import type { UserRole } from '@/features/auth'
-import { isValidEmail, PASSWORD_MIN } from '@/shared/utils/auth-validation'
-import { fetchErrorMessage } from '@/shared/utils/fetch-error'
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useRegisterMutation } from "@/features/auth";
+import { AuthCard } from "../components/AuthCard";
+import { AuthHeader } from "../components/AuthHeader";
+import { InputField } from "../components/InputField";
+import { PasswordInput } from "../components/PasswordInput";
+import { RoleSelector } from "../components/RoleSelector";
+import { SubmitButton } from "../components/SubmitButton";
+import type { UserRole } from "@/features/auth";
+import { isValidEmail, PASSWORD_MIN } from "@/utils/auth-validation";
+import { fetchErrorMessage } from "@/utils/fetch-error";
 
 export function RegisterPage() {
-  const navigate = useNavigate()
-  const [register, { isLoading }] = useRegisterMutation()
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [role, setRole] = useState<UserRole>('vendor')
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  const navigate = useNavigate();
+  const [register, { isLoading }] = useRegisterMutation();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [role, setRole] = useState<UserRole>("vendor");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   function validate() {
-    const e2: Record<string, string> = {}
+    const e2: Record<string, string> = {};
     if (!name.trim()) {
-      e2.name = 'Name is required'
+      e2.name = "Name is required";
     }
     if (!email) {
-      e2.email = 'Email is required'
+      e2.email = "Email is required";
     } else if (!isValidEmail(email)) {
-      e2.email = 'Enter a valid email'
+      e2.email = "Enter a valid email";
     }
     if (!phone.trim()) {
-      e2.phone = 'Phone is required'
+      e2.phone = "Phone is required";
     }
     if (!password) {
-      e2.password = 'Password is required'
+      e2.password = "Password is required";
     } else if (password.length < PASSWORD_MIN) {
-      e2.password = `At least ${PASSWORD_MIN} characters`
+      e2.password = `At least ${PASSWORD_MIN} characters`;
     }
     if (password !== confirm) {
-      e2.confirm = 'Passwords do not match'
+      e2.confirm = "Passwords do not match";
     }
-    setErrors(e2)
-    return Object.keys(e2).length === 0
+    setErrors(e2);
+    return Object.keys(e2).length === 0;
   }
 
   async function onSubmit(ev: React.FormEvent) {
-    ev.preventDefault()
+    ev.preventDefault();
     if (!validate()) {
-      return
+      return;
     }
     try {
       await register({
@@ -60,22 +60,31 @@ export function RegisterPage() {
         phone: phone.trim(),
         password,
         role,
-      }).unwrap()
-      if (role === 'service') {
-        toast.success('Account created. Let’s set up your service profile.')
-        void navigate('/onboarding/service', { replace: true, state: { email: email.trim().toLowerCase(), phone, name } })
+      }).unwrap();
+      if (role === "service") {
+        toast.success("Account created. Let’s set up your service profile.");
+        void navigate("/onboarding/service", {
+          replace: true,
+          state: { email: email.trim().toLowerCase(), phone, name },
+        });
       } else {
-        toast.success('Account created. Let’s set up your vendor profile.')
-        void navigate('/onboarding/vendor', { replace: true, state: { email: email.trim().toLowerCase(), phone, name } })
+        toast.success("Account created. Let’s set up your vendor profile.");
+        void navigate("/onboarding/vendor", {
+          replace: true,
+          state: { email: email.trim().toLowerCase(), phone, name },
+        });
       }
     } catch (err) {
-      toast.error(fetchErrorMessage(err) ?? 'Registration failed')
+      toast.error(fetchErrorMessage(err) ?? "Registration failed");
     }
   }
 
   return (
     <AuthCard>
-      <AuthHeader title="Create account" subtitle="Choose a role and complete your profile" />
+      <AuthHeader
+        title="Create account"
+        subtitle="Choose a role and complete your profile"
+      />
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
         <div>
           <p className="mb-2 text-sm font-medium text-zinc-800">I am a</p>
@@ -128,12 +137,15 @@ export function RegisterPage() {
         />
         <SubmitButton loading={isLoading}>Create account</SubmitButton>
         <p className="text-center text-sm text-zinc-600">
-          Already have an account?{' '}
-          <Link to="/auth/login" className="font-semibold text-[#895129] transition-colors hover:text-[#6f3f1f]">
+          Already have an account?{" "}
+          <Link
+            to="/auth/login"
+            className="font-semibold text-[#895129] transition-colors hover:text-[#6f3f1f]"
+          >
             Sign in
           </Link>
         </p>
       </form>
     </AuthCard>
-  )
+  );
 }

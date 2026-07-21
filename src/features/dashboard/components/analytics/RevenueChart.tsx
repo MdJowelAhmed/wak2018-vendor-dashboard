@@ -1,10 +1,25 @@
-import { useMemo, useState } from 'react'
-import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Button } from '@/shared/ui/button'
-import { Skeleton } from '@/shared/ui/skeleton'
-import type { AnalyticsRangeKey, AnalyticsRevenuePoint } from '@/shared/types/api'
-import { cn } from '@/shared/utils/utils'
+import { useMemo, useState } from "react";
+import {
+  CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { AnalyticsRangeKey, AnalyticsRevenuePoint } from "@/types/api";
+import { cn } from "@/utils/utils";
 
 export function RevenueChart({
   points,
@@ -13,21 +28,21 @@ export function RevenueChart({
   onChangeRange,
   className,
 }: {
-  points: AnalyticsRevenuePoint[] | undefined
-  isLoading?: boolean
-  range: AnalyticsRangeKey
-  onChangeRange: (r: AnalyticsRangeKey) => void
-  className?: string
+  points: AnalyticsRevenuePoint[] | undefined;
+  isLoading?: boolean;
+  range: AnalyticsRangeKey;
+  onChangeRange: (r: AnalyticsRangeKey) => void;
+  className?: string;
 }) {
-  const data = useMemo(() => points ?? [], [points])
-  const has = data.length > 0
+  const data = useMemo(() => points ?? [], [points]);
+  const has = data.length > 0;
 
-  const [hovered, setHovered] = useState<AnalyticsRevenuePoint | null>(null)
+  const [hovered, setHovered] = useState<AnalyticsRevenuePoint | null>(null);
 
   return (
     <Card
       className={cn(
-        'group relative overflow-hidden rounded-xl border-border/60 bg-gradient-to-br from-card to-muted/20 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md',
+        "group relative overflow-hidden rounded-xl border-border/60 bg-gradient-to-br from-card to-muted/20 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md",
         className,
       )}
     >
@@ -40,16 +55,16 @@ export function RevenueChart({
           <CardDescription>Revenue and orders/jobs over time.</CardDescription>
         </div>
         <div className="inline-flex rounded-xl bg-muted/60 p-1 ring-1 ring-border/60 backdrop-blur supports-[backdrop-filter]:bg-muted/50">
-          {(['7d', '30d', '90d'] as const).map((r) => (
+          {(["7d", "30d", "90d"] as const).map((r) => (
             <Button
               key={r}
               type="button"
-              variant={range === r ? 'default' : 'ghost'}
+              variant={range === r ? "default" : "ghost"}
               size="sm"
               className="h-8 px-3 rounded-lg"
               onClick={() => onChangeRange(r)}
             >
-              {r === '7d' ? '7 Days' : r === '30d' ? '30 Days' : '90 Days'}
+              {r === "7d" ? "7 Days" : r === "30d" ? "30 Days" : "90 Days"}
             </Button>
           ))}
         </div>
@@ -64,30 +79,49 @@ export function RevenueChart({
                 data={data}
                 margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
                 onMouseMove={(s) => {
-                  const p = (s as any)?.activePayload?.[0]?.payload as AnalyticsRevenuePoint | undefined
-                  if (p) setHovered(p)
+                  const p = (s as any)?.activePayload?.[0]?.payload as
+                    | AnalyticsRevenuePoint
+                    | undefined;
+                  if (p) setHovered(p);
                 }}
                 onMouseLeave={() => setHovered(null)}
               >
-                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  className="stroke-border"
+                />
                 <XAxis dataKey="label" tickLine={false} className="text-xs" />
-                <YAxis yAxisId="left" tickLine={false} className="text-xs" width={56} />
-                <YAxis yAxisId="right" orientation="right" tickLine={false} className="text-xs" width={40} />
+                <YAxis
+                  yAxisId="left"
+                  tickLine={false}
+                  className="text-xs"
+                  width={56}
+                />
+                <YAxis
+                  yAxisId="right"
+                  orientation="right"
+                  tickLine={false}
+                  className="text-xs"
+                  width={40}
+                />
                 <Tooltip
                   contentStyle={{
                     borderRadius: 8,
-                    border: '1px solid hsl(var(--border))',
-                    background: 'hsl(var(--background))',
+                    border: "1px solid hsl(var(--border))",
+                    background: "hsl(var(--background))",
                   }}
                   formatter={(v: any, name: any) => {
-                    const n = String(name ?? '')
-                    if (n === 'Revenue') {
+                    const n = String(name ?? "");
+                    if (n === "Revenue") {
                       return [
-                        new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(Number(v ?? 0)),
+                        new Intl.NumberFormat(undefined, {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(Number(v ?? 0)),
                         n,
-                      ]
+                      ];
                     }
-                    return [v, n]
+                    return [v, n];
                   }}
                 />
                 <Legend />
@@ -115,20 +149,28 @@ export function RevenueChart({
             </ResponsiveContainer>
           </div>
         ) : (
-          <p className="text-muted-foreground py-12 text-center text-sm">No chart data available.</p>
+          <p className="text-muted-foreground py-12 text-center text-sm">
+            No chart data available.
+          </p>
         )}
 
         {hovered ? (
           <div className="text-muted-foreground mt-3 text-xs">
-            {hovered.label} ·{' '}
+            {hovered.label} ·{" "}
             <span className="text-foreground font-medium">
-              {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(hovered.revenue)}
-            </span>{' '}
-            revenue · <span className="text-foreground font-medium">{hovered.ordersJobs}</span> orders/jobs
+              {new Intl.NumberFormat(undefined, {
+                style: "currency",
+                currency: "USD",
+              }).format(hovered.revenue)}
+            </span>{" "}
+            revenue ·{" "}
+            <span className="text-foreground font-medium">
+              {hovered.ordersJobs}
+            </span>{" "}
+            orders/jobs
           </div>
         ) : null}
       </CardContent>
     </Card>
-  )
+  );
 }
-

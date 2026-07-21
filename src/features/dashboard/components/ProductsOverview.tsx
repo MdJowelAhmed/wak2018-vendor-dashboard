@@ -1,81 +1,147 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card'
-import { Skeleton } from '@/shared/ui/skeleton'
-import { cn } from '@/shared/utils/utils'
-import { motion } from 'framer-motion'
-import { AnimatedNumber } from '@/shared/ui/AnimatedNumber'
-import { fadeUp, hoverLift, staggerContainer } from '@/shared/ui/motion'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/utils/utils";
+import { motion } from "framer-motion";
+import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { fadeUp, hoverLift, staggerContainer } from "@/components/ui/motion";
 
 type Props = {
-  total: number
-  lowStockCount: number
-  topName: string
-  topSales?: number
-  isLoading?: boolean
-  className?: string
-}
+  total: number;
+  lowStockCount: number;
+  topName: string;
+  topSales?: number;
+  isLoading?: boolean;
+  className?: string;
+};
 
-export function ProductsOverview({ total, lowStockCount, topName, topSales, isLoading, className }: Props) {
+export function ProductsOverview({
+  total,
+  lowStockCount,
+  topName,
+  topSales,
+  isLoading,
+  className,
+}: Props) {
   return (
     <motion.div
-      className={cn('grid grid-cols-1 gap-4 md:grid-cols-3', className)}
+      className={cn("grid grid-cols-1 gap-4 md:grid-cols-3", className)}
       variants={staggerContainer(0.06, 0.02)}
       initial="hidden"
       animate="show"
     >
-      <motion.div variants={fadeUp} whileHover={hoverLift.whileHover} transition={hoverLift.transition}>
+      <motion.div
+        variants={fadeUp}
+        whileHover={hoverLift.whileHover}
+        transition={hoverLift.transition}
+      >
         <Card className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl">
           <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10" />
           </div>
-        <CardHeader>
-          <CardDescription className="text-sm text-gray-500">Total products</CardDescription>
-          <CardTitle className="text-3xl font-bold tabular-nums text-gray-900">
-            {isLoading ? <Skeleton className="h-8 w-16" /> : <AnimatedNumber value={total} />}
-          </CardTitle>
-        </CardHeader>
+          <CardHeader>
+            <CardDescription className="text-sm text-gray-500">
+              Total products
+            </CardDescription>
+            <CardTitle className="text-3xl font-bold tabular-nums text-gray-900">
+              {isLoading ? (
+                <Skeleton className="h-8 w-16" />
+              ) : (
+                <AnimatedNumber value={total} />
+              )}
+            </CardTitle>
+          </CardHeader>
         </Card>
       </motion.div>
 
-      <motion.div variants={fadeUp} whileHover={hoverLift.whileHover} transition={hoverLift.transition}>
+      <motion.div
+        variants={fadeUp}
+        whileHover={hoverLift.whileHover}
+        transition={hoverLift.transition}
+      >
         <Card
           className={cn(
-            'group relative overflow-hidden rounded-2xl border py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl',
-            lowStockCount > 0 ? 'border-rose-200 bg-rose-50/50' : 'border-gray-100 bg-white/80',
+            "group relative overflow-hidden rounded-2xl border py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl",
+            lowStockCount > 0
+              ? "border-rose-200 bg-rose-50/50"
+              : "border-gray-100 bg-white/80",
           )}
         >
           <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <div className={cn('absolute inset-0 bg-gradient-to-br', lowStockCount > 0 ? 'from-rose-500/10 to-purple-500/10' : 'from-primary/10 to-purple-500/10')} />
+            <div
+              className={cn(
+                "absolute inset-0 bg-gradient-to-br",
+                lowStockCount > 0
+                  ? "from-rose-500/10 to-purple-500/10"
+                  : "from-primary/10 to-purple-500/10",
+              )}
+            />
           </div>
           <CardHeader>
-            <CardDescription className={cn('text-sm', lowStockCount > 0 ? 'text-rose-600' : 'text-gray-500')}>Low stock items</CardDescription>
-            <CardTitle className={cn('text-3xl font-bold tabular-nums', lowStockCount > 0 ? 'text-rose-700' : 'text-gray-900')}>
-              {isLoading ? <Skeleton className="h-8 w-12" /> : <AnimatedNumber value={lowStockCount} />}
+            <CardDescription
+              className={cn(
+                "text-sm",
+                lowStockCount > 0 ? "text-rose-600" : "text-gray-500",
+              )}
+            >
+              Low stock items
+            </CardDescription>
+            <CardTitle
+              className={cn(
+                "text-3xl font-bold tabular-nums",
+                lowStockCount > 0 ? "text-rose-700" : "text-gray-900",
+              )}
+            >
+              {isLoading ? (
+                <Skeleton className="h-8 w-12" />
+              ) : (
+                <AnimatedNumber value={lowStockCount} />
+              )}
             </CardTitle>
           </CardHeader>
           {lowStockCount > 0 && (
-            <CardContent className="text-xs text-rose-700/80">Review inventory soon</CardContent>
+            <CardContent className="text-xs text-rose-700/80">
+              Review inventory soon
+            </CardContent>
           )}
         </Card>
       </motion.div>
 
-      <motion.div variants={fadeUp} whileHover={hoverLift.whileHover} transition={hoverLift.transition}>
+      <motion.div
+        variants={fadeUp}
+        whileHover={hoverLift.whileHover}
+        transition={hoverLift.transition}
+      >
         <Card className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl">
           <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10" />
           </div>
           <CardHeader>
-            <CardDescription className="text-sm text-gray-500">Top product</CardDescription>
+            <CardDescription className="text-sm text-gray-500">
+              Top product
+            </CardDescription>
             {isLoading ? (
               <Skeleton className="mt-2 h-6 w-40" />
             ) : (
               <>
-                <CardTitle className="text-base font-semibold leading-tight text-gray-900">{topName}</CardTitle>
-                {topSales !== undefined && <p className="text-xs text-gray-500">Units sold: {topSales}</p>}
+                <CardTitle className="text-base font-semibold leading-tight text-gray-900">
+                  {topName}
+                </CardTitle>
+                {topSales !== undefined && (
+                  <p className="text-xs text-gray-500">
+                    Units sold: {topSales}
+                  </p>
+                )}
               </>
             )}
           </CardHeader>
         </Card>
       </motion.div>
     </motion.div>
-  )
+  );
 }

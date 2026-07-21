@@ -1,62 +1,91 @@
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Eye } from 'lucide-react'
-import { useGetProductOrdersQuery, useGetServiceOrdersQuery } from '@/features/orders'
-import type { Order, ProductOrderStatus, ServiceOrderStatus } from '@/shared/types/api'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Skeleton } from '@/shared/ui/skeleton'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-import { Button } from '@/shared/ui/button'
-import { OrderStatusBadge } from '@/shared/components/status-badge'
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Eye } from "lucide-react";
+import {
+  useGetProductOrdersQuery,
+  useGetServiceOrdersQuery,
+} from "@/features/orders";
+import type {
+  Order,
+  ProductOrderStatus,
+  ServiceOrderStatus,
+} from "@/types/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { OrderStatusBadge } from "@/components/status-badge";
 
-type StatusFilter = 'all' | ProductOrderStatus | ServiceOrderStatus
-type DeliveryTypeFilter = 'all' | 'local' | 'international' | 'none'
+type StatusFilter = "all" | ProductOrderStatus | ServiceOrderStatus;
+type DeliveryTypeFilter = "all" | "local" | "international" | "none";
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleString()
+    return new Date(iso).toLocaleString();
   } catch {
-    return iso
+    return iso;
   }
 }
 
 export function OrdersListPage() {
-  const pQ = useGetProductOrdersQuery()
-  const sQ = useGetServiceOrdersQuery()
+  const pQ = useGetProductOrdersQuery();
+  const sQ = useGetServiceOrdersQuery();
 
-  const [status, setStatus] = useState<StatusFilter>('all')
-  const [deliveryType, setDeliveryType] = useState<DeliveryTypeFilter>('all')
+  const [status, setStatus] = useState<StatusFilter>("all");
+  const [deliveryType, setDeliveryType] = useState<DeliveryTypeFilter>("all");
 
   const rows = useMemo(() => {
-    const all: Order[] = [...(pQ.data ?? []), ...(sQ.data ?? [])]
+    const all: Order[] = [...(pQ.data ?? []), ...(sQ.data ?? [])];
     const filtered = all.filter((o) => {
-      if (status !== 'all' && o.status !== status) return false
-      if (deliveryType !== 'all') {
-        const dt = o.deliveryType ?? 'none'
-        if (deliveryType === 'none' && dt !== null && dt !== 'none') return false
-        if (deliveryType !== 'none' && dt !== deliveryType) return false
+      if (status !== "all" && o.status !== status) return false;
+      if (deliveryType !== "all") {
+        const dt = o.deliveryType ?? "none";
+        if (deliveryType === "none" && dt !== null && dt !== "none")
+          return false;
+        if (deliveryType !== "none" && dt !== deliveryType) return false;
       }
-      return true
-    })
-    return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-  }, [pQ.data, sQ.data, status, deliveryType])
+      return true;
+    });
+    return filtered.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [pQ.data, sQ.data, status, deliveryType]);
 
-  const isLoading = pQ.isLoading || sQ.isLoading
-  const isError = pQ.isError || sQ.isError
+  const isLoading = pQ.isLoading || sQ.isLoading;
+  const isError = pQ.isError || sQ.isError;
 
   return (
     <div className="w-full space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Orders</h1>
-          <p className="text-muted-foreground text-sm">Manage product and service orders with delivery tracking.</p>
+          <p className="text-muted-foreground text-sm">
+            Manage product and service orders with delivery tracking.
+          </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <div className="grid gap-1.5">
             <span className="text-muted-foreground text-xs">Status</span>
-            <Select value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
+            <Select
+              value={status}
+              onValueChange={(v) => setStatus(v as StatusFilter)}
+            >
               <SelectTrigger className="w-[12rem]">
                 <SelectValue />
               </SelectTrigger>
@@ -66,18 +95,27 @@ export function OrdersListPage() {
                 <SelectItem value="confirmed">Confirmed</SelectItem>
                 <SelectItem value="processing">Processing</SelectItem>
                 <SelectItem value="ready">Ready</SelectItem>
-                <SelectItem value="delivery_requested">Delivery requested</SelectItem>
-                <SelectItem value="shipment_created">Shipment created</SelectItem>
+                <SelectItem value="delivery_requested">
+                  Delivery requested
+                </SelectItem>
+                <SelectItem value="shipment_created">
+                  Shipment created
+                </SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>
                 <SelectItem value="accepted">Accepted (service)</SelectItem>
-                <SelectItem value="in_progress">In progress (service)</SelectItem>
+                <SelectItem value="in_progress">
+                  In progress (service)
+                </SelectItem>
                 <SelectItem value="completed">Completed (service)</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="grid gap-1.5">
             <span className="text-muted-foreground text-xs">Delivery Type</span>
-            <Select value={deliveryType} onValueChange={(v) => setDeliveryType(v as DeliveryTypeFilter)}>
+            <Select
+              value={deliveryType}
+              onValueChange={(v) => setDeliveryType(v as DeliveryTypeFilter)}
+            >
               <SelectTrigger className="w-[12rem]">
                 <SelectValue />
               </SelectTrigger>
@@ -95,7 +133,9 @@ export function OrdersListPage() {
       <Card className="rounded-xl border-border/60 shadow-sm">
         <CardHeader>
           <CardTitle>Order listing</CardTitle>
-          {isError ? <p className="text-destructive text-sm">Failed to load orders.</p> : null}
+          {isError ? (
+            <p className="text-destructive text-sm">Failed to load orders.</p>
+          ) : null}
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -123,11 +163,18 @@ export function OrdersListPage() {
                     <TableCell>
                       <OrderStatusBadge status={o.status as any} />
                     </TableCell>
-                    <TableCell className="capitalize">{o.deliveryType ?? '—'}</TableCell>
-                    <TableCell>
-                      {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(o.total)}
+                    <TableCell className="capitalize">
+                      {o.deliveryType ?? "—"}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">{formatDate(o.createdAt)}</TableCell>
+                    <TableCell>
+                      {new Intl.NumberFormat(undefined, {
+                        style: "currency",
+                        currency: "USD",
+                      }).format(o.total)}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatDate(o.createdAt)}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button asChild size="sm" variant="outline">
                         <Link to={`/vendor/orders/${o.id}`}>
@@ -140,7 +187,10 @@ export function OrdersListPage() {
                 ))}
                 {!rows.length ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-muted-foreground py-6 text-center">
+                    <TableCell
+                      colSpan={8}
+                      className="text-muted-foreground py-6 text-center"
+                    >
                       No orders match your filters.
                     </TableCell>
                   </TableRow>
@@ -151,6 +201,5 @@ export function OrdersListPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

@@ -1,5 +1,5 @@
-import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export function ChatInput({
   value,
@@ -7,10 +7,10 @@ export function ChatInput({
   onSend,
   disabled,
 }: {
-  value: string
-  onChange: (v: string) => void
-  onSend: () => void
-  disabled?: boolean
+  value: string;
+  onChange: (v: string) => void;
+  onSend: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
@@ -19,9 +19,9 @@ export function ChatInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault()
-            onSend()
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            onSend();
           }
         }}
         placeholder="Type a message…"
@@ -35,6 +35,5 @@ export function ChatInput({
         Send
       </Button>
     </div>
-  )
+  );
 }
-

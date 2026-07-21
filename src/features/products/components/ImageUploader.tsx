@@ -1,61 +1,73 @@
-import { useMemo } from 'react'
-import { ImagePlus, Star, Trash2 } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
-import { cn } from '@/shared/utils/utils'
+import { useMemo } from "react";
+import { ImagePlus, Star, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/utils/utils";
 
 export type ImageUploaderValue = {
-  existingUrls: string[]
-  files: File[]
-  mainIndex: number
-}
+  existingUrls: string[];
+  files: File[];
+  mainIndex: number;
+};
 
 export function ImageUploader({
   value,
   onChange,
   className,
 }: {
-  value: ImageUploaderValue
-  onChange: (next: ImageUploaderValue) => void
-  className?: string
+  value: ImageUploaderValue;
+  onChange: (next: ImageUploaderValue) => void;
+  className?: string;
 }) {
   const thumbs = useMemo(() => {
-    const fileUrls = value.files.map((f) => ({ kind: 'file' as const, url: URL.createObjectURL(f) }))
+    const fileUrls = value.files.map((f) => ({
+      kind: "file" as const,
+      url: URL.createObjectURL(f),
+    }));
     return [
-      ...value.existingUrls.map((u) => ({ kind: 'existing' as const, url: u })),
+      ...value.existingUrls.map((u) => ({ kind: "existing" as const, url: u })),
       ...fileUrls,
-    ]
+    ];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value.existingUrls.join('|'), value.files])
+  }, [value.existingUrls.join("|"), value.files]);
 
-  const total = thumbs.length
-  const mainIndex = Math.min(Math.max(0, value.mainIndex), Math.max(0, total - 1))
+  const total = thumbs.length;
+  const mainIndex = Math.min(
+    Math.max(0, value.mainIndex),
+    Math.max(0, total - 1),
+  );
 
   function addFiles(list: FileList | null) {
-    if (!list) return
-    const added = Array.from(list).filter((f) => f.type.startsWith('image/'))
-    onChange({ ...value, files: [...value.files, ...added] })
+    if (!list) return;
+    const added = Array.from(list).filter((f) => f.type.startsWith("image/"));
+    onChange({ ...value, files: [...value.files, ...added] });
   }
 
   function removeAt(i: number) {
-    const existingCount = value.existingUrls.length
+    const existingCount = value.existingUrls.length;
     if (i < existingCount) {
-      const nextExisting = value.existingUrls.filter((_, idx) => idx !== i)
-      const nextMain = mainIndex === i ? 0 : mainIndex > i ? mainIndex - 1 : mainIndex
-      onChange({ ...value, existingUrls: nextExisting, mainIndex: nextMain })
-      return
+      const nextExisting = value.existingUrls.filter((_, idx) => idx !== i);
+      const nextMain =
+        mainIndex === i ? 0 : mainIndex > i ? mainIndex - 1 : mainIndex;
+      onChange({ ...value, existingUrls: nextExisting, mainIndex: nextMain });
+      return;
     }
-    const fileIndex = i - existingCount
-    const nextFiles = value.files.filter((_, idx) => idx !== fileIndex)
-    const nextMain = mainIndex === i ? 0 : mainIndex > i ? mainIndex - 1 : mainIndex
-    onChange({ ...value, files: nextFiles, mainIndex: nextMain })
+    const fileIndex = i - existingCount;
+    const nextFiles = value.files.filter((_, idx) => idx !== fileIndex);
+    const nextMain =
+      mainIndex === i ? 0 : mainIndex > i ? mainIndex - 1 : mainIndex;
+    onChange({ ...value, files: nextFiles, mainIndex: nextMain });
   }
 
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-0.5">
-          <h3 className="text-sm font-semibold tracking-tight">Product Images</h3>
-          <p className="text-muted-foreground text-xs">Upload multiple images. Pick a main image.</p>
+          <h3 className="text-sm font-semibold tracking-tight">
+            Product Images
+          </h3>
+          <p className="text-muted-foreground text-xs">
+            Upload multiple images. Pick a main image.
+          </p>
         </div>
 
         <label className="inline-flex">
@@ -80,25 +92,33 @@ export function ImageUploader({
               <ImagePlus className="size-5" />
             </div>
             <p className="text-sm font-medium">No images yet</p>
-            <p className="text-muted-foreground text-sm">Upload at least one image for best results.</p>
+            <p className="text-muted-foreground text-sm">
+              Upload at least one image for best results.
+            </p>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
           {thumbs.map((t, i) => {
-            const isMain = i === mainIndex
+            const isMain = i === mainIndex;
             return (
               <button
                 type="button"
                 key={`${t.kind}-${t.url}-${i}`}
                 onClick={() => onChange({ ...value, mainIndex: i })}
                 className={cn(
-                  'group relative aspect-square overflow-hidden rounded-xl border bg-black/5 transition',
-                  isMain ? 'border-primary ring-2 ring-primary/20' : 'border-border/60 hover:border-border',
+                  "group relative aspect-square overflow-hidden rounded-xl border bg-black/5 transition",
+                  isMain
+                    ? "border-primary ring-2 ring-primary/20"
+                    : "border-border/60 hover:border-border",
                 )}
-                aria-label={isMain ? 'Main image' : 'Set as main image'}
+                aria-label={isMain ? "Main image" : "Set as main image"}
               >
-                <img src={t.url} alt="" className="h-full w-full object-cover" />
+                <img
+                  src={t.url}
+                  alt=""
+                  className="h-full w-full object-cover"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/0 to-black/0 opacity-0 transition-opacity group-hover:opacity-100" />
 
                 <div className="absolute left-2 top-2 flex items-center gap-1">
@@ -117,9 +137,9 @@ export function ImageUploader({
                     variant="secondary"
                     className="h-8 w-8"
                     onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      removeAt(i)
+                      e.preventDefault();
+                      e.stopPropagation();
+                      removeAt(i);
                     }}
                     aria-label="Remove image"
                   >
@@ -127,11 +147,10 @@ export function ImageUploader({
                   </Button>
                 </div>
               </button>
-            )
+            );
           })}
         </div>
       )}
     </div>
-  )
+  );
 }
-

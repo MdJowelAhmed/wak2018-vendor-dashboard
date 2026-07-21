@@ -1,5 +1,5 @@
-import type { Delivery } from '@/shared/types/api'
-import { DeliveryCard } from './DeliveryCard'
+import type { Delivery } from "@/types/api";
+import { DeliveryCard } from "./DeliveryCard";
 
 export function LocalDeliveryList({
   deliveries,
@@ -10,16 +10,20 @@ export function LocalDeliveryList({
   onStep,
   busy,
 }: {
-  deliveries: Delivery[]
-  isDriver: boolean
-  onViewDetails: (d: Delivery) => void
-  onAccept: (d: Delivery) => void
-  onReject: (d: Delivery) => void
-  onStep: (d: Delivery) => void
-  busy?: boolean
+  deliveries: Delivery[];
+  isDriver: boolean;
+  onViewDetails: (d: Delivery) => void;
+  onAccept: (d: Delivery) => void;
+  onReject: (d: Delivery) => void;
+  onStep: (d: Delivery) => void;
+  busy?: boolean;
 }) {
   if (!deliveries.length) {
-    return <div className="text-muted-foreground text-sm py-8 text-center">No local deliveries yet.</div>
+    return (
+      <div className="text-muted-foreground text-sm py-8 text-center">
+        No local deliveries yet.
+      </div>
+    );
   }
 
   return (
@@ -37,6 +41,5 @@ export function LocalDeliveryList({
         />
       ))}
     </div>
-  )
+  );
 }
-

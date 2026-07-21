@@ -1,4 +1,4 @@
-import type { Delivery, DeliveryDriverStatus } from '@/shared/types/api'
+import type { Delivery, DeliveryDriverStatus } from '@/types/api'
 
 export type DeliveryUiStatus = {
   key: DeliveryDriverStatus

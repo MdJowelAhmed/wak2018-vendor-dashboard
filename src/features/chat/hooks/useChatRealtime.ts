@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { baseApi } from '@/shared/api/baseApi'
+import { baseApi } from '@/services/baseApi'
 import { useAppDispatch } from '@/app/hooks'
-import { getSocket } from '@/shared/utils/socket'
+import { getSocket } from '@/utils/socket'
 
 export function useChatRealtime(conversationId?: string) {
   const dispatch = useAppDispatch()

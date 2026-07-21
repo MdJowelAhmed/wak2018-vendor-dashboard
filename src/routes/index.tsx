@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 const AuthLayout = lazy(() => import('@/features/auth').then(m => ({ default: m.AuthLayout })));
-const VendorLayout = lazy(() => import('@/shared/components/layout/DashboardLayout').then(m => ({ default: m.VendorLayout })));
-const ServiceLayout = lazy(() => import('@/shared/components/layout/ServiceLayout').then(m => ({ default: m.ServiceLayout })));
+const VendorLayout = lazy(() => import('@/layouts/DashboardLayout').then(m => ({ default: m.VendorLayout })));
+const ServiceLayout = lazy(() => import('@/layouts/ServiceLayout').then(m => ({ default: m.ServiceLayout })));
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const RegisterPage = lazy(() => import('@/features/auth/pages/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));

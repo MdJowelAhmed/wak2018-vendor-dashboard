@@ -1,7 +1,7 @@
-import { X } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
-import { cn } from '@/shared/utils/utils'
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/utils/utils";
 
 export function DynamicListInput({
   title,
@@ -11,27 +11,27 @@ export function DynamicListInput({
   placeholder,
   className,
 }: {
-  title: string
-  addLabel: string
-  value: string[]
-  onChange: (next: string[]) => void
-  placeholder?: string
-  className?: string
+  title: string;
+  addLabel: string;
+  value: string[];
+  onChange: (next: string[]) => void;
+  placeholder?: string;
+  className?: string;
 }) {
-  const items = value ?? []
+  const items = value ?? [];
 
   function add() {
-    onChange([...items, ''])
+    onChange([...items, ""]);
   }
   function remove(i: number) {
-    onChange(items.filter((_, idx) => idx !== i))
+    onChange(items.filter((_, idx) => idx !== i));
   }
   function patch(i: number, next: string) {
-    onChange(items.map((v, idx) => (idx === i ? next : v)))
+    onChange(items.map((v, idx) => (idx === i ? next : v)));
   }
 
   return (
-    <div className={cn('space-y-3', className)}>
+    <div className={cn("space-y-3", className)}>
       <div className="flex items-center justify-between gap-3">
         <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
         <Button type="button" size="sm" variant="secondary" onClick={add}>
@@ -41,7 +41,9 @@ export function DynamicListInput({
 
       <div className="space-y-2">
         {items.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Add items to show on your service details page.</p>
+          <p className="text-muted-foreground text-sm">
+            Add items to show on your service details page.
+          </p>
         ) : (
           items.map((v, i) => (
             <div
@@ -68,6 +70,5 @@ export function DynamicListInput({
         )}
       </div>
     </div>
-  )
+  );
 }
-

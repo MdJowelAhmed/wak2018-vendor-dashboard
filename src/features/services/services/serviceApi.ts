@@ -1,5 +1,5 @@
-import { baseApi } from '@/shared/api/baseApi'
-import type { Service, ServicePackage } from '@/shared/types/api'
+import { baseApi } from '@/services/baseApi'
+import type { Service, ServicePackage } from '@/types/api'
 import type { UserRole } from '@/features/auth'
 
 const listTag = { type: 'Service' as const, id: 'LIST' as const }

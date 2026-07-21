@@ -1,65 +1,82 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Pencil, Plus, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-import { Button } from '@/shared/ui/button'
-import { Badge } from '@/shared/ui/badge'
-import { AddControllerModal, type ControllerRecord, type ControllerPermissions } from '@/features/controllers'
+import { useEffect, useMemo, useState } from "react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  AddControllerModal,
+  type ControllerRecord,
+  type ControllerPermissions,
+} from "@/features/controllers";
 
-const LS_KEY = 'controller_management:list:v1'
+const LS_KEY = "controller_management:list:v1";
 
 function loadControllers(): ControllerRecord[] {
   try {
-    const raw = localStorage.getItem(LS_KEY)
-    if (!raw) return []
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(Boolean) as ControllerRecord[]
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(Boolean) as ControllerRecord[];
   } catch {
-    return []
+    return [];
   }
 }
 
 function saveControllers(list: ControllerRecord[]) {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(list))
+    localStorage.setItem(LS_KEY, JSON.stringify(list));
   } catch {
     // ignore
   }
 }
 
 function permLabel(p: ControllerPermissions) {
-  return p === 'delivery' ? 'Delivery' : p[0]!.toUpperCase() + p.slice(1)
+  return p === "delivery" ? "Delivery" : p[0]!.toUpperCase() + p.slice(1);
 }
 
 export function ControllerManagement() {
-  const [open, setOpen] = useState(false)
-  const [controllers, setControllers] = useState<ControllerRecord[]>([])
+  const [open, setOpen] = useState(false);
+  const [controllers, setControllers] = useState<ControllerRecord[]>([]);
 
   useEffect(() => {
-    setControllers(loadControllers())
-  }, [])
+    setControllers(loadControllers());
+  }, []);
 
   useEffect(() => {
-    saveControllers(controllers)
-  }, [controllers])
+    saveControllers(controllers);
+  }, [controllers]);
 
-  const rows = useMemo(() => controllers.slice(), [controllers])
+  const rows = useMemo(() => controllers.slice(), [controllers]);
 
-  function createController(c: Omit<ControllerRecord, 'id'>) {
+  function createController(c: Omit<ControllerRecord, "id">) {
     setControllers((prev) => [
       {
         id: `ctrl-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
         ...c,
       },
       ...prev,
-    ])
+    ]);
   }
 
   function deleteController(id: string) {
-    setControllers((prev) => prev.filter((c) => c.id !== id))
-    toast.success('Deleted')
+    setControllers((prev) => prev.filter((c) => c.id !== id));
+    toast.success("Deleted");
   }
 
   return (
@@ -67,9 +84,15 @@ export function ControllerManagement() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Controller Management</h1>
-          <p className="text-muted-foreground text-sm">Create controllers and assign page access permissions.</p>
+          <p className="text-muted-foreground text-sm">
+            Create controllers and assign page access permissions.
+          </p>
         </div>
-        <Button type="button" className="bg-[#895129] hover:bg-[#7b4723]" onClick={() => setOpen(true)}>
+        <Button
+          type="button"
+          className="bg-[#895129] hover:bg-[#7b4723]"
+          onClick={() => setOpen(true)}
+        >
           <Plus className="mr-2 size-4" />
           Add Controller
         </Button>
@@ -94,13 +117,21 @@ export function ControllerManagement() {
             <TableBody>
               {rows.map((c, idx) => (
                 <TableRow key={c.id}>
-                  <TableCell className="text-muted-foreground">{idx + 1}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {idx + 1}
+                  </TableCell>
                   <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{c.email}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {c.email}
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1.5">
                       {c.permissions.map((p) => (
-                        <Badge key={p} variant="secondary" className="capitalize">
+                        <Badge
+                          key={p}
+                          variant="secondary"
+                          className="capitalize"
+                        >
                           {permLabel(p)}
                         </Badge>
                       ))}
@@ -112,12 +143,23 @@ export function ControllerManagement() {
                         type="button"
                         size="icon"
                         variant="outline"
-                        onClick={() => toast.message('Edit', { description: 'Edit flow can be added next (modal reuse).' })}
+                        onClick={() =>
+                          toast.message("Edit", {
+                            description:
+                              "Edit flow can be added next (modal reuse).",
+                          })
+                        }
                         aria-label="Edit"
                       >
                         <Pencil className="size-4" />
                       </Button>
-                      <Button type="button" size="icon" variant="outline" onClick={() => deleteController(c.id)} aria-label="Delete">
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="outline"
+                        onClick={() => deleteController(c.id)}
+                        aria-label="Delete"
+                      >
                         <Trash2 className="size-4 text-destructive" />
                       </Button>
                     </div>
@@ -126,7 +168,10 @@ export function ControllerManagement() {
               ))}
               {!rows.length ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-muted-foreground py-8 text-center">
+                  <TableCell
+                    colSpan={5}
+                    className="text-muted-foreground py-8 text-center"
+                  >
                     No controllers yet. Click “Add Controller” to create one.
                   </TableCell>
                 </TableRow>
@@ -136,8 +181,11 @@ export function ControllerManagement() {
         </CardContent>
       </Card>
 
-      <AddControllerModal open={open} onOpenChange={setOpen} onCreate={createController} />
+      <AddControllerModal
+        open={open}
+        onOpenChange={setOpen}
+        onCreate={createController}
+      />
     </div>
-  )
+  );
 }
-

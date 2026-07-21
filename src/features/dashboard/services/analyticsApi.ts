@@ -1,4 +1,4 @@
-import { baseApi } from '@/shared/api/baseApi'
+import { baseApi } from '@/services/baseApi'
 import type {
   AnalyticsDashboardStats,
   AnalyticsRangeKey,
@@ -6,7 +6,7 @@ import type {
   AnalyticsSummary,
   AnalyticsTopData,
   DashboardOverview,
-} from '@/shared/types/api'
+} from '@/types/api'
 
 const tag = { type: 'Analytics' as const, id: 'SUMMARY' as const }
 const dashboardTag = { type: 'Dashboard' as const, id: 'OVERVIEW' as const }

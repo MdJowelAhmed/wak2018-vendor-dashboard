@@ -59,21 +59,19 @@ export function RegisterPage() {
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         password,
-        role,
+        role: role === "service" ? "service_provider" : "vendor",
       }).unwrap();
-      if (role === "service") {
-        toast.success("Account created. Let’s set up your service profile.");
-        void navigate("/onboarding/service", {
-          replace: true,
-          state: { email: email.trim().toLowerCase(), phone, name },
-        });
-      } else {
-        toast.success("Account created. Let’s set up your vendor profile.");
-        void navigate("/onboarding/vendor", {
-          replace: true,
-          state: { email: email.trim().toLowerCase(), phone, name },
-        });
-      }
+      toast.success("Account created! Please verify your email.");
+      void navigate("/auth/verify-otp", {
+        replace: true,
+        state: { 
+          email: email.trim().toLowerCase(), 
+          phone: phone.trim(), 
+          name: name.trim(), 
+          role,
+          mode: "register" 
+        },
+      });
     } catch (err) {
       toast.error(fetchErrorMessage(err) ?? "Registration failed");
     }

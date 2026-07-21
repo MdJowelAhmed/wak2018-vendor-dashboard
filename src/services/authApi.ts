@@ -56,8 +56,11 @@ export const authApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
-    register: build.mutation<{ ok: true }, { name: string; email: string; phone: string; password: string; role: string }>({
-      query: (body) => ({ url: "/auth/register", method: "POST", body }),
+    register: build.mutation<{ success: boolean; message: string; data?: any }, { name: string; email: string; phone: string; password: string; role: string }>({
+      query: (body) => ({ url: "/users/", method: "POST", body }),
+    }),
+    verifyOtp: build.mutation<{ ok: true }, { email: string; otp: string }>({
+      query: (body) => ({ url: "/auth/verify-otp", method: "POST", body }),
       transformResponse: () => ({ ok: true as const }),
     }),
   }),
@@ -70,4 +73,5 @@ export const {
   useResendOtpMutation,
   useChangePasswordMutation,
   useRegisterMutation,
+  useVerifyOtpMutation,
 } = authApi;

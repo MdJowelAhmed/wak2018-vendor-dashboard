@@ -9,28 +9,50 @@ import { SubmitButton } from "../components/SubmitButton";
 import { isValidOtp6 } from "@/utils/auth-validation";
 import { fetchErrorMessage } from "@/utils/fetch-error";
 
-type LocationState = { email?: string };
+import {
+  useVerifyEmailMutation,
+  useVerifyOtpMutation,
+} from "@/services/authApi";
+
+type LocationState = {
+  email?: string;
+  mode?: "register" | "forgot";
+  role?: string;
+  name?: string;
+  phone?: string;
+};
 
 const OTP_EMAIL_KEY = "otp_email";
+const OTP_MODE_KEY = "otp_mode";
+const OTP_ROLE_KEY = "otp_role";
 
 export function VerifyOtpPage() {
   const navigate = useNavigate();
   const { state } = useLocation() as { state: LocationState | null };
   const fromState = state?.email;
+  const mode = state?.mode ?? sessionStorage.getItem(OTP_MODE_KEY) ?? "forgot";
+  const role = state?.role ?? sessionStorage.getItem(OTP_ROLE_KEY);
+
   const fromStore =
     typeof sessionStorage !== "undefined"
       ? sessionStorage.getItem(OTP_EMAIL_KEY)
       : null;
   const [email, setEmail] = useState(fromState ?? fromStore ?? "");
   const [otp, setOtp] = useState("");
-  const [verify, { isLoading }] = useVerifyOtpMutation();
+
+  const [verifyForgot, { isLoading: forgotLoading }] = useVerifyOtpMutation();
+  const [verifyEmailMutation, { isLoading: emailLoading }] =
+    useVerifyEmailMutation();
+  const isLoading = forgotLoading || emailLoading;
 
   useEffect(() => {
     if (fromState) {
       sessionStorage.setItem(OTP_EMAIL_KEY, fromState);
+      if (state.mode) sessionStorage.setItem(OTP_MODE_KEY, state.mode);
+      if (state.role) sessionStorage.setItem(OTP_ROLE_KEY, state.role);
       setEmail(fromState);
     }
-  }, [fromState]);
+  }, [fromState, state]);
 
   useEffect(() => {
     if (!email) {
@@ -48,13 +70,28 @@ export function VerifyOtpPage() {
       return;
     }
     try {
-      await verify({ email, otp }).unwrap();
-      toast.success("Code verified");
-      sessionStorage.setItem("auth_reset", JSON.stringify({ email, otp }));
-      void navigate("/auth/reset-password", {
-        state: { email, otp },
-        replace: true,
-      });
+      if (mode === "register") {
+        await verifyEmailMutation({ email, oneTimeCode: Number(otp) }).unwrap();
+        toast.success("Email verified successfully!");
+        sessionStorage.removeItem(OTP_EMAIL_KEY);
+        sessionStorage.removeItem(OTP_MODE_KEY);
+        sessionStorage.removeItem(OTP_ROLE_KEY);
+
+        const onboardingPath =
+          role === "service" ? "/onboarding/service" : "/onboarding/vendor";
+        void navigate(onboardingPath, {
+          state: { email, phone: state?.phone, name: state?.name },
+          replace: true,
+        });
+      } else {
+        await verifyForgot({ email, otp }).unwrap();
+        toast.success("Code verified");
+        sessionStorage.setItem("auth_reset", JSON.stringify({ email, otp }));
+        void navigate("/auth/reset-password", {
+          state: { email, otp },
+          replace: true,
+        });
+      }
     } catch (err) {
       toast.error(fetchErrorMessage(err) ?? "Verification failed");
     }

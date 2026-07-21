@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useRegisterMutation } from "@/features/auth";
+import { useRegisterMutation } from '@/services/authApi';
 import { AuthCard } from "../components/AuthCard";
 import { AuthHeader } from "../components/AuthHeader";
 import { InputField } from "../components/InputField";
 import { PasswordInput } from "../components/PasswordInput";
 import { RoleSelector } from "../components/RoleSelector";
 import { SubmitButton } from "../components/SubmitButton";
-import type { UserRole } from "@/features/auth";
+import type { UserRole } from '@/features/auth/types/authTypes';
 import { isValidEmail, PASSWORD_MIN } from "@/utils/auth-validation";
 import { fetchErrorMessage } from "@/utils/fetch-error";
 

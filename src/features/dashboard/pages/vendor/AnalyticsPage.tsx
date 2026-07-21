@@ -3,7 +3,7 @@ import {
   useGetDashboardStatsQuery,
   useGetRevenueChartQuery,
 } from "@/features/dashboard";
-import { useGetProfileQuery } from "@/features/auth";
+import { useGetProfileQuery } from '@/services/userApi';
 import type { AnalyticsRangeKey } from "@/types/api";
 import { AnalyticsKPI } from "@/features/dashboard/components/analytics/AnalyticsKPI";
 import { RevenueChart } from "@/features/dashboard/components/analytics/RevenueChart";

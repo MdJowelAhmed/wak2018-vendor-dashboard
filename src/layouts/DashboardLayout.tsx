@@ -26,7 +26,8 @@ import { LayoutGroup, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LogoutModal } from "@/components/LogoutModal";
 import { useAppDispatch } from "@/app/hooks";
-import { logout, useGetProfileQuery } from "@/features/auth";
+import { logout } from "@/features/auth/authSlice";
+import { useGetProfileQuery } from "@/services/userApi";
 import { connectSocket } from "@/utils/socket";
 import { cn } from "@/utils/utils";
 

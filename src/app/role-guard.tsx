@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAppSelector } from '@/app/hooks'
-import type { UserRole } from '@/features/auth'
+import type { UserRole } from '@/features/auth/types/authTypes';
 
 type AppRole = UserRole
 

@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { useAppSelector } from '@/app/hooks'
-import { useGetProfileQuery } from '@/features/auth'
+import { useGetProfileQuery } from '@/services/userApi';
 import { ServiceProfileSettings } from '@/features/settings/components/ServiceProfileSettings'
 import { SecuritySettings } from '@/features/settings/components/SecuritySettings'
 import { LegalSettings } from '@/features/settings/components/LegalSettings'

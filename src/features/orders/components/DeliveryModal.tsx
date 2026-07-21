@@ -15,7 +15,7 @@ import {
   useRequestLocalDeliveryMutation,
 } from "@/features/delivery";
 import { useUpdateProductOrderStatusMutation } from "@/features/orders";
-import { useGetProfileQuery } from "@/features/auth";
+import { useGetProfileQuery } from "@/services/userApi";
 import { cn } from "@/utils/utils";
 import {
   DeliveryTypeSelector,
@@ -184,11 +184,15 @@ export function DeliveryModal({
             onClick={() => void submit()}
             disabled={disabled || busy}
           >
-            {busy
-              ? "Submitting…"
-              : type === "local"
-                ? "Request Driver"
-                : "Create Shipment"}
+            {busy ? (
+              <span className="inline-flex items-center gap-2">
+                Loading...
+              </span>
+            ) : type === "local" ? (
+              "Request Driver"
+            ) : (
+              "Create Shipment"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

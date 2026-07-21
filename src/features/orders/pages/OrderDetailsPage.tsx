@@ -25,7 +25,7 @@ import type {
   ServiceOrderStatus,
 } from "@/types/api";
 import { useDeliveryRealtime } from "@/features/delivery";
-import { useGetProfileQuery } from "@/features/auth";
+import { useGetProfileQuery } from '@/services/userApi';
 import {
   orderDetailsButtonMotionProps,
   orderDetailsCardVariants,

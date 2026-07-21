@@ -1,6 +1,6 @@
 import { baseApi } from '@/services/baseApi'
 import type { Service, ServicePackage } from '@/types/api'
-import type { UserRole } from '@/features/auth'
+import type { UserRole } from '@/features/auth/types/authTypes';
 
 const listTag = { type: 'Service' as const, id: 'LIST' as const }
 

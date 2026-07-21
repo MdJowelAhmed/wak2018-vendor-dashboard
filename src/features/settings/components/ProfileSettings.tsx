@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { UserProfile } from "@/types/api";
-import { useUpdateProfileMutation } from "@/features/auth";
+import { useUpdateProfileMutation } from '@/services/userApi';
 import {
   CountryMultiSelect,
   type ServiceCountrySelection,

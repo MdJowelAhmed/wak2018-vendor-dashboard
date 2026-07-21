@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { LogoutModal } from "@/components/LogoutModal";
 import { useAppDispatch } from "@/app/hooks";
-import { logout } from "@/features/auth";
+import { logout } from '@/features/auth/authSlice';
 import { cn } from "@/utils/utils";
 import {
   getActiveServiceControllerPermissions,

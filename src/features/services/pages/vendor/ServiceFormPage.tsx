@@ -5,7 +5,7 @@ import type { RootState } from "@/app/store";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetProfileQuery } from "@/features/auth";
+import { useGetProfileQuery } from '@/services/userApi';
 import {
   useCreateServiceMutation,
   useGetServiceQuery,
@@ -15,7 +15,7 @@ import {
   ServiceForm,
   type ServiceFormValues,
 } from "@/features/services/components/ServiceForm";
-import type { UserRole } from "@/features/auth";
+import type { UserRole } from '@/features/auth/types/authTypes';
 
 type Props = { mode: "create" | "edit" };
 

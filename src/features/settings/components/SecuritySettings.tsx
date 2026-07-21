@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { useChangePasswordMutation } from "@/features/auth";
+import { useChangePasswordMutation } from '@/services/userApi';
 
 export function SecuritySettings() {
   const [changePassword, { isLoading }] = useChangePasswordMutation();

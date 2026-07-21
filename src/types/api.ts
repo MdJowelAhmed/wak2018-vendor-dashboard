@@ -407,7 +407,7 @@ export type AdminUser = {
   id: string
   name: string
   email: string
-  role: import('@/features/auth').UserRole
+  role: import('@/features/auth/components/AuthLayout').UserRole
   status: 'active' | 'suspended' | 'pending_approval'
   createdAt: string
 }

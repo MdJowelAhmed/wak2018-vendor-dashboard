@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { authButtonMotionProps } from "@/features/auth/motion/auth-motion-variants";
-import { setCredentials } from "@/features/auth";
+import { setCredentials } from '@/features/auth/authSlice';
 import { useAppDispatch } from "@/app/hooks";
 import { AuthCard } from "../components/AuthCard";
 import { AuthHeader } from "../components/AuthHeader";
@@ -11,14 +11,27 @@ import { InputField } from "../components/InputField";
 import { PasswordInput } from "../components/PasswordInput";
 import { SubmitButton } from "../components/SubmitButton";
 import { Button } from "@/components/ui/button";
-import type { UserRole } from "@/features/auth";
+import type { UserRole } from '@/features/auth/types/authTypes';
+import { useLoginMutation } from "@/services/authApi";
 
 function GoogleIcon(props: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden className={props.className}>
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
       <path
-        fill="currentColor"
-        d="M12 10.2v3.6h5.05c-.2 1.15-1.37 3.37-5.05 3.37A5.8 5.8 0 0 1 6.2 12a5.8 5.8 0 0 1 5.8-5.8c1.5 0 2.5.64 3.07 1.2l2.1-2.02C15.9 4.16 14.2 3.3 12 3.3A8.7 8.7 0 1 0 12 20.7c5.02 0 8.35-3.52 8.35-8.47 0-.57-.06-1-.14-1.43H12z"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
       />
     </svg>
   );
@@ -29,33 +42,69 @@ export function LoginPage() {
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from;
   const dispatch = useAppDispatch();
-  const [role, setRole] = useState<UserRole>("vendor");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [login, { isLoading }] = useLoginMutation();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const selectedRole = role;
-    dispatch(
-      setCredentials({
-        token: "ui-role",
-        user: {
-          id: "ui-user",
-          email: email.trim().toLowerCase(),
-          role: selectedRole,
-          roles: [selectedRole],
-        },
-      }),
-    );
-    toast.success("Welcome back");
-    if (selectedRole === "vendor") {
-      void navigate(
-        from && from.startsWith("/vendor") ? from : "/vendor/dashboard",
-        { replace: true },
+    try {
+      const res = await login({ email: email.trim(), password }).unwrap();
+      console.log("Login API response:", res);
+
+      if (res.success && res.data) {
+        const { accessToken, role: apiRole } = res.data;
+
+        // Map backend role to frontend app role
+        const appRole = apiRole === "service_provider" ? "service" : "vendor";
+
+        let userId = "unknown";
+        let userEmail = email.trim().toLowerCase();
+
+        try {
+          const payload = JSON.parse(atob(accessToken.split(".")[1]));
+          if (payload.id) userId = payload.id;
+          if (payload.email) userEmail = payload.email;
+        } catch (err) {
+          console.warn("Failed to decode token payload", err);
+        }
+
+        dispatch(
+          setCredentials({
+            token: accessToken,
+            user: {
+              id: userId,
+              email: userEmail,
+              role: appRole as UserRole,
+              roles: [appRole as UserRole],
+            },
+          }),
+        );
+
+        toast.success(res.message || "User logged in successfully.");
+
+        if (appRole === "vendor") {
+          void navigate(
+            from && from.startsWith("/vendor") ? from : "/vendor/dashboard",
+            { replace: true },
+          );
+        } else {
+          void navigate("/service/dashboard", { replace: true });
+        }
+      } else {
+        toast.error(res.message || "Login failed (success: false)");
+      }
+    } catch (error: any) {
+      console.error("Login catch block error:", error);
+      const errorMsg =
+        error?.data?.message ||
+        error?.error ||
+        error?.message ||
+        "Failed to log in";
+      toast.error(
+        typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg),
       );
-      return;
     }
-    void navigate("/service/dashboard", { replace: true });
   }
 
   return (
@@ -82,35 +131,6 @@ export function LoginPage() {
       </div>
 
       <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
-        <div className="grid gap-2">
-          <div className="text-sm font-medium text-zinc-700">I am a</div>
-          <div className="grid grid-cols-2 rounded-xl border border-gray-200 bg-white/70 p-1">
-            <button
-              type="button"
-              onClick={() => setRole("vendor")}
-              className={[
-                "h-10 rounded-lg text-sm font-semibold transition-colors",
-                role === "vendor"
-                  ? "bg-[#895129] text-white"
-                  : "bg-transparent text-zinc-700 hover:bg-white",
-              ].join(" ")}
-            >
-              Vendor
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole("service")}
-              className={[
-                "h-10 rounded-lg text-sm font-semibold transition-colors",
-                role === "service"
-                  ? "bg-[#895129] text-white"
-                  : "bg-transparent text-zinc-700 hover:bg-white",
-              ].join(" ")}
-            >
-              Service Provider
-            </button>
-          </div>
-        </div>
         <InputField
           id="email"
           name="email"
@@ -137,7 +157,7 @@ export function LoginPage() {
             Forgot password?
           </Link>
         </div>
-        <SubmitButton loading={false}>Sign in</SubmitButton>
+        <SubmitButton loading={isLoading}>Sign in</SubmitButton>
         <p className="text-center text-sm text-zinc-600">
           Don&apos;t have an account?{" "}
           <Link

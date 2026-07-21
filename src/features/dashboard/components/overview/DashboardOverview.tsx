@@ -2,11 +2,11 @@ import { useSelector } from "react-redux";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { RootState } from "@/app/store";
-import { useGetProfileQuery } from "@/features/auth";
+import { useGetProfileQuery } from '@/services/userApi';
 import { useDashboardViewModel } from "@/features/dashboard/hooks/useDashboardViewModel";
 import { VendorDashboard } from "./VendorDashboard";
 import { ServiceDashboard } from "./ServiceDashboard";
-import type { UserRole } from "@/features/auth";
+import type { UserRole } from '@/features/auth/types/authTypes';
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer } from "@/components/ui/motion";
 

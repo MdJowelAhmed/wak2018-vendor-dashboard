@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { LayoutGroup, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -315,9 +316,18 @@ export function VendorLayout() {
               >
                 <Menu className="size-5" />
               </Button>
-              <h1 className="text-foreground min-w-0 flex-1 truncate text-base font-semibold md:text-lg">
-                Dashboard
-              </h1>
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                {/* <h1 className="text-foreground truncate text-base font-semibold md:text-lg">
+                  Dashboard
+                </h1> */}
+                <Badge
+                  variant="secondary"
+                  className="bg-blue-50 text-blue-700 border-blue-200/80 text-xs font-semibold px-2.5 py-0.5 rounded-full shrink-0 flex items-center gap-1.5"
+                >
+                  <span className="size-2 rounded-full bg-blue-500 animate-pulse" />
+                  Vendor Dashboard
+                </Badge>
+              </div>
 
               <div className="ml-auto flex items-center gap-2">
                 <NotificationDropdown

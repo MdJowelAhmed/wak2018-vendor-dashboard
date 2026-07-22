@@ -207,6 +207,11 @@ const ServiceMessagesPage = lazy(() =>
     default: m.MessagesPage,
   })),
 );
+const NotificationsPage = lazy(() =>
+  import("@/features/notifications/pages/NotificationsPage").then((m) => ({
+    default: m.NotificationsPage,
+  })),
+);
 
 import {
   createBrowserRouter,
@@ -289,6 +294,7 @@ const router = createBrowserRouter([
                   { path: "chat/:conversationId", element: <ChatPage /> },
                   { path: "analytics", element: <AnalyticsPage /> },
                   { path: "controllers", element: <ControllerManagement /> },
+                  { path: "notifications", element: <NotificationsPage role="vendor" /> },
                   { path: "settings", element: <SettingsPage /> },
                   { path: "settings/profile", element: <SettingsPage /> },
                   { path: "settings/security", element: <SettingsPage /> },
@@ -415,6 +421,10 @@ const router = createBrowserRouter([
                         <ServiceSettingsPage />
                       </RequireServicePermission>
                     ),
+                  },
+                  {
+                    path: "notifications",
+                    element: <NotificationsPage role="service" />,
                   },
                   { path: ":id", element: <ServiceDetails /> },
                 ],

@@ -8,7 +8,6 @@ import {
 } from "react-router-dom";
 import {
   BarChart3,
-  Bell,
   ChevronDown,
   ChevronRight,
   Circle,
@@ -40,6 +39,7 @@ import { useAppDispatch } from "@/app/hooks";
 import { logout } from "@/features/auth/authSlice";
 import { useGetProfileQuery } from "@/services/userApi";
 import { connectSocket } from "@/utils/socket";
+import { NotificationDropdown } from "@/features/notifications/components/NotificationDropdown";
 import { cn } from "@/utils/utils";
 
 type MenuItem = { to: string; label: string; icon: typeof Home };
@@ -320,10 +320,10 @@ export function VendorLayout() {
               </h1>
 
               <div className="ml-auto flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="size-5 text-gray-600" />
-                  <span className="absolute right-2.5 top-2 h-2 w-2 rounded-full bg-red-500" />
-                </Button>
+                <NotificationDropdown
+                  role="vendor"
+                  viewAllUrl="/vendor/notifications"
+                />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

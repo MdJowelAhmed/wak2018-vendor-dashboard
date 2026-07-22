@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import {
   BarChart3,
+  Bell,
   CalendarDays,
   HandCoins,
   Home,
@@ -15,6 +16,7 @@ import {
   MessageCircle,
   Settings,
   Shield,
+  User,
   Users,
   Wrench,
 } from "lucide-react";
@@ -22,9 +24,20 @@ import { useEffect, useMemo, useState } from "react";
 import { LayoutGroup, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LogoutModal } from "@/components/LogoutModal";
 import { useAppDispatch } from "@/app/hooks";
 import { logout } from "@/features/auth/authSlice";
+import { useGetProfileQuery } from "@/services/userApi";
+import { NotificationDropdown } from "@/features/notifications/components/NotificationDropdown";
 import { cn } from "@/utils/utils";
 import {
   getActiveServiceControllerPermissions,
@@ -207,6 +220,7 @@ export function ServiceLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { data, isError } = useGetProfileQuery();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -257,6 +271,11 @@ export function ServiceLayout() {
               </span>
               <span>Unified service</span>
             </Link>
+            {isError && (
+              <p className="text-muted-foreground mt-1 text-xs">
+                Set auth token in Settings to load your profile.
+              </p>
+            )}
           </div>
 
           <ServiceSidebar onNavigate={() => setMobileOpen(false)} />
@@ -297,6 +316,64 @@ export function ServiceLayout() {
               <h1 className="text-foreground min-w-0 flex-1 truncate text-base font-semibold md:text-lg">
                 Dashboard
               </h1>
+
+              <div className="ml-auto flex items-center gap-2">
+                <NotificationDropdown role="service" viewAllUrl="/service/notifications" />
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative h-8 w-8 rounded-full"
+                    >
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {data?.name?.charAt(0) || <User className="size-4" />}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {data?.name || "Service Provider"}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {data?.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/service/settings/profile"
+                        className="flex items-center cursor-pointer"
+                      >
+                        <User className="mr-2 size-4" />
+                        <span>Profile Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link
+                        to="/service/settings/profile"
+                        className="flex items-center cursor-pointer"
+                      >
+                        <Settings className="mr-2 size-4" />
+                        <span>Settings</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-red-600 focus:bg-red-50 focus:text-red-600 cursor-pointer flex items-center"
+                      onClick={() => setShowLogoutModal(true)}
+                    >
+                      <LogOut className="mr-2 size-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </header>
           <main className="min-h-[calc(100svh-3.5rem)] w-full flex-1 px-6 py-6 lg:px-8">
@@ -316,3 +393,4 @@ export function ServiceLayout() {
     </div>
   );
 }
+

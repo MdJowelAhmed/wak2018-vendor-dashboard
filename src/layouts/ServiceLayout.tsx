@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { LogoutModal } from "@/components/LogoutModal";
 import { useAppDispatch } from "@/app/hooks";
-import { logout } from '@/features/auth/authSlice';
+import { logout } from "@/features/auth/authSlice";
 import { cn } from "@/utils/utils";
 import {
   getActiveServiceControllerPermissions,
@@ -59,7 +59,6 @@ function ServiceSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const items = useMemo(() => {
     if (!activePerms) return serviceNav;
     const allowed = new Set(activePerms);
-    // Controllers do not manage controllers list.
     return serviceNav.filter((i) => {
       if (i.to === "/service/controllers") return false;
       if (i.to === "/service/dashboard") return allowed.has("dashboard");
@@ -211,7 +210,6 @@ export function ServiceLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  // Dev/testing: activate a controller session via URL query: ?controller=<controllerId>
   useEffect(() => {
     const controllerId = new URLSearchParams(location.search).get("controller");
     if (!controllerId) return;

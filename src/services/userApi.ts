@@ -1,7 +1,6 @@
 import { baseApi } from "@/services/baseApi";
 import type { UserProfile } from "@/types/api";
 
-
 export type UserRole = "customer" | "vendor" | "driver";
 export type UserStatus = "active" | "blocked";
 

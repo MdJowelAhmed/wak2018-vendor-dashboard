@@ -82,27 +82,55 @@ export type ProductOrderStatus =
   | 'delivery_requested'
   | 'shipment_created'
   | 'delivered'
+  | 'cancelled'
 
 export type ServiceOrderStatus = 'pending' | 'accepted' | 'in_progress' | 'completed'
 
 export type ProductOrder = {
   id: string
+  orderId: string
   type: 'product'
   productId: string
   productName: string
   customerName: string
   customer?: {
+    _id?: string
     name: string
     phone?: string
     email?: string
     address?: string
   }
-  items?: { name: string; quantity: number; price: number }[]
+  shippingAddress?: {
+    fullName: string
+    phone: string
+    address: string
+    city: string
+    state: string
+    country: string
+    countryCode: string
+    postalCode: string
+    latitude?: number
+    longitude?: number
+  }
+  shipment?: {
+    trackingStatus: string
+  }
+  vendor?: string
+  paymentMethod?: string
+  paymentStatus?: string
+  items?: { product: string; quantity: number; unitPrice: number; unitTotal: number; _id?: string }[]
   deliveryType?: 'local' | 'international' | null
+  subTotal?: number
+  shippingFee?: number
+  discount?: number
+  totalQuantity?: number
+  grandTotal?: number
   total: number
   quantity: number
   status: ProductOrderStatus
   createdAt: string
+  updatedAt?: string
+  stripeSessionId?: string
 }
 
 export type ServiceOrder = {
@@ -327,6 +355,7 @@ export type DashboardOrderDisplayStatus =
   | 'Delivered'
   | 'In Progress'
   | 'Completed'
+  | 'Cancelled'
 
 export type DashboardRecentOrder = {
   id: string
@@ -416,4 +445,26 @@ export type AdminUser = {
   role: UserRole
   status: 'active' | 'suspended' | 'pending_approval'
   createdAt: string
+}
+
+export type StripeConnectDetails = {
+  accountId: string
+  detailsSubmitted: boolean
+  chargesEnabled: boolean
+  payoutsEnabled: boolean
+}
+
+export type Wallet = {
+  _id: string
+  user: string
+  availableBalance: number
+  pendingBalance: number
+  processingBalance: number
+  holdBalance: number
+  totalEarnings: number
+  currency: string
+  stripeConnect: StripeConnectDetails
+  createdAt: string
+  updatedAt: string
+  __v?: number
 }

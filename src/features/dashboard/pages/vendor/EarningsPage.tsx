@@ -28,7 +28,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/utils";
+import { useGetWalletQuery } from "../../services/walletApi";
 
 function fmtMoney(n: number) {
   return new Intl.NumberFormat(undefined, {
@@ -58,11 +60,12 @@ function typeBadgeClass(t: Txn["type"]) {
 }
 
 export function EarningsPage() {
-  // Placeholder values until backend is wired.
-  const totalEarnings = 0;
-  const availableBalance = 0;
-  const pendingPayout = 0;
-  const connectedMethod: "Stripe" | "Bank" | "Hubtel" = "Stripe";
+  const { data: wallet, isLoading } = useGetWalletQuery();
+
+  const totalEarnings = wallet?.totalEarnings ?? 0;
+  const availableBalance = wallet?.availableBalance ?? 0;
+  const pendingPayout = wallet?.pendingBalance ?? 0;
+  const connectedMethod = wallet?.stripeConnect?.payoutsEnabled ? "Stripe (Payouts Enabled)" : "Stripe (Action Required)";
 
   const [amount, setAmount] = useState("");
   const [txnSearch, setTxnSearch] = useState("");
@@ -152,6 +155,14 @@ export function EarningsPage() {
         </p>
       </div>
 
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <Skeleton className="h-[120px] rounded-xl" />
+          <Skeleton className="h-[120px] rounded-xl" />
+          <Skeleton className="h-[120px] rounded-xl" />
+        </div>
+      ) : (
+
       <motion.div
         className="grid grid-cols-1 gap-6 lg:grid-cols-3"
         variants={earningsTopStaggerParentVariants}
@@ -230,6 +241,7 @@ export function EarningsPage() {
           </Card>
         </motion.div>
       </motion.div>
+      )}
 
       <motion.div
         variants={earningsTableSectionVariants}

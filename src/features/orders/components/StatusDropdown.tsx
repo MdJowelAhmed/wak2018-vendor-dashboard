@@ -34,6 +34,7 @@ const productLabels: Record<ProductOrderStatus, string> = {
   delivery_requested: "Delivery Requested",
   shipment_created: "Shipment Created",
   delivered: "Delivered",
+  cancelled: "Cancelled",
 };
 
 const serviceLabels: Record<ServiceOrderStatus, string> = {

@@ -157,7 +157,9 @@ export function OrdersListPage() {
               <TableBody>
                 {rows.map((o) => (
                   <TableRow key={o.id}>
-                    <TableCell className="font-medium">#{o.id}</TableCell>
+                    <TableCell className="font-medium">
+                      {'orderId' in o && o.orderId ? o.orderId : `#${o.id}`}
+                    </TableCell>
                     <TableCell>{o.customerName}</TableCell>
                     <TableCell className="capitalize">{o.type}</TableCell>
                     <TableCell>

@@ -213,7 +213,7 @@ const store = {
       status: 'shipment_created' as const,
       createdAt: iso(new Date(2025, 3, 3)),
     },
-  ] as ProductOrder[],
+  ] as unknown as ProductOrder[],
   serviceOrders: [
     {
       id: 'so-1',

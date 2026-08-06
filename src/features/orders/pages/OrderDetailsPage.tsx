@@ -104,20 +104,37 @@ export function OrderDetailsPage() {
   }
 
   const customer = order.customer ?? { name: order.customerName };
-  const items = order.items ?? [
+  const displayItems = order.items?.map((it: any) => ({
+    name: it.name || (order.type === 'product' ? 'Product Item' : (order as any).serviceName),
+    quantity: it.quantity || 1,
+    price: it.price ?? it.unitPrice ?? 0,
+    total: it.unitTotal ?? (it.price ?? it.unitPrice ?? 0) * (it.quantity || 1),
+  })) ?? [
     {
-      name: order.type === "product" ? order.productName : order.serviceName,
+      name: order.type === "product" ? order.productName : (order as any).serviceName,
       quantity: (order as any).quantity ?? 1,
       price: order.total,
+      total: order.total,
     },
   ];
-  const subtotal = items.reduce((a, it) => a + it.price * it.quantity, 0);
-  const deliveryFee = order.deliveryType
+
+  const subtotal = order.type === 'product' && order.subTotal !== undefined 
+    ? order.subTotal 
+    : displayItems.reduce((a, it) => a + it.total, 0);
+
+  const deliveryFee = order.type === 'product' && order.shippingFee !== undefined
+    ? order.shippingFee
+    : order.deliveryType
     ? order.deliveryType === "international"
       ? 15
       : 5
     : 0;
-  const total = subtotal + deliveryFee;
+
+  const discount = order.type === 'product' ? (order.discount || 0) : 0;
+
+  const total = order.type === 'product' && order.grandTotal !== undefined
+    ? order.grandTotal
+    : subtotal + deliveryFee - discount;
 
   const vendorId =
     profile?.id ?? localStorage.getItem("vendor_id") ?? "demo-vendor";
@@ -226,24 +243,49 @@ export function OrderDetailsPage() {
               <CardTitle>Customer details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div>
-                  <div className="text-muted-foreground">Name</div>
-                  <div className="font-medium">{customer.name}</div>
+              {order.type === 'product' && order.shippingAddress ? (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <div className="text-muted-foreground">Name</div>
+                    <div className="font-medium">{order.shippingAddress.fullName}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Phone</div>
+                    <div className="font-medium">{order.shippingAddress.phone ?? "—"}</div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <div className="text-muted-foreground">Address</div>
+                    <div className="font-medium">
+                      {[
+                        order.shippingAddress.address,
+                        order.shippingAddress.city,
+                        order.shippingAddress.state,
+                        order.shippingAddress.postalCode,
+                        order.shippingAddress.country
+                      ].filter(Boolean).join(", ") || "—"}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-muted-foreground">Phone</div>
-                  <div className="font-medium">{customer.phone ?? "—"}</div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <div className="text-muted-foreground">Name</div>
+                    <div className="font-medium">{customer.name}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Phone</div>
+                    <div className="font-medium">{customer.phone ?? "—"}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Email</div>
+                    <div className="font-medium">{customer.email ?? "—"}</div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <div className="text-muted-foreground">Address</div>
+                    <div className="font-medium">{customer.address ?? "—"}</div>
+                  </div>
                 </div>
-                <div>
-                  <div className="text-muted-foreground">Email</div>
-                  <div className="font-medium">{customer.email ?? "—"}</div>
-                </div>
-                <div className="sm:col-span-2">
-                  <div className="text-muted-foreground">Address</div>
-                  <div className="font-medium">{customer.address ?? "—"}</div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -503,7 +545,7 @@ export function OrderDetailsPage() {
                 initial="hidden"
                 animate="visible"
               >
-                {items.map((it, idx) => (
+                {displayItems.map((it, idx) => (
                   <motion.div
                     key={`${it.name}-${idx}`}
                     variants={orderDetailsItemRowVariants}
@@ -512,11 +554,11 @@ export function OrderDetailsPage() {
                     <div className="min-w-0">
                       <div className="font-medium truncate">{it.name}</div>
                       <div className="text-muted-foreground">
-                        Qty {it.quantity}
+                        Qty {it.quantity} &times; {fmtMoney(it.price)}
                       </div>
                     </div>
                     <div className="font-medium tabular-nums">
-                      {fmtMoney(it.price * it.quantity)}
+                      {fmtMoney(it.total)}
                     </div>
                   </motion.div>
                 ))}
@@ -543,6 +585,14 @@ export function OrderDetailsPage() {
                   {fmtMoney(deliveryFee)}
                 </span>
               </div>
+              {discount > 0 && (
+                <div className="flex items-center justify-between text-green-600">
+                  <span className="text-muted-foreground text-green-600">Discount</span>
+                  <span className="font-medium tabular-nums">
+                    -{fmtMoney(discount)}
+                  </span>
+                </div>
+              )}
               <div className="h-px bg-border my-2" />
               <div className="flex items-center justify-between">
                 <span className="font-medium">Total</span>

@@ -26,7 +26,7 @@ import { useUpdateServiceProviderProfileMutation } from "@/services/profileApi";
 const STORAGE_KEY = "service_onboarding_v1";
 
 type ExperienceLevel = "beginner" | "intermediate" | "expert";
-type Availability = "full_time" | "part_time" | "weekends";
+type Availability = "fullTime" | "partTime" | "weekends";
 
 type OnboardingData = {
   // Step 2
@@ -582,8 +582,8 @@ function Step3Professional({
             <SelectValue placeholder="Select availability" />
           </SelectTrigger>
           <SelectContent className="border-gray-200 bg-white text-gray-900">
-            <SelectItem value="full_time">Full-time</SelectItem>
-            <SelectItem value="part_time">Part-time</SelectItem>
+            <SelectItem value="fullTime">Full-time</SelectItem>
+            <SelectItem value="partTime">Part-time</SelectItem>
             <SelectItem value="weekends">Weekends</SelectItem>
           </SelectContent>
         </Select>

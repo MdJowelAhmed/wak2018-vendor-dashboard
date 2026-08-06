@@ -26,6 +26,7 @@ import {
   emptyServiceCountrySelection,
   normalizeServiceCountrySelection,
 } from "@/utils/service-provider-profile-storage";
+import { useUpdateServiceProviderProfileMutation } from "@/services/profileApi";
 import {
   CountryMultiSelect,
   type ServiceCountrySelection,
@@ -39,7 +40,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 type ExperienceLevel = "beginner" | "intermediate" | "expert" | "";
-type Availability = "full_time" | "part_time" | "weekends" | "";
+type Availability = "fullTime" | "partTime" | "weekends" | "";
 
 export type ServiceProviderProfileData = {
   businessName: string;
@@ -202,19 +203,9 @@ function MultiSelect({
   );
 }
 
-export function ServiceProfileSettings({
-  profile,
-}: {
-  profile:
-    | {
-        email?: string;
-        phone?: string;
-        firstName?: string;
-        lastName?: string;
-      }
-    | undefined;
-}) {
+export function ServiceProfileSettings({ profile }: { profile: any }) {
   const imageRef = useRef<HTMLInputElement | null>(null);
+  const [updateProfile] = useUpdateServiceProviderProfileMutation();
 
   const initial = useMemo(() => {
     const stored = safeLoad();
@@ -228,31 +219,49 @@ export function ServiceProfileSettings({
     }
     const onboarding = safeLoadOnboarding();
     const fullName =
-      `${profile?.firstName ?? ""} ${profile?.lastName ?? ""}`.trim();
+      `${profile?.firstName ?? profile?.name ?? ""} ${profile?.lastName ?? ""}`.trim();
     return {
-      businessName: String(onboarding?.businessName ?? ""),
+      businessName: String(
+        profile?.serviceProvider?.title ?? onboarding?.businessName ?? "",
+      ),
       ownerName: String(onboarding?.ownerName ?? fullName),
-      phone: String(onboarding?.phone ?? profile?.phone ?? ""),
-      email: String(onboarding?.email ?? profile?.email ?? ""),
-      address: String(onboarding?.address ?? ""),
+      phone: String(profile?.phone ?? onboarding?.phone ?? ""),
+      email: String(profile?.email ?? onboarding?.email ?? ""),
+      address: String(profile?.address ?? onboarding?.address ?? ""),
       category: Array.isArray(onboarding?.serviceCategories)
         ? (onboarding?.serviceCategories as string[])
         : [],
       serviceArea: String(onboarding?.serviceArea ?? ""),
       serviceLocation: emptyServiceCountrySelection(),
 
-      experienceLevel: (onboarding?.experienceLevel as ExperienceLevel) ?? "",
-      years: String(onboarding?.yearsExperience ?? ""),
-      skills: Array.isArray(onboarding?.skills)
-        ? (onboarding?.skills as string[])
-        : [],
-      portfolio: Array.isArray(onboarding?.portfolioLinks)
-        ? (onboarding?.portfolioLinks as string[]).join("\n")
-        : String(onboarding?.portfolio ?? ""),
-      languages: Array.isArray(onboarding?.languages)
-        ? (onboarding?.languages as string[])
-        : [],
-      availability: (onboarding?.availability as Availability) ?? "",
+      experienceLevel:
+        (profile?.serviceProvider?.experienceLevel as ExperienceLevel) ??
+        (onboarding?.experienceLevel as ExperienceLevel) ??
+        "",
+      years: String(
+        profile?.serviceProvider?.yearsOfExperience ??
+          onboarding?.yearsExperience ??
+          "",
+      ),
+      skills: Array.isArray(profile?.serviceProvider?.skills)
+        ? (profile.serviceProvider.skills as string[])
+        : Array.isArray(onboarding?.skills)
+          ? (onboarding?.skills as string[])
+          : [],
+      portfolio:
+        profile?.serviceProvider?.portfolioLink ??
+        (Array.isArray(onboarding?.portfolioLinks)
+          ? (onboarding?.portfolioLinks as string[]).join("\n")
+          : String(onboarding?.portfolio ?? "")),
+      languages: Array.isArray(profile?.serviceProvider?.languages)
+        ? (profile.serviceProvider.languages as string[])
+        : Array.isArray(onboarding?.languages)
+          ? (onboarding?.languages as string[])
+          : [],
+      availability:
+        (profile?.serviceProvider?.availability as Availability) ??
+        (onboarding?.availability as Availability) ??
+        "",
 
       serviceTitle: String(onboarding?.serviceTitle ?? ""),
       serviceCategory: String(onboarding?.serviceCategory ?? ""),
@@ -348,13 +357,27 @@ export function ServiceProfileSettings({
     setV((p) => ({ ...p, skills: p.skills.filter((x) => x !== s) }));
   }
 
-  function save() {
+  async function save() {
     if (!validate()) {
       toast.error("Please fill required fields.");
       return;
     }
-    safeSave(v);
-    toast.success("Profile updated");
+
+    try {
+      await updateProfile({
+        experienceLevel: v.experienceLevel,
+        yearsOfExperience: Number(v.years) || 0,
+        portfolioLink: v.portfolio,
+        skills: v.skills,
+        languages: v.languages,
+        availability: v.availability,
+      }).unwrap();
+
+      safeSave(v); // Keep local storage sync for other fields not covered by API yet
+      toast.success("Profile updated successfully!");
+    } catch (err) {
+      toast.error("Failed to update profile.");
+    }
   }
 
   return (
@@ -602,8 +625,8 @@ export function ServiceProfileSettings({
                   <SelectValue placeholder="Select availability" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="full_time">Full-time</SelectItem>
-                  <SelectItem value="part_time">Part-time</SelectItem>
+                  <SelectItem value="fullTime">Full-time</SelectItem>
+                  <SelectItem value="partTime">Part-time</SelectItem>
                   <SelectItem value="weekends">Weekends</SelectItem>
                 </SelectContent>
               </Select>

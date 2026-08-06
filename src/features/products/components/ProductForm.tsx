@@ -275,7 +275,7 @@ export function ProductForm({
                   className="rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#895129]"
                 />
               </div> */}
-              <div className="grid gap-2">
+              {/* <div className="grid gap-2">
                 <Label className="text-gray-700" htmlFor="product-country">
                   Product Country
                 </Label>
@@ -294,7 +294,7 @@ export function ProductForm({
                       : undefined
                   }
                 />
-              </div>
+              </div> */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label className="text-gray-700" htmlFor="price">
@@ -348,7 +348,7 @@ export function ProductForm({
                     className="rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#895129]"
                   />
                 </div>
-                <div className="flex items-center gap-2 pt-6">
+                {/* <div className="flex items-center gap-2 pt-6">
                   <Switch
                     id="active"
                     checked={v.active}
@@ -357,7 +357,7 @@ export function ProductForm({
                   <Label className="text-gray-700" htmlFor="active">
                     Active
                   </Label>
-                </div>
+                </div> */}
               </div>
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">

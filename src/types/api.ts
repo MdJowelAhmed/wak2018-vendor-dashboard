@@ -2,6 +2,7 @@ import type { UserRole } from '@/features/auth/types/authTypes'
 
 export type UserProfile = {
   id: string
+  name?: string
   firstName?: string
   lastName?: string
   email?: string
@@ -407,7 +408,7 @@ export type AdminUser = {
   id: string
   name: string
   email: string
-  role: import('@/features/auth/components/AuthLayout').UserRole
+  role: UserRole
   status: 'active' | 'suspended' | 'pending_approval'
   createdAt: string
 }

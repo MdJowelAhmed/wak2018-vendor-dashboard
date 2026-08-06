@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUpdateVendorProfileMutation } from "@/services/profileApi";
 
 const STORAGE_KEY = "vendor_onboarding_v1";
 
@@ -575,6 +576,9 @@ export function VendorOnboardingPage() {
     Partial<Record<keyof VendorData, string>>
   >({});
 
+  const [updateVendorProfile, { isLoading: isUpdating }] =
+    useUpdateVendorProfileMutation();
+
   useEffect(() => {
     store(data);
   }, [data]);
@@ -604,10 +608,41 @@ export function VendorOnboardingPage() {
     return Object.keys(e).length === 0;
   }
 
-  function next() {
+  async function next() {
     if (!validateCurrent()) return;
     setErrors({});
-    setStep((s) => (s === 2 ? 3 : 4));
+
+    if (step === 2) {
+      try {
+        const formData = new FormData();
+        formData.append("businessName", data.businessName);
+        formData.append("ownerName", data.ownerName);
+        formData.append("businessEmail", data.email);
+        formData.append("businessPhone", data.phone);
+        formData.append("address", data.address);
+        formData.append("description", data.description);
+        const mappedDeliveryType =
+          data.deliveryType === "own" ? "own_delivery" : "platform_delivery";
+        formData.append("deliveryType", mappedDeliveryType);
+        formData.append("productCount", data.productCount);
+        // Note: category and shopType are unsupported by the backend currently so we omit them.
+
+        if (logo) {
+          formData.append("logo", logo);
+        }
+        if (cover) {
+          formData.append("coverImage", cover);
+        }
+
+        await updateVendorProfile(formData).unwrap();
+        toast.success("Profile updated successfully");
+        setStep(3);
+      } catch (err: any) {
+        toast.error(err?.data?.message || "Failed to update profile");
+      }
+    } else {
+      setStep((s) => (s === 2 ? 3 : 4));
+    }
   }
 
   function back() {
@@ -709,10 +744,11 @@ export function VendorOnboardingPage() {
                 <Button
                   type="button"
                   onClick={next}
-                  className="h-11 rounded-xl bg-[#895129] px-6 text-white transition-all duration-200 hover:scale-[1.02] hover:bg-[#6f3f1f]"
+                  disabled={isUpdating}
+                  className="h-11 rounded-xl bg-[#895129] px-6 text-white transition-all duration-200 hover:scale-[1.02] hover:bg-[#6f3f1f] disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  Next
-                  <ChevronRight className="ml-2 size-4" />
+                  {isUpdating ? "Saving..." : "Next"}
+                  {!isUpdating && <ChevronRight className="ml-2 size-4" />}
                 </Button>
               </div>
             ) : null}

@@ -1,7 +1,7 @@
 import { baseApi } from '@/services/baseApi'
 import type { Product } from '@/types/api'
 
-const listTag = { type: 'Product' as const, id: 'LIST' as const }
+const listTag = { type: 'Products' as const, id: 'LIST' as const }
 
 export const productApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -9,12 +9,12 @@ export const productApi = baseApi.injectEndpoints({
       query: () => '/vendor/products',
       providesTags: (r) =>
         r
-          ? [listTag, ...r.map((p) => ({ type: 'Product' as const, id: p.id }))]
+          ? [listTag, ...r.map((p) => ({ type: 'Products' as const, id: p.id }))]
           : [listTag],
     }),
     getProduct: build.query<Product, string>({
       query: (id) => `/vendor/products/${id}`,
-      providesTags: (_r, _e, id) => [{ type: 'Product', id }],
+      providesTags: (_r, _e, id) => [{ type: 'Products', id }],
     }),
     createProduct: build.mutation<Product, FormData>({
       query: (formData) => ({
@@ -30,7 +30,7 @@ export const productApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: (_r, _e, arg) => [listTag, { type: 'Product' as const, id: arg.id }],
+      invalidatesTags: (_r, _e, arg) => [listTag, { type: 'Products' as const, id: arg.id }],
     }),
     patchProduct: build.mutation<Product, { id: string; partial: Partial<Product> }>({
       query: ({ id, partial }) => ({
@@ -38,11 +38,11 @@ export const productApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: partial,
       }),
-      invalidatesTags: (_r, _e, arg) => [listTag, { type: 'Product' as const, id: arg.id }],
+      invalidatesTags: (_r, _e, arg) => [listTag, { type: 'Products' as const, id: arg.id }],
     }),
     deleteProduct: build.mutation<void, string>({
       query: (id) => ({ url: `/vendor/products/${id}`, method: 'DELETE' }),
-      invalidatesTags: (_r, _e, id) => [listTag, { type: 'Product' as const, id }],
+      invalidatesTags: (_r, _e, id) => [listTag, { type: 'Products' as const, id }],
     }),
   }),
   overrideExisting: false,

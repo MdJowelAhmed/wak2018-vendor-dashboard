@@ -34,14 +34,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogoutModal } from "@/components/LogoutModal";
 import { useAppDispatch } from "@/app/hooks";
 import { logout } from "@/features/auth/authSlice";
-import { useGetProfileQuery } from "@/services/userApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import { connectSocket } from "@/utils/socket";
 import { NotificationDropdown } from "@/features/notifications/components/NotificationDropdown";
-import { cn } from "@/utils/utils";
+import { cn, getImageUrl } from "@/utils/utils";
 
 type MenuItem = { to: string; label: string; icon: typeof Home };
 
@@ -60,7 +60,8 @@ export function VendorLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { data, isError } = useGetProfileQuery();
+  const { data: profileResponse, isError } = useGetUserProfileQuery();
+  const data = profileResponse?.data;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [openSettings, setOpenSettings] = useState(false);
@@ -106,10 +107,14 @@ export function VendorLayout() {
               className="flex items-center gap-2 font-semibold text-primary"
               onClick={() => setMobileOpen(false)}
             >
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm">
-                W
+              <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm overflow-hidden">
+                {data?.vendor?.logo ? (
+                  <img src={getImageUrl(data.vendor.logo)} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  (data?.vendor?.businessName?.[0] || data?.name?.[0] || "W").toUpperCase()
+                )}
               </span>
-              <span>Unified vendor</span>
+              <span className="truncate w-40">{data?.vendor?.businessName || data?.name || "Unified vendor"}</span>
             </Link>
             {isError && (
               <p className="text-muted-foreground mt-1 text-xs">
@@ -342,6 +347,9 @@ export function VendorLayout() {
                       className="relative h-8 w-8 rounded-full"
                     >
                       <Avatar className="h-8 w-8">
+                        {data?.vendor?.logo && (
+                          <AvatarImage src={getImageUrl(data.vendor.logo)} />
+                        )}
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {data?.name?.charAt(0) || <User className="size-4" />}
                         </AvatarFallback>

@@ -7,8 +7,8 @@ export const baseApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl,
     prepareHeaders: (headers) => {
-      const token = localStorage.getItem("admin_token");
-      if (token) headers.set("authorization", `${token}`);
+      const token = localStorage.getItem("auth_token") || localStorage.getItem("admin_token");
+      if (token) headers.set("authorization", `Bearer ${token}`);
       return headers;
     },
   }),
@@ -22,6 +22,12 @@ export const baseApi = createApi({
     "Payouts",
     "Analytics",
     "DeliveryDrivers",
+    "Settings",
+    "Milestones",
+    "Deliveries",
+    "Customers",
+    "Messages",
+    "Conversations",
   ],
   endpoints: () => ({}),
 });

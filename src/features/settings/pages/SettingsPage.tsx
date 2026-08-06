@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom'
 import { useAppSelector } from '@/app/hooks'
-import { useGetProfileQuery } from '@/services/userApi';
+import { useGetUserProfileQuery } from '@/services/profileApi';
 import { ProfileSettings } from '@/features/settings/components/ProfileSettings'
 import { SecuritySettings } from '@/features/settings/components/SecuritySettings'
 import { LegalSettings } from '@/features/settings/components/LegalSettings'
@@ -9,7 +9,8 @@ import { SupportSettings } from '@/features/settings/components/SupportSettings'
 export function SettingsPage() {
   const location = useLocation()
   const sessionUser = useAppSelector((s) => s.auth.user)
-  const { data } = useGetProfileQuery()
+  const { data: profileResponse } = useGetUserProfileQuery()
+  const profileData = profileResponse?.data
 
   const p = location.pathname
   const section = p.endsWith('/security')
@@ -34,7 +35,7 @@ export function SettingsPage() {
         </p>
       )}
 
-      {section === 'profile' ? <ProfileSettings profile={data} /> : null}
+      {section === 'profile' ? <ProfileSettings profile={profileData} /> : null}
       {section === 'security' ? <SecuritySettings /> : null}
       {section === 'legal' ? <LegalSettings /> : null}
       {section === 'support' ? <SupportSettings /> : null}

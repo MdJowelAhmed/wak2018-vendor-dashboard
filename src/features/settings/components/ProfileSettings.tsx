@@ -11,15 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { UserProfile } from "@/types/api";
-import { useUpdateProfileMutation } from '@/services/userApi';
+import { useUpdateVendorProfileMutation } from '@/services/profileApi';
 import {
   CountryMultiSelect,
   type ServiceCountrySelection,
@@ -30,28 +22,6 @@ import {
 } from "@/utils/service-provider-profile-storage";
 
 const VENDOR_ONBOARDING_STORAGE_KEY = "vendor_onboarding_v1";
-
-const categoryOptions = [
-  "Grocery",
-  "Restaurant",
-  "Fashion",
-  "Electronics",
-  "Beauty",
-  "Home & Kitchen",
-  "Kids",
-  "Health",
-  "Books",
-  "Sports",
-] as const;
-
-const shopTypeOptions = [
-  "Retail",
-  "Online-only",
-  "Restaurant",
-  "Grocery",
-  "Wholesale",
-  "Other",
-] as const;
 
 function safeReadOnboarding(): Partial<Record<string, any>> | null {
   if (typeof localStorage === "undefined") return null;
@@ -64,34 +34,24 @@ function safeReadOnboarding(): Partial<Record<string, any>> | null {
   }
 }
 
-function fullNameFromProfile(p: UserProfile | undefined) {
-  const first = p?.firstName ?? "";
-  const last = p?.lastName ?? "";
-  return `${first} ${last}`.trim();
-}
-
 export function ProfileSettings({
   profile,
 }: {
-  profile: UserProfile | undefined;
+  profile: any;
 }) {
-  const [update, { isLoading }] = useUpdateProfileMutation();
+  const [update, { isLoading }] = useUpdateVendorProfileMutation();
 
   const onboarding = useMemo(() => safeReadOnboarding(), []);
 
   const initial = useMemo(
     () => ({
-      businessName: String(onboarding?.businessName ?? ""),
-      ownerName: String(onboarding?.ownerName ?? fullNameFromProfile(profile)),
+      businessName: String(profile?.vendor?.businessName ?? onboarding?.businessName ?? ""),
+      ownerName: String(profile?.vendor?.ownerName ?? onboarding?.ownerName ?? profile?.name ?? ""),
       email: profile?.email ?? "",
-      phone: String(onboarding?.phone ?? profile?.phone ?? ""),
-      streetAddress: String(onboarding?.address ?? profile?.address ?? ""),
-      category: Array.isArray(onboarding?.category)
-        ? String(onboarding?.category?.[0] ?? "")
-        : String(onboarding?.category ?? ""),
-      shopType: String(onboarding?.shopType ?? ""),
-      approxProductCount: String(onboarding?.productCount ?? ""),
-      description: String(onboarding?.description ?? ""),
+      phone: String(profile?.vendor?.businessPhone ?? profile?.phone ?? onboarding?.phone ?? ""),
+      streetAddress: String(profile?.vendor?.address ?? profile?.address ?? onboarding?.address ?? ""),
+      approxProductCount: String(profile?.vendor?.productCount ?? onboarding?.productCount ?? ""),
+      description: String(profile?.vendor?.description ?? onboarding?.description ?? ""),
     }),
     [profile, onboarding],
   );
@@ -105,12 +65,12 @@ export function ProfileSettings({
     useState<ServiceCountrySelection>(() =>
       readVendorServiceLocationFromLocalStorage(),
     );
-  const [category, setCategory] = useState(initial.category);
-  const [shopType, setShopType] = useState(initial.shopType);
   const [approxProductCount, setApproxProductCount] = useState(
     initial.approxProductCount,
   );
   const [description, setDescription] = useState(initial.description);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     setEmail(initial.email);
@@ -118,8 +78,6 @@ export function ProfileSettings({
     setOwnerName(initial.ownerName);
     setPhone(initial.phone);
     setStreetAddress(initial.streetAddress);
-    setCategory(initial.category);
-    setShopType(initial.shopType);
     setApproxProductCount(initial.approxProductCount);
     setDescription(initial.description);
   }, [
@@ -128,8 +86,6 @@ export function ProfileSettings({
     initial.ownerName,
     initial.phone,
     initial.streetAddress,
-    initial.category,
-    initial.shopType,
     initial.approxProductCount,
     initial.description,
   ]);
@@ -153,13 +109,30 @@ export function ProfileSettings({
       return;
     }
     try {
-      // Current API supports only basic profile fields; keep business fields in UI for now.
-      await update({
-        fullName: ownerName.trim(),
-        email: undefined, // email is readonly in this UI
-        phone: phone.trim() || undefined,
-        address: streetAddress.trim() || undefined,
-      }).unwrap();
+      const formData = new FormData();
+      formData.append("ownerName", ownerName.trim());
+      formData.append("businessName", businessName.trim());
+      
+      if (phone.trim()) {
+        formData.append("businessPhone", phone.trim());
+      }
+      if (streetAddress.trim()) {
+        formData.append("address", streetAddress.trim());
+      }
+      if (approxProductCount.trim()) {
+        formData.append("productCount", approxProductCount.trim());
+      }
+      if (description.trim()) {
+        formData.append("description", description.trim());
+      }
+      if (logoFile) {
+        formData.append("logo", logoFile);
+      }
+      if (coverImageFile) {
+        formData.append("coverImage", coverImageFile);
+      }
+
+      await update(formData).unwrap();
       writeVendorServiceLocationToLocalStorage(serviceLocation);
       toast.success("Profile updated");
     } catch {
@@ -259,40 +232,9 @@ export function ProfileSettings({
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label>Category</Label>
-              <Select value={category} onValueChange={setCategory}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoryOptions.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
-            <div className="grid gap-2">
-              <Label>Shop Type</Label>
-              <Select value={shopType} onValueChange={setShopType}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select shop type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {shopTypeOptions.map((t) => (
-                    <SelectItem key={t} value={t}>
-                      {t}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
               <Label htmlFor="approxProductCount">Approx Product Count</Label>
               <Input
                 id="approxProductCount"
@@ -303,6 +245,45 @@ export function ProfileSettings({
                 inputMode="numeric"
                 placeholder="e.g. 50"
               />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-xl border-border/60 shadow-sm">
+        <CardHeader>
+          <CardTitle>Images</CardTitle>
+          <CardDescription>Upload your logo and cover image.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid gap-2">
+              <Label htmlFor="logo">Logo</Label>
+              <Input
+                id="logo"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {profile?.vendor?.logo && !logoFile
+                  ? "You have a logo uploaded."
+                  : null}
+              </p>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="coverImage">Cover Image</Label>
+              <Input
+                id="coverImage"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setCoverImageFile(e.target.files?.[0] || null)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {profile?.vendor?.coverImage && !coverImageFile
+                  ? "You have a cover image uploaded."
+                  : null}
+              </p>
             </div>
           </div>
         </CardContent>

@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useUpdateServiceProviderProfileMutation } from "@/services/profileApi";
 
 const STORAGE_KEY = "service_onboarding_v1";
 
@@ -931,6 +932,9 @@ export function ServiceOnboardingPage() {
     Partial<Record<keyof OnboardingData, string>>
   >({});
 
+  const [updateServiceProviderProfile, { isLoading: isUpdating }] =
+    useUpdateServiceProviderProfileMutation();
+
   useEffect(() => {
     store(data);
   }, [data]);
@@ -983,11 +987,29 @@ export function ServiceOnboardingPage() {
     return Object.keys(e).length === 0;
   }
 
-  function next() {
+  async function next() {
     if (!validateCurrent()) return;
     setErrors({});
     if (step === 6) return;
-    setStep((s) => (s === 2 ? 3 : s === 3 ? 4 : s === 4 ? 5 : 6));
+
+    if (step === 3) {
+      try {
+        await updateServiceProviderProfile({
+          experienceLevel: data.experienceLevel,
+          yearsOfExperience: Number(data.yearsExperience),
+          portfolioLink: data.portfolioLinks.join(","),
+          skills: data.skills,
+          languages: data.languages,
+          availability: data.availability,
+        }).unwrap();
+        toast.success("Professional info updated");
+        setStep(4);
+      } catch (err: any) {
+        toast.error(err?.data?.message || "Failed to update profile");
+      }
+    } else {
+      setStep((s) => (s === 2 ? 3 : s === 3 ? 4 : s === 4 ? 5 : 6));
+    }
   }
 
   function back() {
@@ -1096,10 +1118,11 @@ export function ServiceOnboardingPage() {
                 <Button
                   type="button"
                   onClick={next}
-                  className="h-11 rounded-xl bg-[#895129] px-6 text-white transition-all duration-200 hover:scale-[1.02] hover:bg-[#6f3f1f]"
+                  disabled={isUpdating}
+                  className="h-11 rounded-xl bg-[#895129] px-6 text-white transition-all duration-200 hover:scale-[1.02] hover:bg-[#6f3f1f] disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  Next
-                  <ChevronRight className="ml-2 size-4" />
+                  {isUpdating ? "Saving..." : "Next"}
+                  {!isUpdating && <ChevronRight className="ml-2 size-4" />}
                 </Button>
               </div>
             ) : null}

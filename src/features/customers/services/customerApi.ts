@@ -1,7 +1,7 @@
 import { baseApi } from '@/services/baseApi'
 import type { CustomerDetails, CustomerListRow } from '@/types/api'
 
-const tag = { type: 'Customer' as const, id: 'DETAIL' as const }
+const tag = { type: 'Customers' as const, id: 'DETAIL' as const }
 
 export const customerApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -11,7 +11,7 @@ export const customerApi = baseApi.injectEndpoints({
     }),
     getCustomerDetails: build.query<CustomerDetails, string>({
       query: (id) => `/vendor/customers/${id}`,
-      providesTags: (_r, _e, id) => [tag, { type: 'Customer' as const, id }],
+      providesTags: (_r, _e, id) => [tag, { type: 'Customers' as const, id }],
     }),
   }),
   overrideExisting: false,

@@ -1,42 +1,48 @@
-import { useEffect } from 'react'
-import { baseApi } from '@/services/baseApi'
-import { useAppDispatch } from '@/app/hooks'
-import { getSocket } from '@/utils/socket'
+import { useEffect } from "react";
+import { baseApi } from "@/services/baseApi";
+import { useAppDispatch } from "@/app/hooks";
+import { getSocket } from "@/utils/socket";
 
 /**
  * Subscribes to delivery-related socket events and invalidates RTK Query caches.
  * In static demo mode, `getSocket()` returns null, so this becomes a no-op.
  */
 export function useDeliveryRealtime(orderId?: string) {
-  const dispatch = useAppDispatch()
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    const socket = getSocket()
-    if (!socket) return
+    const socket = getSocket();
+    if (!socket) return;
 
     const invalidate = () => {
       dispatch(
         baseApi.util.invalidateTags(
           orderId
-            ? [{ type: 'Delivery', id: orderId }, { type: 'Order', id: orderId }, { type: 'Order', id: 'LIST' }]
-            : [{ type: 'Delivery', id: 'LIST' }, { type: 'Order', id: 'LIST' }],
+            ? [
+                { type: "Deliveries", id: orderId },
+                { type: "Orders", id: orderId },
+                { type: "Orders", id: "LIST" },
+              ]
+            : [
+                { type: "Deliveries", id: "LIST" },
+                { type: "Orders", id: "LIST" },
+              ],
         ),
-      )
-    }
+      );
+    };
 
     // Keep event names flexible: backend can emit either generic or typed events.
     const handlers: Array<[string, (...args: any[]) => void]> = [
-      ['delivery:updated', invalidate],
-      ['delivery:status', invalidate],
-      ['driver:accepted', invalidate],
-      ['shipment:tracking', invalidate],
-      ['delivery:completed', invalidate],
-    ]
+      ["delivery:updated", invalidate],
+      ["delivery:status", invalidate],
+      ["driver:accepted", invalidate],
+      ["shipment:tracking", invalidate],
+      ["delivery:completed", invalidate],
+    ];
 
-    for (const [evt, fn] of handlers) socket.on(evt, fn)
+    for (const [evt, fn] of handlers) socket.on(evt, fn);
     return () => {
-      for (const [evt, fn] of handlers) socket.off(evt, fn)
-    }
-  }, [dispatch, orderId])
+      for (const [evt, fn] of handlers) socket.off(evt, fn);
+    };
+  }, [dispatch, orderId]);
 }
-

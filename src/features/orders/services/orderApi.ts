@@ -1,7 +1,7 @@
 import { baseApi } from '@/services/baseApi'
 import type { ProductOrder, ProductOrderStatus, ServiceOrder, ServiceOrderStatus } from '@/types/api'
 
-const list = { type: 'Order' as const, id: 'LIST' as const }
+const list = { type: 'Orders' as const, id: 'LIST' as const }
 
 export const orderApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -10,18 +10,18 @@ export const orderApi = baseApi.injectEndpoints({
         url: '/orders/products',
         params: q && q.status ? { status: q.status } : undefined,
       }),
-      providesTags: (r) => (r ? [list, ...r.map((o) => ({ type: 'Order' as const, id: o.id }))] : [list]),
+      providesTags: (r) => (r ? [list, ...r.map((o) => ({ type: 'Orders' as const, id: o.id }))] : [list]),
     }),
     getServiceOrders: build.query<ServiceOrder[], { status?: ServiceOrderStatus } | void>({
       query: (q) => ({
         url: '/orders/services',
         params: q && q.status ? { status: q.status } : undefined,
       }),
-      providesTags: (r) => (r ? [list, ...r.map((o) => ({ type: 'Order' as const, id: o.id }))] : [list]),
+      providesTags: (r) => (r ? [list, ...r.map((o) => ({ type: 'Orders' as const, id: o.id }))] : [list]),
     }),
     getOrderById: build.query<ProductOrder | ServiceOrder, string>({
       query: (id) => `/orders/${id}`,
-      providesTags: (_r, _e, id) => [{ type: 'Order', id }],
+      providesTags: (_r, _e, id) => [{ type: 'Orders', id }],
     }),
     updateProductOrderStatus: build.mutation<
       ProductOrder,
@@ -32,7 +32,7 @@ export const orderApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: { status },
       }),
-      invalidatesTags: (_r, _e, { id }) => [list, { type: 'Order' as const, id }],
+      invalidatesTags: (_r, _e, { id }) => [list, { type: 'Orders' as const, id }],
     }),
     updateServiceOrderStatus: build.mutation<
       ServiceOrder,
@@ -43,7 +43,7 @@ export const orderApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: { status },
       }),
-      invalidatesTags: (_r, _e, { id }) => [list, { type: 'Order' as const, id }],
+      invalidatesTags: (_r, _e, { id }) => [list, { type: 'Orders' as const, id }],
     }),
   }),
   overrideExisting: false,

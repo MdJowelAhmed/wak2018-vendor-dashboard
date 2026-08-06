@@ -15,8 +15,8 @@ export function useChatRealtime(conversationId?: string) {
     const invalidate = () => {
       dispatch(
         baseApi.util.invalidateTags([
-          { type: 'Message', id: conversationId },
-          { type: 'Conversation', id: 'LIST' },
+          { type: 'Messages', id: conversationId },
+          { type: 'Conversations', id: 'LIST' },
         ]),
       )
     }

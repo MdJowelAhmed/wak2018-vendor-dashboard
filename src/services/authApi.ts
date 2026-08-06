@@ -27,7 +27,7 @@ export const authApi = baseApi.injectEndpoints({
       }),
     }),
     verifyEmail: build.mutation<
-      { success: boolean; message: string },
+      { success: boolean; message: string; data?: { token: string } },
       { email: string; oneTimeCode: number }
     >({
       query: (data) => ({

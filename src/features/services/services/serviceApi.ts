@@ -2,7 +2,7 @@ import { baseApi } from "@/services/baseApi";
 import type { Service, ServicePackage } from "@/types/api";
 import type { UserRole } from "@/features/auth/types/authTypes";
 
-const listTag = { type: "Service" as const, id: "LIST" as const };
+const listTag = { type: "Services" as const, id: "LIST" as const };
 
 export type CreateServiceInput = {
   title: string;
@@ -36,12 +36,15 @@ export const serviceApi = baseApi.injectEndpoints({
       query: () => "/vendor/services",
       providesTags: (r) =>
         r
-          ? [listTag, ...r.map((s) => ({ type: "Service" as const, id: s.id }))]
+          ? [
+              listTag,
+              ...r.map((s) => ({ type: "Services" as const, id: s.id })),
+            ]
           : [listTag],
     }),
     getService: build.query<Service, string>({
       query: (id) => `/vendor/services/${id}`,
-      providesTags: (_r, _e, id) => [{ type: "Service", id }],
+      providesTags: (_r, _e, id) => [{ type: "Services", id }],
     }),
     createService: build.mutation<Service, CreateServiceInput | FormData>({
       query: (body) => ({
@@ -62,7 +65,7 @@ export const serviceApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_r, _e, arg) => [
         listTag,
-        { type: "Service" as const, id: arg.id },
+        { type: "Services" as const, id: arg.id },
       ],
     }),
     createServiceProviderService: build.mutation<

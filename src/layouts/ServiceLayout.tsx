@@ -7,7 +7,6 @@ import {
 } from "react-router-dom";
 import {
   BarChart3,
-  Bell,
   CalendarDays,
   HandCoins,
   Home,
@@ -33,13 +32,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogoutModal } from "@/components/LogoutModal";
 import { useAppDispatch } from "@/app/hooks";
 import { logout } from "@/features/auth/authSlice";
-import { useGetProfileQuery } from "@/services/userApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import { NotificationDropdown } from "@/features/notifications/components/NotificationDropdown";
-import { cn } from "@/utils/utils";
+import { cn, getImageUrl } from "@/utils/utils";
 import {
   getActiveServiceControllerPermissions,
   loadServiceControllers,
@@ -221,7 +220,8 @@ export function ServiceLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { data, isError } = useGetProfileQuery();
+  const { data: profileResponse, isError } = useGetUserProfileQuery();
+  const data = profileResponse?.data;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
@@ -267,10 +267,14 @@ export function ServiceLayout() {
               className="flex items-center gap-2 font-semibold text-primary"
               onClick={() => setMobileOpen(false)}
             >
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm">
-                W
+              <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm overflow-hidden">
+                {data?.serviceProvider?.logo ? (
+                  <img src={getImageUrl(data.serviceProvider.logo)} alt="Logo" className="h-full w-full object-cover" />
+                ) : (
+                  (data?.serviceProvider?.title?.[0] || data?.name?.[0] || "W").toUpperCase()
+                )}
               </span>
-              <span>Unified service</span>
+              <span className="truncate w-40">{data?.serviceProvider?.title || data?.name || "Unified service"}</span>
             </Link>
             {isError && (
               <p className="text-muted-foreground mt-1 text-xs">
@@ -328,7 +332,10 @@ export function ServiceLayout() {
               </div>
 
               <div className="ml-auto flex items-center gap-2">
-                <NotificationDropdown role="service" viewAllUrl="/service/notifications" />
+                <NotificationDropdown
+                  role="service"
+                  viewAllUrl="/service/notifications"
+                />
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -337,6 +344,9 @@ export function ServiceLayout() {
                       className="relative h-8 w-8 rounded-full"
                     >
                       <Avatar className="h-8 w-8">
+                        {data?.serviceProvider?.logo && (
+                          <AvatarImage src={getImageUrl(data.serviceProvider.logo)} />
+                        )}
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {data?.name?.charAt(0) || <User className="size-4" />}
                         </AvatarFallback>
@@ -403,4 +413,3 @@ export function ServiceLayout() {
     </div>
   );
 }
-

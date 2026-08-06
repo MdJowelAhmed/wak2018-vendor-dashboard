@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setToken } from "../authSlice";
 import { toast } from "sonner";
 import { AuthCard } from "../components/AuthCard";
 import { AuthHeader } from "../components/AuthHeader";
@@ -28,6 +30,7 @@ const OTP_ROLE_KEY = "otp_role";
 
 export function VerifyOtpPage() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { state } = useLocation() as { state: LocationState | null };
   const fromState = state?.email;
   const mode = state?.mode ?? sessionStorage.getItem(OTP_MODE_KEY) ?? "forgot";
@@ -96,7 +99,10 @@ export function VerifyOtpPage() {
     }
     try {
       if (mode === "register") {
-        await verifyEmailMutation({ email, oneTimeCode: Number(otp) }).unwrap();
+        const res = await verifyEmailMutation({ email, oneTimeCode: Number(otp) }).unwrap();
+        if (res.data?.token) {
+          dispatch(setToken(res.data.token));
+        }
         toast.success("Email verified successfully!");
         sessionStorage.removeItem(OTP_EMAIL_KEY);
         sessionStorage.removeItem(OTP_MODE_KEY);

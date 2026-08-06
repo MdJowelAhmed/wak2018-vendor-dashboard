@@ -1,5 +1,5 @@
 import { baseApi } from '@/services/baseApi'
-import type { Wallet } from '@/types/api'
+import type { Wallet, WalletTransaction } from '@/types/api'
 
 export const walletApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -8,8 +8,13 @@ export const walletApi = baseApi.injectEndpoints({
       transformResponse: (response: { data: Wallet }) => response.data,
       providesTags: ['Wallet' as any],
     }),
+    getTransactions: build.query<WalletTransaction[], void>({
+      query: () => '/transactions/',
+      transformResponse: (response: { data: WalletTransaction[] }) => response.data,
+      providesTags: ['Wallet' as any],
+    }),
   }),
   overrideExisting: false,
 })
 
-export const { useGetWalletQuery } = walletApi
+export const { useGetWalletQuery, useGetTransactionsQuery } = walletApi

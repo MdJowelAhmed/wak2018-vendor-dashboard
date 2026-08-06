@@ -468,3 +468,25 @@ export type Wallet = {
   updatedAt: string
   __v?: number
 }
+
+export type WalletTransaction = {
+  _id: string
+  transactionId: string
+  user: {
+    _id: string
+    name: string
+    email: string
+  }
+  amount: number
+  netAmount: number
+  currency: string
+  paymentMethod: string
+  paymentGateway: string
+  gatewayTransactionId?: string
+  status: 'pending' | 'success' | 'failed'
+  type: 'withdrawal' | 'deposit' | 'earning' | 'refund'
+  description: string
+  createdAt: string
+  updatedAt: string
+}
+

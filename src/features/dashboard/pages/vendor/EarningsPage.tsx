@@ -30,7 +30,10 @@ import {
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/utils";
-import { useGetWalletQuery } from "../../services/walletApi";
+import {
+  useGetWalletQuery,
+  useGetTransactionsQuery,
+} from "../../services/walletApi";
 
 function fmtMoney(n: number) {
   return new Intl.NumberFormat(undefined, {
@@ -45,16 +48,8 @@ function fmtDateTime(iso: string) {
   return d.toLocaleString();
 }
 
-type Txn = {
-  id: string;
-  type: "Income" | "Expense";
-  title: string;
-  createdAt: string;
-  amount: number;
-};
-
-function typeBadgeClass(t: Txn["type"]) {
-  return t === "Income"
+function typeBadgeClass(t: string) {
+  return t === "earning" || t === "deposit"
     ? "bg-emerald-600 text-white border-emerald-600"
     : "bg-red-600 text-white border-red-600";
 }
@@ -65,7 +60,9 @@ export function EarningsPage() {
   const totalEarnings = wallet?.totalEarnings ?? 0;
   const availableBalance = wallet?.availableBalance ?? 0;
   const pendingPayout = wallet?.pendingBalance ?? 0;
-  const connectedMethod = wallet?.stripeConnect?.payoutsEnabled ? "Stripe (Payouts Enabled)" : "Stripe (Action Required)";
+  const connectedMethod = wallet?.stripeConnect?.payoutsEnabled
+    ? "Stripe (Payouts Enabled)"
+    : "Stripe (Action Required)";
 
   const [amount, setAmount] = useState("");
   const [txnSearch, setTxnSearch] = useState("");
@@ -100,42 +97,16 @@ export function EarningsPage() {
     setAmount("");
   }
 
-  // Demo activity until API is wired.
-  const transactions: Txn[] = [
-    {
-      id: "TXN-10021",
-      type: "Income",
-      title: "Order payment received",
-      createdAt: new Date().toISOString(),
-      amount: 120,
-    },
-    {
-      id: "TXN-10018",
-      type: "Expense",
-      title: "Payout fee",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 6).toISOString(),
-      amount: 4.5,
-    },
-    {
-      id: "TXN-10012",
-      type: "Income",
-      title: "Service completion payout",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 28).toISOString(),
-      amount: 260,
-    },
-    {
-      id: "TXN-10005",
-      type: "Expense",
-      title: "Withdrawal processed",
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 52).toISOString(),
-      amount: 80,
-    },
-  ];
+  const { data: rawTransactions, isLoading: isLoadingTxns } =
+    useGetTransactionsQuery();
+  const transactions = rawTransactions || [];
 
   const filteredTxns = useMemo(() => {
     const q = txnSearch.trim().toLowerCase();
     if (!q) return transactions;
-    return transactions.filter((t) => t.id.toLowerCase().includes(q));
+    return transactions.filter((t) =>
+      t.transactionId.toLowerCase().includes(q),
+    );
   }, [transactions, txnSearch]);
 
   const tableRowClass =
@@ -162,85 +133,84 @@ export function EarningsPage() {
           <Skeleton className="h-[120px] rounded-xl" />
         </div>
       ) : (
-
-      <motion.div
-        className="grid grid-cols-1 gap-6 lg:grid-cols-3"
-        variants={earningsTopStaggerParentVariants}
-        initial="hidden"
-        animate="visible"
-      >
         <motion.div
-          variants={earningsTopCardVariants}
-          {...earningsCardLiftHover}
-          className="min-h-0"
+          className="grid grid-cols-1 gap-6 lg:grid-cols-3"
+          variants={earningsTopStaggerParentVariants}
+          initial="hidden"
+          animate="visible"
         >
-          <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Total Earnings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold tabular-nums">
-                <AnimatedNumber
-                  value={totalEarnings}
-                  format={(n) => fmtMoney(n)}
-                  duration={0.85}
-                />
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                All-time earnings from orders &amp; services
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+          <motion.div
+            variants={earningsTopCardVariants}
+            {...earningsCardLiftHover}
+            className="min-h-0"
+          >
+            <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Total Earnings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-semibold tabular-nums">
+                  <AnimatedNumber
+                    value={totalEarnings}
+                    format={(n) => fmtMoney(n)}
+                    duration={0.85}
+                  />
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  All-time earnings from orders &amp; services
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          variants={earningsTopCardVariants}
-          {...earningsCardLiftHover}
-          className="min-h-0"
-        >
-          <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Available Balance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold tabular-nums">
-                <AnimatedNumber
-                  value={availableBalance}
-                  format={(n) => fmtMoney(n)}
-                  duration={0.85}
-                />
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                Ready to withdraw
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+          <motion.div
+            variants={earningsTopCardVariants}
+            {...earningsCardLiftHover}
+            className="min-h-0"
+          >
+            <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Available Balance</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-semibold tabular-nums">
+                  <AnimatedNumber
+                    value={availableBalance}
+                    format={(n) => fmtMoney(n)}
+                    duration={0.85}
+                  />
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Ready to withdraw
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        <motion.div
-          variants={earningsTopCardVariants}
-          {...earningsCardLiftHover}
-          className="min-h-0"
-        >
-          <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Pending Payout</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-semibold tabular-nums">
-                <AnimatedNumber
-                  value={pendingPayout}
-                  format={(n) => fmtMoney(n)}
-                  duration={0.85}
-                />
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                Scheduled or processing payouts
-              </div>
-            </CardContent>
-          </Card>
+          <motion.div
+            variants={earningsTopCardVariants}
+            {...earningsCardLiftHover}
+            className="min-h-0"
+          >
+            <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Pending Payout</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-semibold tabular-nums">
+                  <AnimatedNumber
+                    value={pendingPayout}
+                    format={(n) => fmtMoney(n)}
+                    duration={0.85}
+                  />
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  Scheduled or processing payouts
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </motion.div>
-      </motion.div>
       )}
 
       <motion.div
@@ -276,7 +246,15 @@ export function EarningsPage() {
                   <TableHead className="w-[120px] text-right">Amount</TableHead>
                 </TableRow>
               </TableHeader>
-              {filteredTxns.length ? (
+              {isLoadingTxns ? (
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center">
+                      Loading transactions...
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              ) : filteredTxns.length ? (
                 <motion.tbody
                   className="[&_tr:last-child]:border-0"
                   variants={earningsTableStaggerParentVariants}
@@ -285,7 +263,7 @@ export function EarningsPage() {
                 >
                   {filteredTxns.map((t, idx) => (
                     <motion.tr
-                      key={t.id}
+                      key={t._id}
                       variants={earningsTableRowVariants}
                       className={tableRowClass}
                     >
@@ -297,12 +275,14 @@ export function EarningsPage() {
                           {t.type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">{t.title}</TableCell>
+                      <TableCell className="font-medium">
+                        {t.description}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {fmtDateTime(t.createdAt)}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
-                        {t.id}
+                        {t.transactionId}
                       </TableCell>
                       <TableCell className="text-right font-semibold tabular-nums">
                         {fmtMoney(t.amount)}

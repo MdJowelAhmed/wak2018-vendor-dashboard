@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -70,11 +70,15 @@ function CheckboxRow({
 export function AddControllerModal({
   open,
   onOpenChange,
-  onCreate,
+  mode = "create",
+  initial,
+  onSubmit,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onCreate: (c: Omit<ControllerRecord, "id">) => void;
+  mode?: "create" | "edit";
+  initial?: ControllerRecord | null;
+  onSubmit: (c: Omit<ControllerRecord, "id">) => void;
 }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -90,6 +94,33 @@ export function AddControllerModal({
     analytics: false,
     settings: false,
   }));
+
+  useEffect(() => {
+    if (open) {
+      if (mode === "edit" && initial) {
+        setName(initial.name || "");
+        setEmail(initial.email || "");
+        setPermSet(() => {
+          const s: Record<ControllerPermissions, boolean> = {
+            dashboard: false,
+            products: false,
+            services: false,
+            orders: false,
+            delivery: false,
+            messages: false,
+            analytics: false,
+            settings: false,
+          };
+          (initial.permissions || []).forEach((p) => {
+            s[p] = true;
+          });
+          return s;
+        });
+      } else {
+        reset();
+      }
+    }
+  }, [open, mode, initial]);
 
   const selected = useMemo(
     () => PERMS.filter((p) => permSet[p.key]).map((p) => p.key),
@@ -124,18 +155,16 @@ export function AddControllerModal({
       toast.error("Add name, valid email, and at least 1 permission.");
       return;
     }
-    onCreate({ name: name.trim(), email: email.trim(), permissions: selected });
-    toast.success("Controller created");
-    handleClose(false);
+    onSubmit({ name: name.trim(), email: email.trim(), permissions: selected });
   }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Controller</DialogTitle>
+          <DialogTitle>{mode === "edit" ? "Edit Controller" : "Add Controller"}</DialogTitle>
           <DialogDescription>
-            Create a controller with page access permissions.
+            {mode === "edit" ? "Update controller access permissions." : "Create a controller with page access permissions."}
           </DialogDescription>
         </DialogHeader>
 
@@ -200,7 +229,7 @@ export function AddControllerModal({
             disabled={!canCreate}
             onClick={submit}
           >
-            Create Controller
+            {mode === "edit" ? "Save Changes" : "Create Controller"}
           </Button>
         </DialogFooter>
       </DialogContent>

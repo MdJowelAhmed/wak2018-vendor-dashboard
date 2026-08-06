@@ -18,6 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 function ProductThumb({ urls }: { urls: string[] }) {
   const first = urls[0];
   if (first) {
@@ -31,12 +39,11 @@ function ProductThumb({ urls }: { urls: string[] }) {
 export function ProductsListPage() {
   const { data, isLoading, isError, refetch } = useGetProductsQuery();
   const [remove, { isLoading: isDeleting }] = useDeleteProductMutation();
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function onDelete(id: string) {
-    if (!window.confirm("Delete this product?")) {
-      return;
-    }
+    setProductToDelete(null);
     setDeletingId(id);
     try {
       await remove(id).unwrap();
@@ -134,9 +141,8 @@ export function ProductsListPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          type="button"
                           disabled={isDeleting && deletingId === p.id}
-                          onClick={() => onDelete(p.id)}
+                          onClick={() => setProductToDelete(p.id)}
                           aria-label="Delete product"
                         >
                           <Trash2 className="size-4" />
@@ -160,6 +166,40 @@ export function ProductsListPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog
+        open={!!productToDelete}
+        onOpenChange={(open) => !open && setProductToDelete(null)}
+      >
+        <DialogContent className="sm:max-w-[400px] text-center">
+          <DialogHeader>
+            <DialogTitle className="text-center">Delete Product</DialogTitle>
+            <DialogDescription className="text-center">
+              Are you sure you want to delete this product? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex w-full items-center justify-center gap-2 sm:justify-center mt-4">
+            <Button
+              variant="outline"
+              className="w-24"
+              onClick={() => setProductToDelete(null)}
+            >
+              No
+            </Button>
+            <Button
+              variant="destructive"
+              className="w-24"
+              onClick={() => {
+                if (productToDelete) onDelete(productToDelete);
+              }}
+              disabled={isDeleting}
+            >
+              Yes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

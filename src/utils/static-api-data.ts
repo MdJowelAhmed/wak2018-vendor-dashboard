@@ -51,7 +51,7 @@ function makeProducts(): Product[] {
       name: 'Cold brew set',
       category: 'Home & Kitchen',
       description: 'Glass carafe and filters',
-      descriptionPoints: ['Glass carafe', 'Reusable filters', 'Easy clean'],
+      productDetails: 'Glass carafe\nReusable filters\nEasy clean',
       price: 24.9,
       discount: 0,
       stock: 2,
@@ -71,7 +71,7 @@ function makeProducts(): Product[] {
       name: 'Desk lamp',
       category: 'Office',
       description: 'Warm LED, adjustable',
-      descriptionPoints: ['Warm LED', 'Adjustable neck', 'USB powered'],
+      productDetails: 'Warm LED\nAdjustable neck\nUSB powered',
       price: 45,
       discount: 5,
       stock: 14,
@@ -91,7 +91,7 @@ function makeProducts(): Product[] {
       name: 'Notebook pack',
       category: 'Stationery',
       description: '3 lined notebooks',
-      descriptionPoints: ['3 notebooks', 'A5 size', '80gsm paper'],
+      productDetails: '3 notebooks\nA5 size\n80gsm paper',
       price: 8.5,
       stock: 0,
       active: false,
@@ -695,12 +695,7 @@ export async function getStaticRequestResult(args: string | FetchArgs): Promise<
         name,
         category: category || undefined,
         description: desc,
-        descriptionPoints: descPointsRaw
-          ? descPointsRaw
-              .split('\n')
-              .map((s) => s.replace(/^(?:[•*\\-\\s])+/, '').trim())
-              .filter(Boolean)
-          : undefined,
+        productDetails: descPointsRaw ? descPointsRaw : undefined,
         price: Number(fd.get('price') || 0),
         discount: Number.isFinite(discount) ? discount : 0,
         stock: Math.floor(Number(fd.get('stock') || 0)),
@@ -743,12 +738,7 @@ export async function getStaticRequestResult(args: string | FetchArgs): Promise<
             name: String(fd.get('name') || store.products[i]!.name),
             category: String(fd.get('category') || store.products[i]!.category || '') || undefined,
             description: desc,
-            descriptionPoints: descPointsRaw
-              ? descPointsRaw
-                  .split('\n')
-                  .map((s) => s.replace(/^(?:[•*\\-\\s])+/, '').trim())
-                  .filter(Boolean)
-              : store.products[i]!.descriptionPoints,
+            productDetails: descPointsRaw ? descPointsRaw : store.products[i]!.productDetails,
             price: Number(fd.get('price') || store.products[i]!.price),
             discount: Number(fd.get('discount') || store.products[i]!.discount || 0),
             stock: Math.floor(Number(fd.get('stock') || store.products[i]!.stock)),

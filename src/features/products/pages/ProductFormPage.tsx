@@ -77,15 +77,20 @@ export function ProductFormPage({ mode }: Props) {
           price: String(data.price ?? ""),
           discount: data.discount != null ? String(data.discount) : "",
           description: data.description ?? "",
-          descriptionPointsText: (data.descriptionPoints ?? [])
-            .map((s) => `• ${s}`)
-            .join("\n"),
-          active: data.active ?? true,
+          productDetails: data.productDetails ?? "",
+          active: data.status === "active" || data.active === true,
           stock: String(data.stock ?? 0),
           existingImageUrls: data.imageUrls ?? [],
           newFiles: [],
           mainImageIndex: data.mainImageIndex ?? 0,
           highlights: data.highlights ?? [],
+          brand: data.brand ?? "",
+          weight: String(data.weight ?? 0),
+          dimensions: {
+            length: String(data.dimensions?.length ?? 0),
+            width: String(data.dimensions?.width ?? 0),
+            height: String(data.dimensions?.height ?? 0),
+          }
         }
       : mode === "create"
         ? { countrySelection: defaultNewProductCountrySelection() }

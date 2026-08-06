@@ -12,6 +12,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/utils/utils";
 import {
@@ -21,6 +28,7 @@ import {
 } from "@/components/CountryMultiSelect";
 import { ImageUploader, type ImageUploaderValue } from "./ImageUploader";
 import { HighlightsInput, type HighlightRow } from "./HighlightsInput";
+import { useGetProductCategoriesQuery } from "../services/categoryApi";
 
 export type ProductFormValues = {
   name: string;
@@ -29,13 +37,16 @@ export type ProductFormValues = {
   price: string;
   discount: string;
   description: string;
-  descriptionPointsText: string;
+  productDetails: string;
   stock: string;
   active: boolean;
   existingImageUrls: string[];
   newFiles: File[];
   mainImageIndex: number;
   highlights: HighlightRow[];
+  brand: string;
+  weight: string;
+  dimensions: { length: string; width: string; height: string };
 };
 
 const DEFAULT_VALUES: ProductFormValues = {
@@ -45,22 +56,17 @@ const DEFAULT_VALUES: ProductFormValues = {
   price: "",
   discount: "",
   description: "",
-  descriptionPointsText: "",
+  productDetails: "",
   stock: "0",
   active: true,
   existingImageUrls: [],
   newFiles: [],
   mainImageIndex: 0,
   highlights: [],
+  brand: "",
+  weight: "0",
+  dimensions: { length: "0", width: "0", height: "0" },
 };
-
-function normalizePointsText(raw: string) {
-  return raw
-    .split("\n")
-    .map((s) => s.replace(/^[•\-\*\s]+/, "").trim())
-    .filter(Boolean)
-    .join("\n");
-}
 
 export function ProductForm({
   mode,
@@ -77,6 +83,7 @@ export function ProductForm({
   onSubmit: (values: { toFormData: () => FormData }) => Promise<void> | void;
   className?: string;
 }) {
+  const { data: categories = [] } = useGetProductCategoriesQuery();
   const [v, setV] = useState<ProductFormValues>({
     ...DEFAULT_VALUES,
     ...initialValues,
@@ -118,19 +125,31 @@ export function ProductForm({
       ),
     );
     fd.set("price", String(Number(v.price)));
-    fd.set("discount", v.discount ? String(Number(v.discount)) : "0");
+    fd.set("discountPrice", v.discount ? String(Number(v.discount)) : "0");
     fd.set("description", v.description);
-    fd.set("descriptionPoints", normalizePointsText(v.descriptionPointsText));
+    fd.set("productDetails", v.productDetails);
     fd.set("stock", String(Math.max(0, Math.floor(Number(v.stock || 0)))));
-    fd.set("active", String(Boolean(v.active)));
+    fd.set("status", v.active ? "active" : "inactive");
+    if (v.brand) fd.set("brand", v.brand.trim());
+    fd.set("weight", String(Number(v.weight)));
+    fd.set(
+      "dimensions",
+      JSON.stringify({
+        length: String(v.dimensions.length),
+        width: String(v.dimensions.width),
+        height: String(v.dimensions.height),
+      }),
+    );
     fd.set(
       "mainImageIndex",
       String(Math.max(0, Math.floor(Number(v.mainImageIndex || 0)))),
     );
     fd.set(
-      "highlights",
+      "topHighlights",
       JSON.stringify(
-        (v.highlights ?? []).filter((h) => h.title.trim() || h.value.trim()),
+        (v.highlights ?? [])
+          .filter((h) => h.title.trim() || h.value.trim())
+          .map((h) => ({ name: h.title, value: h.value })),
       ),
     );
     for (const f of v.newFiles) fd.append("image", f);
@@ -221,16 +240,41 @@ export function ProductForm({
                 <Label className="text-gray-700" htmlFor="category">
                   Category
                 </Label>
-                <Input
-                  id="category"
+                <Select
                   value={v.category}
-                  onChange={(e) =>
-                    setV((s) => ({ ...s, category: e.target.value }))
+                  onValueChange={(val) =>
+                    setV((s) => ({ ...s, category: val }))
                   }
-                  placeholder="e.g. Accessories"
+                >
+                  <SelectTrigger
+                    id="category"
+                    className="rounded-lg border border-gray-200 bg-gray-50 text-gray-900 focus:ring-2 focus:ring-[#895129]"
+                  >
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat._id} value={cat._id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* <div className="grid gap-2">
+                <Label className="text-gray-700" htmlFor="brand">
+                  Brand (ID)
+                </Label>
+                <Input
+                  id="brand"
+                  value={v.brand}
+                  onChange={(e) =>
+                    setV((s) => ({ ...s, brand: e.target.value }))
+                  }
+                  placeholder="e.g. 6875f6a2b4b8f12345678901"
                   className="rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#895129]"
                 />
-              </div>
+              </div> */}
               <div className="grid gap-2">
                 <Label className="text-gray-700" htmlFor="product-country">
                   Product Country
@@ -315,6 +359,75 @@ export function ProductForm({
                   </Label>
                 </div>
               </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label className="text-gray-700" htmlFor="weight">
+                    Weight (g/kg)
+                  </Label>
+                  <Input
+                    id="weight"
+                    type="number"
+                    min={0}
+                    value={v.weight}
+                    onChange={(e) =>
+                      setV((s) => ({ ...s, weight: e.target.value }))
+                    }
+                    className="rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#895129]"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-gray-700">
+                    Dimensions (L x W x H)
+                  </Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      placeholder="L"
+                      min={0}
+                      value={v.dimensions.length}
+                      onChange={(e) =>
+                        setV((s) => ({
+                          ...s,
+                          dimensions: {
+                            ...s.dimensions,
+                            length: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    <Input
+                      type="number"
+                      placeholder="W"
+                      min={0}
+                      value={v.dimensions.width}
+                      onChange={(e) =>
+                        setV((s) => ({
+                          ...s,
+                          dimensions: {
+                            ...s.dimensions,
+                            width: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                    <Input
+                      type="number"
+                      placeholder="H"
+                      min={0}
+                      value={v.dimensions.height}
+                      onChange={(e) =>
+                        setV((s) => ({
+                          ...s,
+                          dimensions: {
+                            ...s.dimensions,
+                            height: e.target.value,
+                          },
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
@@ -339,24 +452,19 @@ export function ProductForm({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="points">Product Details (bullets)</Label>
+                <Label htmlFor="details">Product Details</Label>
                 <Textarea
-                  id="points"
+                  id="details"
                   rows={4}
-                  value={v.descriptionPointsText}
+                  value={v.productDetails}
                   onChange={(e) =>
                     setV((s) => ({
                       ...s,
-                      descriptionPointsText: e.target.value,
+                      productDetails: e.target.value,
                     }))
                   }
-                  placeholder={
-                    "• Genuine leather\n• RFID blocking\n• Slim profile"
-                  }
+                  placeholder="The iPhone 16 Pro Max comes with..."
                 />
-                <p className="text-muted-foreground text-xs">
-                  One bullet per line. You can include “•” or “-”.
-                </p>
               </div>
             </CardContent>
           </Card>

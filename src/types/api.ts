@@ -16,9 +16,9 @@ export type Product = {
   id: string
   name: string
   category?: string
+  brand?: string
   description: string
-  /** Optional bullet points derived from textarea (one per line) */
-  descriptionPoints?: string[]
+  productDetails?: string
   price: number
   discount?: number
   stock: number
@@ -28,10 +28,15 @@ export type Product = {
   mainImageIndex?: number
   rating?: number
   highlights?: { title: string; value: string }[]
+  topHighlights?: { name: string; value: string }[]
   /** When true, product is available globally; `productCountries` ignored. */
   allCountries?: boolean
   /** ISO country codes when not `allCountries`. */
   productCountries?: string[]
+  weight?: number
+  dimensions?: { length: number; width: number; height: number }
+  status?: "active" | "inactive"
+  discountPrice?: number
 }
 
 export type ServicePackage = {

@@ -140,15 +140,13 @@ export function ProductDetailsView({
             <CardTitle>About</CardTitle>
           </CardHeader>
           <CardContent>
-            {product.descriptionPoints?.length ? (
-              <ul className="list-disc space-y-2 pl-5 text-sm text-foreground">
-                {product.descriptionPoints.map((p, i) => (
-                  <li key={`${p}-${i}`}>{p}</li>
-                ))}
-              </ul>
+            {product.productDetails ? (
+              <p className="whitespace-pre-wrap text-sm text-foreground">
+                {product.productDetails}
+              </p>
             ) : (
               <p className="text-muted-foreground text-sm">
-                No bullet details provided.
+                No product details provided.
               </p>
             )}
           </CardContent>

@@ -14,21 +14,24 @@ export const productApi = baseApi.injectEndpoints({
           id: p._id,
           name: p.name,
           category: p.category,
-          description: p.description || p.productDetails || "",
+          brand: p.brand,
+          description: p.description || "",
+          productDetails: p.productDetails || "",
           price: p.price,
-          discount:
-            p.discountPrice && p.price > p.discountPrice
-              ? Math.round(((p.price - p.discountPrice) / p.price) * 100)
-              : 0,
+          discount: p.discountPrice,
+          discountPrice: p.discountPrice,
           stock: p.stock,
+          weight: p.weight,
+          dimensions: p.dimensions,
           active: p.status === "active",
+          status: p.status,
           imageUrls: (p.images || []).map((img: string) => getImageUrl(img)),
           highlights: (p.topHighlights || []).map((h: any) => ({
             title: h.name,
             value: h.value,
           })),
+          topHighlights: p.topHighlights || [],
           _id: p._id,
-          status: p.status,
           sku: p.sku,
         })) as Product[];
       },
@@ -49,21 +52,24 @@ export const productApi = baseApi.injectEndpoints({
           id: p._id,
           name: p.name,
           category: p.category,
-          description: p.description || p.productDetails || "",
+          brand: p.brand,
+          description: p.description || "",
+          productDetails: p.productDetails || "",
           price: p.price,
-          discount:
-            p.discountPrice && p.price > p.discountPrice
-              ? Math.round(((p.price - p.discountPrice) / p.price) * 100)
-              : 0,
+          discount: p.discountPrice,
+          discountPrice: p.discountPrice,
           stock: p.stock,
+          weight: p.weight,
+          dimensions: p.dimensions,
           active: p.status === "active",
+          status: p.status,
           imageUrls: (p.images || []).map((img: string) => getImageUrl(img)),
           highlights: (p.topHighlights || []).map((h: any) => ({
             title: h.name,
             value: h.value,
           })),
+          topHighlights: p.topHighlights || [],
           _id: p._id,
-          status: p.status,
           sku: p.sku,
         } as Product;
       },

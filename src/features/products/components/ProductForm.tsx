@@ -133,7 +133,15 @@ export function ProductForm({
         (v.highlights ?? []).filter((h) => h.title.trim() || h.value.trim()),
       ),
     );
-    for (const f of v.newFiles) fd.append("images", f);
+    for (const f of v.newFiles) fd.append("image", f);
+    const paths = v.existingImageUrls.map((u) =>
+      u.replace(
+        import.meta.env.VITE_API_BASE_URL?.replace(/\/api\/v\d+$/, "") ??
+          "http://localhost:4060",
+        "",
+      ),
+    );
+    fd.append("existingImages", JSON.stringify(paths));
     return fd;
   }
 

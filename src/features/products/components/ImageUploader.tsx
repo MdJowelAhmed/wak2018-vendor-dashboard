@@ -70,19 +70,24 @@ export function ImageUploader({
           </p>
         </div>
 
-        <label className="inline-flex">
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={(e) => addFiles(e.target.files)}
-          />
-          <Button type="button" variant="secondary" size="sm">
+        <Button
+          asChild
+          variant="secondary"
+          size="sm"
+          className="cursor-pointer"
+        >
+          <label>
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => addFiles(e.target.files)}
+            />
             <ImagePlus className="mr-2 size-4" />
             Upload
-          </Button>
-        </label>
+          </label>
+        </Button>
       </div>
 
       {total === 0 ? (

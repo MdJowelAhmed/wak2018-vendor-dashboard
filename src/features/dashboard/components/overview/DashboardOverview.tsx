@@ -2,11 +2,11 @@ import { useSelector } from "react-redux";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { RootState } from "@/app/store";
-import { useGetProfileQuery } from '@/services/userApi';
+import { useGetProfileQuery } from "@/services/userApi";
 import { useDashboardViewModel } from "@/features/dashboard/hooks/useDashboardViewModel";
 import { VendorDashboard } from "./VendorDashboard";
 import { ServiceDashboard } from "./ServiceDashboard";
-import type { UserRole } from '@/features/auth/types/authTypes';
+import type { UserRole } from "@/features/auth/types/authTypes";
 import { motion } from "framer-motion";
 import { fadeUp, staggerContainer } from "@/components/ui/motion";
 
@@ -17,7 +17,7 @@ export function DashboardOverview() {
   const { data: profile } = useGetProfileQuery();
   const role: UserRole | null = authRole ?? profile?.role ?? null;
 
-  const { data, meta, isLoading, isError, isDemo, refetch } =
+  const { data, meta, isLoading, isError, refetch } =
     useDashboardViewModel(role);
 
   if ((isLoading && !data) || !role) {
@@ -82,15 +82,6 @@ export function DashboardOverview() {
       <motion.div variants={fadeUp}>
         <PageHeading role={role} />
       </motion.div>
-
-      {isDemo && (
-        <motion.div variants={fadeUp}>
-          <Alert>
-            <AlertTitle>Demo data</AlertTitle>
-            <AlertDescription>Showing static sample data.</AlertDescription>
-          </Alert>
-        </motion.div>
-      )}
 
       <motion.div variants={fadeUp}>
         {role === "vendor" && <VendorDashboard data={data} />}

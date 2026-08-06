@@ -28,10 +28,11 @@ export function ActiveDeliveries({ items, isLoading, className }: Props) {
       animate="show"
       whileHover={hoverLift.whileHover}
       transition={hoverLift.transition}
+      className="flex h-full flex-col"
     >
       <Card
         className={cn(
-          "group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition-shadow duration-300 hover:shadow-xl",
+          "group flex h-full flex-col relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition-shadow duration-300 hover:shadow-xl",
           className,
         )}
       >

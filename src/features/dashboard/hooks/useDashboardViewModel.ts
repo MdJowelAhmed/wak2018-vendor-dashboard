@@ -2,10 +2,10 @@ import { useMemo } from "react";
 import {
   useGetAnalyticsQuery,
   useGetDashboardOverviewQuery,
+  useGetRecentOrdersQuery,
+  useGetActiveDeliveriesQuery,
 } from "../services/analyticsApi";
-import { useGetDeliveryRequestsQuery } from "@/features/delivery";
 import {
-  useGetProductOrdersQuery,
   useGetServiceOrdersQuery,
 } from "@/features/orders";
 import { useGetProductsQuery } from "@/features/products";
@@ -259,9 +259,9 @@ function augment(
 export function useDashboardViewModel(role: UserRole | null) {
   const overviewQ = useGetDashboardOverviewQuery();
   const analyticsQ = useGetAnalyticsQuery();
-  const pOrdersQ = useGetProductOrdersQuery();
+  const pOrdersQ = useGetRecentOrdersQuery();
   const sOrdersQ = useGetServiceOrdersQuery();
-  const delQ = useGetDeliveryRequestsQuery();
+  const delQ = useGetActiveDeliveriesQuery();
   const productsQ = useGetProductsQuery();
   const servicesQ = useGetServicesQuery();
   const useDemo = demoEnabled();

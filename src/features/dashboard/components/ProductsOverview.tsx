@@ -39,16 +39,17 @@ export function ProductsOverview({
         variants={fadeUp}
         whileHover={hoverLift.whileHover}
         transition={hoverLift.transition}
+        className="h-full"
       >
-        <Card className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl">
+        <Card className="flex h-full flex-col group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition-shadow duration-300 hover:shadow-xl">
           <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10" />
           </div>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardDescription className="text-sm text-gray-500">
               Total products
             </CardDescription>
-            <CardTitle className="text-3xl font-bold tabular-nums text-gray-900">
+            <CardTitle className="text-2xl font-bold tabular-nums text-gray-900 truncate">
               {isLoading ? (
                 <Skeleton className="h-8 w-16" />
               ) : (
@@ -56,6 +57,11 @@ export function ProductsOverview({
               )}
             </CardTitle>
           </CardHeader>
+          <CardContent className="mt-auto">
+            <p className="text-xs text-muted-foreground">
+              All listed inventory
+            </p>
+          </CardContent>
         </Card>
       </motion.div>
 
@@ -63,10 +69,11 @@ export function ProductsOverview({
         variants={fadeUp}
         whileHover={hoverLift.whileHover}
         transition={hoverLift.transition}
+        className="h-full"
       >
         <Card
           className={cn(
-            "group relative overflow-hidden rounded-2xl border py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl",
+            "flex h-full flex-col group relative overflow-hidden rounded-2xl border shadow-sm transition-shadow duration-300 hover:shadow-xl",
             lowStockCount > 0
               ? "border-rose-200 bg-rose-50/50"
               : "border-gray-100 bg-white/80",
@@ -82,7 +89,7 @@ export function ProductsOverview({
               )}
             />
           </div>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardDescription
               className={cn(
                 "text-sm",
@@ -93,7 +100,7 @@ export function ProductsOverview({
             </CardDescription>
             <CardTitle
               className={cn(
-                "text-3xl font-bold tabular-nums",
+                "text-2xl font-bold tabular-nums truncate",
                 lowStockCount > 0 ? "text-rose-700" : "text-gray-900",
               )}
             >
@@ -104,11 +111,13 @@ export function ProductsOverview({
               )}
             </CardTitle>
           </CardHeader>
-          {lowStockCount > 0 && (
-            <CardContent className="text-xs text-rose-700/80">
-              Review inventory soon
-            </CardContent>
-          )}
+          <CardContent className="mt-auto">
+            {lowStockCount > 0 ? (
+              <p className="text-xs text-rose-700/80">Review inventory soon</p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Stock is healthy</p>
+            )}
+          </CardContent>
         </Card>
       </motion.div>
 
@@ -116,30 +125,31 @@ export function ProductsOverview({
         variants={fadeUp}
         whileHover={hoverLift.whileHover}
         transition={hoverLift.transition}
+        className="h-full"
       >
-        <Card className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl">
+        <Card className="flex h-full flex-col group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 shadow-sm transition-shadow duration-300 hover:shadow-xl">
           <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10" />
           </div>
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardDescription className="text-sm text-gray-500">
               Top product
             </CardDescription>
-            {isLoading ? (
-              <Skeleton className="mt-2 h-6 w-40" />
-            ) : (
-              <>
-                <CardTitle className="text-base font-semibold leading-tight text-gray-900">
-                  {topName}
-                </CardTitle>
-                {topSales !== undefined && (
-                  <p className="text-xs text-gray-500">
-                    Units sold: {topSales}
-                  </p>
-                )}
-              </>
-            )}
+            <CardTitle className="text-2xl font-bold text-gray-900 truncate">
+              {isLoading ? <Skeleton className="h-8 w-40" /> : topName || "—"}
+            </CardTitle>
           </CardHeader>
+          <CardContent className="mt-auto">
+            {isLoading ? (
+              <Skeleton className="mt-1 h-3 w-20" />
+            ) : topSales !== undefined ? (
+              <p className="text-xs text-muted-foreground">
+                Units sold: {topSales}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">Not enough data</p>
+            )}
+          </CardContent>
         </Card>
       </motion.div>
     </motion.div>

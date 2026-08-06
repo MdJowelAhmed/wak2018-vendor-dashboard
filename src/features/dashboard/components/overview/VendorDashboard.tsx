@@ -58,7 +58,7 @@ export function VendorDashboard({ data }: { data: DashboardOverview }) {
           className="min-w-0"
         />
         <div className="flex min-w-0 flex-col gap-6">
-          <DeliveriesCard items={data.activeDeliveriesList} />
+          <DeliveriesCard items={data.activeDeliveriesList} className="flex-1" />
           <QuickLinks />
         </div>
       </div>

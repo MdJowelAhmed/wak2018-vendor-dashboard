@@ -60,8 +60,9 @@ export function StatsCards({
           variants={fadeUp}
           whileHover={hoverLift.whileHover}
           transition={hoverLift.transition}
+          className="flex h-full flex-col"
         >
-          <Card className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl">
+          <Card className="group flex h-full flex-col relative overflow-hidden rounded-2xl border border-gray-100 bg-white/80 py-0 shadow-sm transition-shadow duration-300 hover:shadow-xl">
             <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-purple-500/10" />
             </div>

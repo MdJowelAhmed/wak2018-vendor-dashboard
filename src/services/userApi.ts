@@ -72,11 +72,11 @@ export const usersApi = baseApi.injectEndpoints({
     }),
     changePassword: build.mutation<
       { ok: true },
-      { currentPassword: string; newPassword: string }
+      { currentPassword: string; newPassword: string; confirmPassword: string }
     >({
       query: (body) => ({
-        url: "/user/change-password",
-        method: "PUT",
+        url: "/auth/change-password",
+        method: "POST",
         body,
       }),
     }),

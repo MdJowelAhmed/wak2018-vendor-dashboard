@@ -5,9 +5,7 @@ import {
   useGetRecentOrdersQuery,
   useGetActiveDeliveriesQuery,
 } from "../services/analyticsApi";
-import {
-  useGetServiceOrdersQuery,
-} from "@/features/orders";
+import { useGetServiceOrdersQuery } from "@/features/orders";
 import { useGetProductsQuery } from "@/features/products";
 import { useGetServicesQuery } from "@/features/services";
 import type {
@@ -203,14 +201,14 @@ function augment(
   role: UserRole,
 ): DashboardOverview {
   const out = { ...base };
-  if (!out.recentOrders?.length) {
-    const r =
-      role === "vendor"
-        ? buildRecentFromOrders(p, [])
-        : buildRecentFromOrders([], s);
-    if (r.length) {
-      out.recentOrders = r;
-    }
+  const r =
+    role === "vendor"
+      ? buildRecentFromOrders(p, [])
+      : buildRecentFromOrders([], s);
+  if (r.length > 0) {
+    out.recentOrders = r;
+  } else if (!out.recentOrders?.length) {
+    out.recentOrders = [];
   }
   if (role === "vendor" && !out.activeDeliveriesList?.length && d?.length) {
     out.activeDeliveriesList = toActiveList(d);

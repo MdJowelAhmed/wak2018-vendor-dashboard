@@ -54,7 +54,7 @@ export const analyticsApi = baseApi.injectEndpoints({
         const data = res?.data || [];
         return data.map((o: any) => ({
           ...o,
-          id: o._id,
+          id: o.orderId || o._id,
           type: "product",
           status: o.orderStatus,
           total: o.grandTotal || 0,

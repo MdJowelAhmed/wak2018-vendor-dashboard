@@ -39,7 +39,7 @@ export function ControllerManagementPage() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editing, setEditing] = useState<ServiceControllerRecord | null>(null);
-  
+
   const { data: staffs = [], isLoading } = useGetStaffsQuery();
   const [createStaff] = useCreateStaffMutation();
   const [updateStaff] = useUpdateStaffMutation();
@@ -172,7 +172,8 @@ export function ControllerManagementPage() {
                               id: c._id,
                               name: c.staffName,
                               email: c.staffEmail,
-                              permissions: c.permissions as ServiceControllerPermission[],
+                              permissions:
+                                c.permissions as ServiceControllerPermission[],
                             });
                             setOpen(true);
                           }}

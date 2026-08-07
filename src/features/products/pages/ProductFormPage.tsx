@@ -90,7 +90,7 @@ export function ProductFormPage({ mode }: Props) {
             length: String(data.dimensions?.length ?? 0),
             width: String(data.dimensions?.width ?? 0),
             height: String(data.dimensions?.height ?? 0),
-          }
+          },
         }
       : mode === "create"
         ? { countrySelection: defaultNewProductCountrySelection() }

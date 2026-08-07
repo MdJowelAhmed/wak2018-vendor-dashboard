@@ -2,9 +2,9 @@ export {
   AddControllerModal,
   type ControllerPermissions,
   type ControllerRecord,
-} from './components/AddControllerModal'
+} from "./components/AddControllerModal";
 export {
   ServiceControllerModal,
   type ServiceControllerPermission,
   type ServiceControllerRecord,
-} from './components/ServiceControllerModal'
+} from "./components/ServiceControllerModal";

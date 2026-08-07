@@ -1,1 +1,1 @@
-export * from './services/settingsApi'
+export * from "./services/settingsApi";

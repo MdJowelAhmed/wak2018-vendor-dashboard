@@ -18,7 +18,10 @@ export const staffApi = baseApi.injectEndpoints({
       transformResponse: (res: any) => res.data || [],
       providesTags: [tag],
     }),
-    createStaff: build.mutation<Staff, { name: string; email: string; permissions: string[] }>({
+    createStaff: build.mutation<
+      Staff,
+      { name: string; email: string; permissions: string[] }
+    >({
       query: (body) => ({
         url: "/staffs/",
         method: "POST",
@@ -26,7 +29,10 @@ export const staffApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tag],
     }),
-    updateStaff: build.mutation<Staff, { id: string; data: { staffName?: string; permissions?: string[] } }>({
+    updateStaff: build.mutation<
+      Staff,
+      { id: string; data: { staffName?: string; permissions?: string[] } }
+    >({
       query: ({ id, data }) => ({
         url: `/staffs/${id}`,
         method: "PATCH",

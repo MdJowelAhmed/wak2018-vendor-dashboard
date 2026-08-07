@@ -1,15 +1,15 @@
-import { AnimatePresence, motion } from 'framer-motion'
-import { Outlet, useLocation } from 'react-router-dom'
-import { Package, Sparkles } from 'lucide-react'
+import { AnimatePresence, motion } from "framer-motion";
+import { Outlet, useLocation } from "react-router-dom";
+import { Package, Sparkles } from "lucide-react";
 import {
   authFormColumnVariants,
   authIllustrationVariants,
   authPageLoadTransition,
   authRouteStepVariants,
-} from '@/features/auth/motion/auth-motion-variants'
+} from "@/features/auth/motion/auth-motion-variants";
 
 export function AuthLayout() {
-  const location = useLocation()
+  const location = useLocation();
 
   return (
     <div className="relative min-h-svh overflow-hidden bg-gradient-to-br from-[#f9f7f5] via-white to-[#f3ede8]">
@@ -40,14 +40,20 @@ export function AuthLayout() {
               <Package className="size-7" strokeWidth={1.75} />
             </div>
             <div className="space-y-3">
-              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Welcome to Wak</h2>
+              <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">
+                Welcome to Wak
+              </h2>
               <p className="text-sm leading-relaxed text-zinc-600">
-                Manage products, services, orders, and deliveries from one calm dashboard — built for vendors and service
-                providers.
+                Manage products, services, orders, and deliveries from one calm
+                dashboard — built for vendors and service providers.
               </p>
             </div>
             <ul className="space-y-3 text-sm text-zinc-600">
-              {['Secure sign-in', 'Role-based workspaces', 'Fast onboarding'].map((t) => (
+              {[
+                "Secure sign-in",
+                "Role-based workspaces",
+                "Fast onboarding",
+              ].map((t) => (
                 <li key={t} className="flex items-center gap-2">
                   <Sparkles className="size-4 shrink-0 text-[#895129]" />
                   {t}
@@ -80,5 +86,5 @@ export function AuthLayout() {
         </div>
       </motion.div>
     </div>
-  )
+  );
 }

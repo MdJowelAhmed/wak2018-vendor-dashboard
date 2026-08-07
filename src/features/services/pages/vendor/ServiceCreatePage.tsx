@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { RootState } from "@/app/store";
-import { useGetProfileQuery } from '@/services/userApi';
+import { useGetProfileQuery } from "@/services/userApi";
 import { ServiceFormPage } from "@/features/services/pages/vendor/ServiceFormPage";
-import type { UserRole } from '@/features/auth/types/authTypes';
+import type { UserRole } from "@/features/auth/types/authTypes";
 
 type PkgState = {
   name: "basic" | "standard" | "premium";

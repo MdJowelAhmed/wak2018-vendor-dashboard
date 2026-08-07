@@ -52,7 +52,8 @@ export const serviceNotifications: NotificationItem[] = [
   {
     id: "s-1",
     title: "New Booking Request",
-    message: "Booking #BS-8291 for Plumbing Repair scheduled for tomorrow 10:00 AM.",
+    message:
+      "Booking #BS-8291 for Plumbing Repair scheduled for tomorrow 10:00 AM.",
     time: "2 mins ago",
     read: false,
     category: "booking",

@@ -109,12 +109,22 @@ export function VendorLayout() {
             >
               <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm overflow-hidden">
                 {data?.vendor?.logo ? (
-                  <img src={getImageUrl(data.vendor.logo)} alt="Logo" className="h-full w-full object-cover" />
+                  <img
+                    src={getImageUrl(data.vendor.logo)}
+                    alt="Logo"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  (data?.vendor?.businessName?.[0] || data?.name?.[0] || "W").toUpperCase()
+                  (
+                    data?.vendor?.businessName?.[0] ||
+                    data?.name?.[0] ||
+                    "W"
+                  ).toUpperCase()
                 )}
               </span>
-              <span className="truncate w-40">{data?.vendor?.businessName || data?.name || "Unified vendor"}</span>
+              <span className="truncate w-40">
+                {data?.vendor?.businessName || data?.name || "Unified vendor"}
+              </span>
             </Link>
             {isError && (
               <p className="text-muted-foreground mt-1 text-xs">

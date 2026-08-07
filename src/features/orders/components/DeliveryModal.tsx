@@ -185,9 +185,7 @@ export function DeliveryModal({
             disabled={disabled || busy}
           >
             {busy ? (
-              <span className="inline-flex items-center gap-2">
-                Loading...
-              </span>
+              <span className="inline-flex items-center gap-2">Loading...</span>
             ) : type === "local" ? (
               "Request Driver"
             ) : (

@@ -15,8 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { RootState } from "@/app/store";
-import { useGetProfileQuery } from '@/services/userApi';
-import type { UserRole } from '@/features/auth/types/authTypes';
+import { useGetProfileQuery } from "@/services/userApi";
+import type { UserRole } from "@/features/auth/types/authTypes";
 
 export function ServicesListPage() {
   const { data, isLoading, isError } = useGetServicesQuery();

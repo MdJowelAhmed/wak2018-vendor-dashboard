@@ -162,9 +162,13 @@ export function AddControllerModal({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>{mode === "edit" ? "Edit Controller" : "Add Controller"}</DialogTitle>
+          <DialogTitle>
+            {mode === "edit" ? "Edit Controller" : "Add Controller"}
+          </DialogTitle>
           <DialogDescription>
-            {mode === "edit" ? "Update controller access permissions." : "Create a controller with page access permissions."}
+            {mode === "edit"
+              ? "Update controller access permissions."
+              : "Create a controller with page access permissions."}
           </DialogDescription>
         </DialogHeader>
 

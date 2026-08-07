@@ -1,37 +1,53 @@
-import { baseApi } from '@/services/baseApi'
-import type { AdminUser, Delivery, Order, Product, Service } from '@/types/api'
+import { baseApi } from "@/services/baseApi";
+import type { AdminUser, Delivery, Order, Product, Service } from "@/types/api";
 
-const list = (t: string) => ({ type: t as any, id: 'LIST' as const })
+const list = (t: string) => ({ type: t as any, id: "LIST" as const });
 
 export const adminApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getUsers: build.query<AdminUser[], void>({
-      query: () => '/admin/users',
-      providesTags: (r) => (r ? [list('Users'), ...r.map((u) => ({ type: 'Users' as const, id: u.id }))] : [list('Users')]),
+      query: () => "/admin/users",
+      providesTags: (r) =>
+        r
+          ? [
+              list("Users"),
+              ...r.map((u) => ({ type: "Users" as const, id: u.id })),
+            ]
+          : [list("Users")],
     }),
-    updateUserStatus: build.mutation<AdminUser, { id: string; status: AdminUser['status'] }>({
-      query: ({ id, status }) => ({ url: `/admin/users/${id}/status`, method: 'PUT', body: { status } }),
-      invalidatesTags: (_r, _e, { id }) => [{ type: 'Users' as const, id }, list('Users')],
+    updateUserStatus: build.mutation<
+      AdminUser,
+      { id: string; status: AdminUser["status"] }
+    >({
+      query: ({ id, status }) => ({
+        url: `/admin/users/${id}/status`,
+        method: "PUT",
+        body: { status },
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        { type: "Users" as const, id },
+        list("Users"),
+      ],
     }),
     getAllOrders: build.query<Order[], void>({
-      query: () => '/admin/orders',
-      providesTags: [list('Order')],
+      query: () => "/admin/orders",
+      providesTags: [list("Order")],
     }),
     getAllProducts: build.query<Product[], void>({
-      query: () => '/admin/products',
-      providesTags: [list('Product')],
+      query: () => "/admin/products",
+      providesTags: [list("Product")],
     }),
     getAllServices: build.query<Service[], void>({
-      query: () => '/admin/services',
-      providesTags: [list('Service')],
+      query: () => "/admin/services",
+      providesTags: [list("Service")],
     }),
     getAllDeliveries: build.query<Delivery[], void>({
-      query: () => '/admin/deliveries',
-      providesTags: [list('Delivery')],
+      query: () => "/admin/deliveries",
+      providesTags: [list("Delivery")],
     }),
   }),
   overrideExisting: false,
-})
+});
 
 export const {
   useGetUsersQuery,
@@ -40,5 +56,4 @@ export const {
   useGetAllProductsQuery,
   useGetAllServicesQuery,
   useGetAllDeliveriesQuery,
-} = adminApi
-
+} = adminApi;

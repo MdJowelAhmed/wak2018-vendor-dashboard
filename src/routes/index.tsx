@@ -294,7 +294,10 @@ const router = createBrowserRouter([
                   { path: "chat/:conversationId", element: <ChatPage /> },
                   { path: "analytics", element: <AnalyticsPage /> },
                   { path: "controllers", element: <ControllerManagement /> },
-                  { path: "notifications", element: <NotificationsPage role="vendor" /> },
+                  {
+                    path: "notifications",
+                    element: <NotificationsPage role="vendor" />,
+                  },
                   { path: "settings", element: <SettingsPage /> },
                   { path: "settings/profile", element: <SettingsPage /> },
                   { path: "settings/security", element: <SettingsPage /> },

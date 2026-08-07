@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useUpdateVendorProfileMutation } from '@/services/profileApi';
+import { useUpdateVendorProfileMutation } from "@/services/profileApi";
 import {
   CountryMultiSelect,
   type ServiceCountrySelection,
@@ -34,24 +34,41 @@ function safeReadOnboarding(): Partial<Record<string, any>> | null {
   }
 }
 
-export function ProfileSettings({
-  profile,
-}: {
-  profile: any;
-}) {
+export function ProfileSettings({ profile }: { profile: any }) {
   const [update, { isLoading }] = useUpdateVendorProfileMutation();
 
   const onboarding = useMemo(() => safeReadOnboarding(), []);
 
   const initial = useMemo(
     () => ({
-      businessName: String(profile?.vendor?.businessName ?? onboarding?.businessName ?? ""),
-      ownerName: String(profile?.vendor?.ownerName ?? onboarding?.ownerName ?? profile?.name ?? ""),
+      businessName: String(
+        profile?.vendor?.businessName ?? onboarding?.businessName ?? "",
+      ),
+      ownerName: String(
+        profile?.vendor?.ownerName ??
+          onboarding?.ownerName ??
+          profile?.name ??
+          "",
+      ),
       email: profile?.email ?? "",
-      phone: String(profile?.vendor?.businessPhone ?? profile?.phone ?? onboarding?.phone ?? ""),
-      streetAddress: String(profile?.vendor?.address ?? profile?.address ?? onboarding?.address ?? ""),
-      approxProductCount: String(profile?.vendor?.productCount ?? onboarding?.productCount ?? ""),
-      description: String(profile?.vendor?.description ?? onboarding?.description ?? ""),
+      phone: String(
+        profile?.vendor?.businessPhone ??
+          profile?.phone ??
+          onboarding?.phone ??
+          "",
+      ),
+      streetAddress: String(
+        profile?.vendor?.address ??
+          profile?.address ??
+          onboarding?.address ??
+          "",
+      ),
+      approxProductCount: String(
+        profile?.vendor?.productCount ?? onboarding?.productCount ?? "",
+      ),
+      description: String(
+        profile?.vendor?.description ?? onboarding?.description ?? "",
+      ),
     }),
     [profile, onboarding],
   );
@@ -112,7 +129,7 @@ export function ProfileSettings({
       const formData = new FormData();
       formData.append("ownerName", ownerName.trim());
       formData.append("businessName", businessName.trim());
-      
+
       if (phone.trim()) {
         formData.append("businessPhone", phone.trim());
       }
@@ -234,7 +251,6 @@ export function ProfileSettings({
         <CardContent className="grid gap-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-
               <Label htmlFor="approxProductCount">Approx Product Count</Label>
               <Input
                 id="approxProductCount"

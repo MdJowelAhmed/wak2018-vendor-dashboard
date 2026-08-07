@@ -1,11 +1,11 @@
-import type { Variants } from 'framer-motion'
+import type { Variants } from "framer-motion";
 
 /** Primary easing — subtle, professional. */
-export const customerEase = [0.25, 0.1, 0.25, 1] as const
+export const customerEase = [0.25, 0.1, 0.25, 1] as const;
 
-export const pageLoadTransition = { duration: 0.4, ease: customerEase }
+export const pageLoadTransition = { duration: 0.4, ease: customerEase };
 
-export const cardHoverTransition = { duration: 0.2, ease: 'easeOut' as const }
+export const cardHoverTransition = { duration: 0.2, ease: "easeOut" as const };
 
 /** Parent: stagger stat / insight cards */
 export const staggerParentVariants: Variants = {
@@ -16,7 +16,7 @@ export const staggerParentVariants: Variants = {
       delayChildren: 0.06,
     },
   },
-}
+};
 
 /** Each card: fade + scale */
 export const staggerCardVariants: Variants = {
@@ -26,7 +26,7 @@ export const staggerCardVariants: Variants = {
     scale: 1,
     transition: { duration: 0.35, ease: customerEase },
   },
-}
+};
 
 /** Delivery overview mini tiles */
 export const staggerTileVariants: Variants = {
@@ -36,14 +36,14 @@ export const staggerTileVariants: Variants = {
     scale: 1,
     transition: { duration: 0.28, ease: customerEase },
   },
-}
+};
 
 export const staggerTilesParentVariants: Variants = {
   hidden: {},
   visible: {
     transition: { staggerChildren: 0.06, delayChildren: 0.04 },
   },
-}
+};
 
 /** Timeline row — fade + slight L→R */
 export const timelineItemVariants: Variants = {
@@ -57,9 +57,9 @@ export const timelineItemVariants: Variants = {
       ease: customerEase,
     },
   }),
-}
+};
 
 export const buttonMotionProps = {
   whileHover: { scale: 1.03, transition: cardHoverTransition },
   whileTap: { scale: 0.97, transition: { duration: 0.15 } },
-}
+};

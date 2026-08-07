@@ -99,7 +99,10 @@ export function VerifyOtpPage() {
     }
     try {
       if (mode === "register") {
-        const res = await verifyEmailMutation({ email, oneTimeCode: Number(otp) }).unwrap();
+        const res = await verifyEmailMutation({
+          email,
+          oneTimeCode: Number(otp),
+        }).unwrap();
         if (res.data?.token) {
           dispatch(setToken(res.data.token));
         }

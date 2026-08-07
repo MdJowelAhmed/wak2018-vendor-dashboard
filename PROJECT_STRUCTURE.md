@@ -76,10 +76,10 @@ src/
 
 # 🧠 How to Read This
 
-* 🧠 `app/` → controls the whole system
-* 🚀 `features/` → where real work happens
-* ♻️ `shared/` → reusable across app
-* 🎨 `assets/` → static files
+- 🧠 `app/` → controls the whole system
+- 🚀 `features/` → where real work happens
+- ♻️ `shared/` → reusable across app
+- 🎨 `assets/` → static files
 
 ---
 

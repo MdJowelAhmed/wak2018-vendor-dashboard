@@ -269,12 +269,24 @@ export function ServiceLayout() {
             >
               <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm overflow-hidden">
                 {data?.serviceProvider?.logo ? (
-                  <img src={getImageUrl(data.serviceProvider.logo)} alt="Logo" className="h-full w-full object-cover" />
+                  <img
+                    src={getImageUrl(data.serviceProvider.logo)}
+                    alt="Logo"
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
-                  (data?.serviceProvider?.title?.[0] || data?.name?.[0] || "W").toUpperCase()
+                  (
+                    data?.serviceProvider?.title?.[0] ||
+                    data?.name?.[0] ||
+                    "W"
+                  ).toUpperCase()
                 )}
               </span>
-              <span className="truncate w-40">{data?.serviceProvider?.title || data?.name || "Unified service"}</span>
+              <span className="truncate w-40">
+                {data?.serviceProvider?.title ||
+                  data?.name ||
+                  "Unified service"}
+              </span>
             </Link>
             {isError && (
               <p className="text-muted-foreground mt-1 text-xs">
@@ -345,7 +357,9 @@ export function ServiceLayout() {
                     >
                       <Avatar className="h-8 w-8">
                         {data?.serviceProvider?.logo && (
-                          <AvatarImage src={getImageUrl(data.serviceProvider.logo)} />
+                          <AvatarImage
+                            src={getImageUrl(data.serviceProvider.logo)}
+                          />
                         )}
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {data?.name?.charAt(0) || <User className="size-4" />}

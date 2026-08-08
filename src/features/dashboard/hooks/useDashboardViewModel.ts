@@ -109,13 +109,6 @@ function buildRecentFromOrders(
     .map((x) => x.row);
 }
 
-function sumTotals(orders: Array<{ total: number }> | undefined) {
-  return (orders ?? []).reduce(
-    (acc, o) => acc + (Number.isFinite(o.total) ? o.total : 0),
-    0,
-  );
-}
-
 function mapRevenueSeries(
   points: RevenueChartPoint[] | undefined,
   role: UserRole,
@@ -222,11 +215,11 @@ function augment(
     const low = products.filter((x) => x.stock < 5).length;
     out.products = {
       ...out.products,
-      total: out.products.total || products.length,
-      lowStockCount: out.products.lowStockCount || low,
+      total: out.products.total ?? products.length,
+      lowStockCount: out.products.lowStockCount ?? low,
     };
   }
-  if (services?.length && !out.services.total) {
+  if (services?.length && out.services.total == null) {
     out.services = {
       ...out.services,
       total: services.length,
@@ -242,14 +235,7 @@ function augment(
       ? out.recentOrders.filter((o) => o.type === "product")
       : out.recentOrders.filter((o) => o.type === "service");
   if (role === "vendor") {
-    const productRevenue = sumTotals(p);
-    if (productRevenue > 0) out.totalRevenue = productRevenue;
-    if (p) out.totalOrders = p.length;
     out.activeServices = 0;
-  } else {
-    const serviceRevenue = sumTotals(s);
-    if (serviceRevenue > 0) out.totalRevenue = serviceRevenue;
-    if (s) out.totalOrders = s.length;
   }
   return out;
 }

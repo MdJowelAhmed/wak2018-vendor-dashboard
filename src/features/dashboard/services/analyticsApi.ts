@@ -1,4 +1,5 @@
 import { baseApi } from "@/services/baseApi";
+import { DASHBOARD_STATIC_DEMO } from "../hooks/static-demo";
 import type {
   AnalyticsDashboardStats,
   AnalyticsRangeKey,
@@ -18,7 +19,20 @@ export const analyticsApi = baseApi.injectEndpoints({
       providesTags: [tag],
     }),
     getDashboardOverview: build.query<DashboardOverview, void>({
-      query: () => "/vendor/dashboard/overview",
+      query: () => "/vendors/analytics/overview",
+      transformResponse: (res: any) => {
+        const d = res?.data || {};
+        return {
+          ...DASHBOARD_STATIC_DEMO,
+          totalRevenue: d.totalRevenue ?? 0,
+          totalOrders: d.totalOrders ?? 0,
+          activeDeliveries: d.activeDeliveries ?? 0,
+          products: {
+            ...DASHBOARD_STATIC_DEMO.products,
+            total: d.totalProducts ?? 0,
+          },
+        };
+      },
       providesTags: [dashboardTag, tag],
     }),
     getDashboardStats: build.query<

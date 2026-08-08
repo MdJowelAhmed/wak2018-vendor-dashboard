@@ -1,7 +1,7 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { baseApi } from "@/services/baseApi";
-import authReducer from "@/features/auth/authSlice";
+import authReducer, { logout } from "@/features/auth/authSlice";
 import "@/features/products";
 import "@/features/services";
 import "@/features/orders";
@@ -12,11 +12,20 @@ import "@/features/admin";
 import "@/features/customers";
 import "@/features/settings";
 
+const appReducer = combineReducers({
+  [baseApi.reducerPath]: baseApi.reducer,
+  auth: authReducer,
+});
+
+const rootReducer = (state: any, action: any) => {
+  if (action.type === logout.type) {
+    state = undefined;
+  }
+  return appReducer(state, action);
+};
+
 export const store = configureStore({
-  reducer: {
-    [baseApi.reducerPath]: baseApi.reducer,
-    auth: authReducer,
-  },
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(baseApi.middleware),
 });

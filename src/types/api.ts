@@ -509,3 +509,18 @@ export type WalletTransaction = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type WithdrawRequest = {
+  _id: string;
+  wallet: string;
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+  };
+  amount: number;
+  status: "pending" | "approved" | "rejected";
+  method: string;
+  createdAt: string;
+  updatedAt: string;
+};

@@ -33,6 +33,14 @@ import {
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { cn } from "@/utils/utils";
 
+import {
+  useGetWalletQuery,
+  useGetTransactionsQuery,
+  useGetWithdrawRequestsQuery,
+  useConnectStripeMutation,
+  useCreateWithdrawRequestMutation,
+} from "../../services/walletApi";
+
 export function EarningsPage() {
   const role = useAppSelector((s) => s.auth.user?.role);
   if (role === "vendor") {
@@ -54,70 +62,35 @@ function fmtDateTime(iso: string) {
   return d.toLocaleString();
 }
 
-type Booking = {
-  id: number;
-  service: string;
-  amount: number;
-  status: "Completed" | "Ongoing" | "Pending";
-  customerApproved: boolean;
-};
-
-type Txn = {
-  id: string;
-  type: "Income" | "Expense";
-  title: string;
-  createdAt: string;
-  amount: number;
-};
-
-function typeBadgeClass(t: Txn["type"]) {
-  return t === "Income"
+function typeBadgeClass(t: string) {
+  return t === "earning" || t === "deposit"
     ? "bg-emerald-600 text-white border-emerald-600"
     : "bg-red-600 text-white border-red-600";
 }
 
+function withdrawStatusBadgeClass(s: string) {
+  if (s === "approved") return "bg-emerald-600 text-white border-emerald-600";
+  if (s === "rejected") return "bg-red-600 text-white border-red-600";
+  return "bg-amber-500 text-white border-amber-500";
+}
+
 function ServiceProviderEarningsPage() {
-  // Static-only source (service provider).
-  const bookings: Booking[] = [
-    {
-      id: 1,
-      service: "Web Development",
-      amount: 250,
-      status: "Completed",
-      customerApproved: true,
-    },
-    {
-      id: 2,
-      service: "API Integration",
-      amount: 150,
-      status: "Completed",
-      customerApproved: false,
-    },
-  ];
+  const { data: wallet } = useGetWalletQuery();
+  const [connectStripe, { isLoading: isConnecting }] =
+    useConnectStripeMutation();
+  const [createWithdrawRequest, { isLoading: isWithdrawing }] =
+    useCreateWithdrawRequestMutation();
 
-  const connectedMethod: "Stripe" | "Bank" | "Hubtel" = "Stripe";
-
-  const totalEarnings = useMemo(
-    () =>
-      bookings
-        .filter((b) => b.status === "Completed" && b.customerApproved)
-        .reduce((sum, b) => sum + b.amount, 0),
-    [bookings],
-  );
-
-  const pendingPayout = useMemo(
-    () =>
-      bookings
-        .filter((b) => b.status === "Completed" && !b.customerApproved)
-        .reduce((sum, b) => sum + b.amount, 0),
-    [bookings],
-  );
-
-  const [withdrawnAmount, setWithdrawnAmount] = useState(0);
-  const availableBalance = Math.max(0, totalEarnings - withdrawnAmount);
+  const totalEarnings = wallet?.totalEarnings ?? 0;
+  const availableBalance = wallet?.availableBalance ?? 0;
+  const pendingPayout = wallet?.pendingBalance ?? 0;
+  const connectedMethod = wallet?.stripeConnect?.payoutsEnabled
+    ? "Stripe (Payouts Enabled)"
+    : "Stripe (Action Required)";
 
   const [amount, setAmount] = useState("");
   const [txnSearch, setTxnSearch] = useState("");
+  const [withdrawSearch, setWithdrawSearch] = useState("");
 
   const minWithdraw = 50;
   const amountNumber = useMemo(() => Number(amount), [amount]);
@@ -127,33 +100,7 @@ function ServiceProviderEarningsPage() {
     amountNumber > 0 &&
     amountNumber <= availableBalance;
 
-  const baseIncomeTxns = useMemo<Txn[]>(
-    () =>
-      bookings
-        .filter((b) => b.status === "Completed" && b.customerApproved)
-        .map((b) => ({
-          id: `INC-${b.id}`,
-          type: "Income" as const,
-          title: `Service payout approved · ${b.service}`,
-          createdAt: new Date(
-            Date.now() - 1000 * 60 * 60 * 24 * b.id,
-          ).toISOString(),
-          amount: b.amount,
-        }))
-        .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
-    [bookings],
-  );
-
-  const [withdrawTxns, setWithdrawTxns] = useState<Txn[]>([]);
-
-  const transactions = useMemo(() => {
-    const all = [...withdrawTxns, ...baseIncomeTxns];
-    const q = txnSearch.trim().toLowerCase();
-    if (!q) return all;
-    return all.filter((t) => t.id.toLowerCase().includes(q));
-  }, [baseIncomeTxns, txnSearch, withdrawTxns]);
-
-  function withdraw() {
+  async function withdraw() {
     if (!amount.trim()) {
       toast.error("Enter an amount");
       return;
@@ -171,21 +118,38 @@ function ServiceProviderEarningsPage() {
       return;
     }
 
-    setWithdrawnAmount((p) => p + amountNumber);
-    setWithdrawTxns((prev) => [
-      {
-        id: `WDR-${Date.now()}`,
-        type: "Expense",
-        title: "Withdrawal processed",
-        createdAt: new Date().toISOString(),
-        amount: amountNumber,
-      },
-      ...prev,
-    ]);
-
-    toast.success("Withdrawal processed");
-    setAmount("");
+    try {
+      await createWithdrawRequest({ amount: amountNumber }).unwrap();
+      toast.success("Withdrawal request submitted");
+      setAmount("");
+    } catch {
+      toast.error("Failed to submit withdrawal request");
+    }
   }
+
+  async function handleConnectStripe() {
+    try {
+      const res = await connectStripe().unwrap();
+      if (res.url) {
+        window.location.href = res.url;
+      }
+    } catch {
+      toast.error("Failed to connect with Stripe");
+    }
+  }
+
+  const { data: rawTransactions } = useGetTransactionsQuery();
+  const transactions = rawTransactions || [];
+
+  const { data: rawWithdrawRequests, isLoading: isLoadingWithdraws } =
+    useGetWithdrawRequestsQuery();
+  const withdrawRequests = rawWithdrawRequests || [];
+
+  const filteredWithdrawRequests = useMemo(() => {
+    const q = withdrawSearch.trim().toLowerCase();
+    if (!q) return withdrawRequests;
+    return withdrawRequests.filter((r) => r._id.toLowerCase().includes(q));
+  }, [withdrawRequests, withdrawSearch]);
 
   const tableRowClass =
     "border-b transition-colors duration-200 hover:bg-muted/40 data-[state=selected]:bg-muted [&:last-child]:border-0";
@@ -334,7 +298,7 @@ function ServiceProviderEarningsPage() {
                 >
                   {transactions.map((t, idx) => (
                     <motion.tr
-                      key={t.id}
+                      key={t._id}
                       variants={earningsTableRowVariants}
                       className={tableRowClass}
                     >
@@ -346,12 +310,14 @@ function ServiceProviderEarningsPage() {
                           {t.type}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">{t.title}</TableCell>
+                      <TableCell className="font-medium">
+                        {t.description}
+                      </TableCell>
                       <TableCell className="text-muted-foreground">
                         {fmtDateTime(t.createdAt)}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
-                        {t.id}
+                        {t.transactionId}
                       </TableCell>
                       <TableCell className="text-right font-semibold tabular-nums">
                         {fmtMoney(t.amount)}
@@ -367,6 +333,100 @@ function ServiceProviderEarningsPage() {
                       className="py-10 text-center text-sm text-muted-foreground"
                     >
                       No transactions found.
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              )}
+            </Table>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div
+        variants={earningsTableSectionVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <Card className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+          <CardHeader>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <CardTitle className="text-base">Withdrawal Requests</CardTitle>
+              <Input
+                value={withdrawSearch}
+                onChange={(e) => setWithdrawSearch(e.target.value)}
+                placeholder="Search Request ID"
+                className={cn(
+                  "bg-white sm:max-w-xs",
+                  earningsInputFocusClass,
+                  "rounded-xl border border-gray-200 shadow-sm",
+                )}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[60px]">S.N</TableHead>
+                  <TableHead className="w-[110px]">Status</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead className="w-[190px]">Date &amp; Time</TableHead>
+                  <TableHead className="w-[160px]">Request ID</TableHead>
+                  <TableHead className="w-[120px] text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              {isLoadingWithdraws ? (
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center">
+                      Loading withdrawal requests...
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              ) : filteredWithdrawRequests.length ? (
+                <motion.tbody
+                  className="[&_tr:last-child]:border-0"
+                  variants={earningsTableStaggerParentVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {filteredWithdrawRequests.map((r, idx) => (
+                    <motion.tr
+                      key={r._id}
+                      variants={earningsTableRowVariants}
+                      className={tableRowClass}
+                    >
+                      <TableCell className="text-muted-foreground">
+                        {idx + 1}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={withdrawStatusBadgeClass(r.status)}>
+                          {r.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium capitalize">
+                        {r.method}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {fmtDateTime(r.createdAt)}
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {r._id}
+                      </TableCell>
+                      <TableCell className="text-right font-semibold tabular-nums">
+                        {fmtMoney(r.amount)}
+                      </TableCell>
+                    </motion.tr>
+                  ))}
+                </motion.tbody>
+              ) : (
+                <TableBody>
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="py-10 text-center text-sm text-muted-foreground"
+                    >
+                      No withdrawal requests found.
                     </TableCell>
                   </TableRow>
                 </TableBody>
@@ -415,10 +475,10 @@ function ServiceProviderEarningsPage() {
                 <Button
                   type="button"
                   className="bg-[#895129] hover:bg-[#7b4723]"
-                  disabled={!canWithdraw}
+                  disabled={!canWithdraw || isWithdrawing}
                   onClick={withdraw}
                 >
-                  Withdraw Funds
+                  {isWithdrawing ? "Processing..." : "Withdraw Funds"}
                 </Button>
               </motion.div>
 
@@ -455,8 +515,13 @@ function ServiceProviderEarningsPage() {
                 className="inline-flex"
                 {...earningsButtonMotionProps}
               >
-                <Button type="button" variant="outline">
-                  Change Method
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isConnecting}
+                  onClick={handleConnectStripe}
+                >
+                  {isConnecting ? "Connecting..." : "Change Method"}
                 </Button>
               </motion.div>
             </CardContent>

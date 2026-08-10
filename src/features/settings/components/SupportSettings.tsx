@@ -13,9 +13,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { useSendSupportMessageMutation } from "@/features/settings";
+import { useAppSelector } from "@/app/hooks";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 
 export function SupportSettings() {
   const [send, { isLoading }] = useSendSupportMessageMutation();
+
+  const sessionUser = useAppSelector((s) => s.auth.user);
+  const { data: profileResponse } = useGetUserProfileQuery();
+  const profileData = profileResponse?.data;
+
+  const userName =
+    profileData?.vendor?.shopName ||
+    profileData?.name ||
+    sessionUser?.name ||
+    "User";
+  const userEmail =
+    sessionUser?.email || profileData?.vendor?.email || "No Email";
 
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
@@ -28,11 +42,16 @@ export function SupportSettings() {
 
   async function onSubmit() {
     if (!valid) {
-      toast.error("Please provide a subject and message.");
+      toast.error("Please fill in all fields.");
       return;
     }
     try {
-      await send({ subject: subject.trim(), message: message.trim() }).unwrap();
+      await send({
+        name: userName,
+        email: userEmail,
+        subject: subject.trim(),
+        message: message.trim(),
+      }).unwrap();
       toast.success("Support message sent");
       setSubject("");
       setMessage("");

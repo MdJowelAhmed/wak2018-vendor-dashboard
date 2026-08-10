@@ -14,10 +14,10 @@ export const settingsApi = baseApi.injectEndpoints({
     }),
     sendSupportMessage: build.mutation<
       { ok: true },
-      { subject: string; message: string }
+      { name: string; email: string; subject: string; message: string }
     >({
       query: (body) => ({
-        url: "/support/message",
+        url: "/contact/",
         method: "POST",
         body,
       }),

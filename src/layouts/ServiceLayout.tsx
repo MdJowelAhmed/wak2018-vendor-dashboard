@@ -283,9 +283,7 @@ export function ServiceLayout() {
                 )}
               </span>
               <span className="truncate w-40">
-                {data?.serviceProvider?.title ||
-                  data?.name ||
-                  "Unified service"}
+                {data?.name || data?.serviceProvider?.title || "Unified service"}
               </span>
             </Link>
             {isError && (

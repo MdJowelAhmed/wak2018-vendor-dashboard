@@ -123,7 +123,7 @@ export function VendorLayout() {
                 )}
               </span>
               <span className="truncate w-40">
-                {data?.vendor?.businessName || data?.name || "Unified vendor"}
+                {data?.name || data?.vendor?.businessName || "Unified vendor"}
               </span>
             </Link>
             {isError && (

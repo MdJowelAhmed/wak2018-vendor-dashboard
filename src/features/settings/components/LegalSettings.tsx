@@ -25,7 +25,7 @@ function Doc({
         <CardTitle>{title}</CardTitle>
         <CardDescription>
           {updatedAt
-            ? `Last updated ${updatedAt}`
+            ? `Last updated ${new Date(updatedAt).toLocaleDateString()}`
             : "View-only (managed by Admin)."}
         </CardDescription>
       </CardHeader>

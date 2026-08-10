@@ -62,6 +62,14 @@ export const analyticsApi = baseApi.injectEndpoints({
       }),
       providesTags: [tag],
     }),
+    getMonthlyRevenue: build.query<
+      { month: string; revenue: number }[],
+      { year: number }
+    >({
+      query: ({ year }) => `/vendors/analytics/monthly-revenue?year=${year}`,
+      transformResponse: (res: any) => res?.data || [],
+      providesTags: [tag],
+    }),
     getRecentOrders: build.query<any[], void>({
       query: () => "/vendors/recent-orders",
       transformResponse: (res: any) => {
@@ -106,4 +114,5 @@ export const {
   useGetTopDataQuery,
   useGetRecentOrdersQuery,
   useGetActiveDeliveriesQuery,
+  useGetMonthlyRevenueQuery,
 } = analyticsApi;

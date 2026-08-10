@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Banknote, Package, ShoppingCart, Truck } from "lucide-react";
 import type { DashboardOverview } from "@/types/api";
-import { ProductsOverview } from "@/features/dashboard/components/ProductsOverview";
+// import { ProductsOverview } from "@/features/dashboard/components/ProductsOverview";
 import { cn } from "@/utils/utils";
 import { formatCurrency } from "@/utils/format-currency";
 import { StatsCards, type StatCard } from "./StatsCards";
@@ -58,12 +58,15 @@ export function VendorDashboard({ data }: { data: DashboardOverview }) {
           className="min-w-0"
         />
         <div className="flex min-w-0 flex-col gap-6">
-          <DeliveriesCard items={data.activeDeliveriesList} className="flex-1" />
+          <DeliveriesCard
+            items={data.activeDeliveriesList}
+            className="flex-1"
+          />
           <QuickLinks />
         </div>
       </div>
 
-      <section className="space-y-3">
+      {/* <section className="space-y-3">
         <h2 className="text-foreground text-lg font-semibold">Inventory</h2>
         <ProductsOverview
           total={data.products.total}
@@ -71,7 +74,7 @@ export function VendorDashboard({ data }: { data: DashboardOverview }) {
           topName={data.products.topProduct.name}
           topSales={data.products.topProduct.sales}
         />
-      </section>
+      </section> */}
     </div>
   );
 }

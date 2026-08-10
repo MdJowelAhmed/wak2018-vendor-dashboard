@@ -26,7 +26,10 @@ import {
   emptyServiceCountrySelection,
   normalizeServiceCountrySelection,
 } from "@/utils/service-provider-profile-storage";
-import { useUpdateServiceProviderProfileMutation } from "@/services/profileApi";
+import {
+  useUpdateServiceProviderProfileMutation,
+  useGetLanguagesQuery,
+} from "@/services/profileApi";
 import {
   CountryMultiSelect,
   type ServiceCountrySelection,
@@ -84,16 +87,6 @@ const categoryOptions = [
   "Tutoring",
   "IT Support",
   "Design",
-] as const;
-
-const languageOptions = [
-  "English",
-  "Arabic",
-  "French",
-  "Spanish",
-  "Hindi",
-  "Bengali",
-  "Urdu",
 ] as const;
 
 function normalizeTag(s: string) {
@@ -206,6 +199,11 @@ function MultiSelect({
 export function ServiceProfileSettings({ profile }: { profile: any }) {
   const imageRef = useRef<HTMLInputElement | null>(null);
   const [updateProfile] = useUpdateServiceProviderProfileMutation();
+  const { data: languagesRes } = useGetLanguagesQuery();
+  const dynamicLanguages = useMemo(
+    () => languagesRes?.data || [],
+    [languagesRes],
+  );
 
   const initial = useMemo(() => {
     const stored = safeLoad();
@@ -603,7 +601,7 @@ export function ServiceProfileSettings({ profile }: { profile: any }) {
               <MultiSelect
                 value={v.languages}
                 onChange={(next) => setV((p) => ({ ...p, languages: next }))}
-                options={languageOptions}
+                options={dynamicLanguages}
                 placeholder="Select languages"
               />
               {errors.languages ? (

@@ -49,6 +49,12 @@ export const profileApi = baseApi.injectEndpoints({
       }),
       providesTags: ["Users"],
     }),
+    getLanguages: build.query<{ success: boolean; data: string[] }, void>({
+      query: () => ({
+        url: "/meta/languages",
+        method: "GET",
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -58,4 +64,5 @@ export const {
   useUpdateServiceProviderProfileMutation,
   useUpdateUserProfileMutation,
   useGetUserProfileQuery,
+  useGetLanguagesQuery,
 } = profileApi;

@@ -3,7 +3,7 @@ import type { Service } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/utils/utils";
+import { cn, getImageUrl } from "@/utils/utils";
 import { ServicePricingCard } from "./ServicePricingCard";
 
 export function ServiceDetailsView({
@@ -21,9 +21,9 @@ export function ServiceDetailsView({
         <Card className="rounded-xl border-border/60 shadow-sm">
           <CardContent className="p-6 space-y-4">
             <div className="border-border/60 bg-muted/20 aspect-video overflow-hidden rounded-xl border">
-              {service.imageUrl ? (
+              {service.image ? (
                 <img
-                  src={service.imageUrl}
+                  src={getImageUrl(service.image)}
                   alt=""
                   className="h-full w-full object-cover"
                 />
@@ -31,19 +31,16 @@ export function ServiceDetailsView({
             </div>
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold tracking-tight">
-                {service.title}
+                {service.name}
               </h1>
               <div className="flex flex-wrap items-center gap-2 text-sm">
-                {service.providerName ? (
-                  <span className="text-muted-foreground">
-                    {service.providerName}
-                  </span>
-                ) : null}
-                <span className="text-muted-foreground">·</span>
                 <span className="text-primary inline-flex items-center gap-1">
                   <Star className="size-4 fill-current" />
                   <span className="font-medium">
-                    {(service.rating ?? 4.5).toFixed(1)}
+                    {(service.averageRating ?? 0).toFixed(1)}
+                  </span>
+                  <span className="text-muted-foreground ml-1">
+                    ({service.ratingCount ?? 0} reviews)
                   </span>
                 </span>
                 {service.category ? (
@@ -66,20 +63,20 @@ export function ServiceDetailsView({
             <CardTitle>About this service</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-foreground leading-relaxed">
-              {service.about ?? service.description}
+            <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+              {service.description}
             </p>
           </CardContent>
         </Card>
 
-        {service.services?.length ? (
+        {service.serviceIncludes?.length ? (
           <Card className="rounded-xl border-border/60 shadow-sm">
             <CardHeader>
               <CardTitle>Services We Offer</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="list-disc space-y-2 pl-5 text-sm">
-                {service.services.map((s, i) => (
+                {service.serviceIncludes.map((s, i) => (
                   <li key={`${s}-${i}`}>{s}</li>
                 ))}
               </ul>
@@ -87,45 +84,31 @@ export function ServiceDetailsView({
           </Card>
         ) : null}
 
-        {service.technologies &&
-        (service.technologies.frontend ||
-          service.technologies.backend ||
-          service.technologies.database) ? (
+        {service.technologies?.length ? (
           <Card className="rounded-xl border-border/60 shadow-sm">
             <CardHeader>
               <CardTitle>Technologies</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-              <div>
-                <div className="text-muted-foreground">Frontend</div>
-                <div className="font-medium">
-                  {service.technologies.frontend || "—"}
-                </div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">Backend</div>
-                <div className="font-medium">
-                  {service.technologies.backend || "—"}
-                </div>
-              </div>
-              <div>
-                <div className="text-muted-foreground">Database</div>
-                <div className="font-medium">
-                  {service.technologies.database || "—"}
-                </div>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {service.technologies.map((t, i) => (
+                  <Badge key={i} variant="outline" className="bg-muted/50">
+                    {t}
+                  </Badge>
+                ))}
               </div>
             </CardContent>
           </Card>
         ) : null}
 
-        {service.benefits?.length ? (
+        {service.packageDetails?.length ? (
           <Card className="rounded-xl border-border/60 shadow-sm">
             <CardHeader>
-              <CardTitle>Why Choose Us</CardTitle>
+              <CardTitle>Package Details</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="list-disc space-y-2 pl-5 text-sm">
-                {service.benefits.map((b, i) => (
+                {service.packageDetails.map((b, i) => (
                   <li key={`${b}-${i}`}>{b}</li>
                 ))}
               </ul>

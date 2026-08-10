@@ -15,7 +15,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/utils/utils";
 import { DynamicListInput } from "./DynamicListInput";
-import { TechnologiesInput, type TechnologiesValue } from "./TechnologiesInput";
 
 export type ServiceFormValues = {
   title: string;
@@ -27,7 +26,7 @@ export type ServiceFormValues = {
   imageFile: File | null;
   imagePreviewUrl: string;
   services: string[];
-  technologies: TechnologiesValue;
+  technologies: string[];
   benefits: string[];
 };
 
@@ -41,7 +40,7 @@ const DEFAULT: ServiceFormValues = {
   imageFile: null,
   imagePreviewUrl: "",
   services: [],
-  technologies: { frontend: "", backend: "", database: "" },
+  technologies: [],
   benefits: [],
 };
 
@@ -83,31 +82,20 @@ export function ServiceForm({
 
   function toFormData() {
     const fd = new FormData();
-    fd.set("title", v.title.trim());
+    fd.set("name", v.title.trim());
     fd.set("category", v.category.trim());
     fd.set("price", String(Number(v.price)));
-    fd.set("pricingType", v.pricingType);
     fd.set(
-      "deliveryTimeDays",
+      "deliveryTime",
       String(Math.max(0, Math.floor(Number(v.deliveryTimeDays || 1)))),
     );
-    fd.set("about", v.about.trim());
-    // keep compatibility with older displays
     fd.set("description", v.about.trim());
-    // static demo stores imageUrl; for real API you’d send the file
     if (v.imageFile) {
       fd.append("image", v.imageFile);
     }
-    if (preview) fd.set("imageUrl", preview);
-    fd.set(
-      "services",
-      JSON.stringify((v.services ?? []).map((s) => s.trim()).filter(Boolean)),
-    );
-    fd.set("technologies", JSON.stringify(v.technologies));
-    fd.set(
-      "benefits",
-      JSON.stringify((v.benefits ?? []).map((s) => s.trim()).filter(Boolean)),
-    );
+    v.services.forEach((s) => fd.append("serviceIncludes", s.trim()));
+    v.technologies.forEach((t) => fd.append("technologies", t.trim()));
+    v.benefits.forEach((b) => fd.append("packageDetails", b.trim()));
     return fd;
   }
 
@@ -329,14 +317,14 @@ export function ServiceForm({
                 placeholder="e.g. API Integration"
               />
               <div className="space-y-3">
-                <h3 className="text-sm font-semibold tracking-tight">
-                  Technologies We Specialize In
-                </h3>
-                <TechnologiesInput
+                <DynamicListInput
+                  title="Technologies We Specialize In"
+                  addLabel="Add Tech"
                   value={v.technologies}
                   onChange={(technologies) =>
                     setV((s) => ({ ...s, technologies }))
                   }
+                  placeholder="e.g. React.js"
                 />
               </div>
               <DynamicListInput

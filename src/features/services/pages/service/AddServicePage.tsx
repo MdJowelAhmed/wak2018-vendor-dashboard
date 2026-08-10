@@ -22,14 +22,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DynamicListInput } from "@/features/services/components/DynamicListInput";
-import { useCreateServiceProviderServiceMutation } from "@/features/services";
+import {
+  useCreateServiceMutation,
+  useGetCategoriesQuery,
+} from "@/features/services";
 import {
   CountryMultiSelect,
   isCountrySelectionValid,
   type ServiceCountrySelection,
 } from "@/components/CountryMultiSelect";
 import { readServiceLocationFromLocalStorage } from "@/utils/service-provider-profile-storage";
-import { cn } from "@/utils/utils";
+import { cn, getImageUrl } from "@/utils/utils";
 import { fetchErrorMessage } from "@/utils/fetch-error";
 
 type FormState = {
@@ -46,14 +49,6 @@ type FormState = {
   deliveryTime: string;
 };
 
-const CATEGORIES = [
-  "Cleaning",
-  "Repair",
-  "Consulting",
-  "Design",
-  "Marketing",
-  "IT Services",
-] as const;
 const DELIVERY_TIME = [
   { value: "1", label: "Within 1 day" },
   { value: "2", label: "Within 2 days" },
@@ -68,9 +63,26 @@ function normalizeTag(s: string) {
 
 export function AddServicePage() {
   const navigate = useNavigate();
-  const [createService, { isLoading }] =
-    useCreateServiceProviderServiceMutation();
+  const [createService, { isLoading }] = useCreateServiceMutation();
+  const { data: categoriesData } = useGetCategoriesQuery();
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  const categories = useMemo(() => {
+    if (categoriesData?.data && Array.isArray(categoriesData.data)) {
+      return categoriesData.data.map((c: any) => ({
+        label: c.name,
+        value: c._id,
+      }));
+    }
+    return [
+      { label: "Cleaning", value: "6875d8f6c2a9d2b8c1f23456" },
+      { label: "Repair", value: "6875d8f6c2a9d2b8c1f23457" },
+      { label: "Consulting", value: "6875d8f6c2a9d2b8c1f23458" },
+      { label: "Design", value: "6875d8f6c2a9d2b8c1f23459" },
+      { label: "Marketing", value: "6875d8f6c2a9d2b8c1f2345a" },
+      { label: "IT Services", value: "6875d8f6c2a9d2b8c1f2345b" },
+    ];
+  }, [categoriesData]);
 
   const [v, setV] = useState<FormState>(() => ({
     title: "",
@@ -92,7 +104,7 @@ export function AddServicePage() {
   const [techDraft, setTechDraft] = useState("");
 
   const previewUrl = useMemo(() => {
-    if (v.imagePreviewUrl) return v.imagePreviewUrl;
+    if (v.imagePreviewUrl) return getImageUrl(v.imagePreviewUrl);
     if (v.imageFile) return URL.createObjectURL(v.imageFile);
     return "";
   }, [v.imageFile, v.imagePreviewUrl]);
@@ -153,30 +165,34 @@ export function AddServicePage() {
     if (Object.keys(e).length) return;
 
     try {
-      await createService({
-        title: v.title.trim(),
-        category: v.category.trim(),
-        allCountries: v.countrySelection.allCountries,
-        countries: v.countrySelection.allCountries
-          ? []
-          : v.countrySelection.countryCodes,
-        description: v.description.trim(),
-        services: (v.servicesIncluded ?? [])
-          .map((s) => s.trim())
-          .filter(Boolean),
-        technologies: (v.technologies ?? [])
-          .map((s) => s.trim())
-          .filter(Boolean),
-        image: v.imagePreviewUrl || previewUrl || "",
-        // Listing base price only; custom offers handle negotiated final amounts in chat.
-        pricingType: "fixed",
-        price: Number(v.price),
-        packageDetails: (v.packageDetails ?? [])
-          .map((s) => s.trim())
-          .filter(Boolean),
-        deliveryTime: v.deliveryTime,
-        role: "service" as const,
-      }).unwrap();
+      const formData = new FormData();
+      formData.append("name", v.title.trim());
+      formData.append("category", v.category.trim());
+      formData.append("price", v.price);
+      formData.append("description", v.description.trim());
+
+      const techArr = (v.technologies ?? [])
+        .map((s) => s.trim())
+        .filter(Boolean);
+      formData.append("technologies", JSON.stringify(techArr));
+
+      const includesArr = (v.servicesIncluded ?? [])
+        .map((s) => s.trim())
+        .filter(Boolean);
+      formData.append("serviceIncludes", JSON.stringify(includesArr));
+
+      const pkgArr = (v.packageDetails ?? [])
+        .map((s) => s.trim())
+        .filter(Boolean);
+      formData.append("packageDetails", JSON.stringify(pkgArr));
+
+      formData.append("deliveryTime", v.deliveryTime);
+
+      if (v.imageFile) {
+        formData.append("image", v.imageFile);
+      }
+
+      await createService(formData).unwrap();
 
       toast.success("Service published");
       void navigate("/service/services", { replace: true });
@@ -243,9 +259,9 @@ export function AddServicePage() {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
+                    {categories.map((c) => (
+                      <SelectItem key={c.value} value={c.value}>
+                        {c.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

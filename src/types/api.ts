@@ -48,30 +48,23 @@ export type ServicePackage = {
 };
 
 export type Service = {
-  id: string;
-  title: string;
+  _id: string;
+  creator: string;
+  name: string;
+  category: string;
+  price: number;
+  image: string;
   description: string;
-  packages: ServicePackage[];
-  /** Service provider fields (used by Service Management UI) */
-  category?: string;
-  price?: number;
-  pricingType?: "hourly" | "fixed";
-  deliveryTimeDays?: number;
-  imageUrl?: string;
-  /** Structured content */
-  about?: string;
-  services?: string[];
-  technologies?: {
-    frontend: string;
-    backend: string;
-    database: string;
-  };
-  benefits?: string[];
-  providerName?: string;
-  rating?: number;
-  /** Service availability: all countries, or explicit ISO country codes. */
-  allCountries?: boolean;
-  serviceCountries?: string[];
+  technologies: string[];
+  serviceIncludes: string[];
+  packageDetails: string[];
+  deliveryTime: number;
+  ratingCount: number;
+  averageRating: number;
+  status: "active" | "draft" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+  slug: string;
 };
 
 export type ProductOrderStatus =

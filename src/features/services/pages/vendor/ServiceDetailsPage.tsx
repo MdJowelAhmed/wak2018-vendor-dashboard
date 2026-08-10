@@ -1,12 +1,12 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useGetServiceQuery } from "@/features/services";
+import { useGetServiceByIdQuery } from "@/features/services";
 import { ServiceDetailsView } from "@/features/services/components/ServiceDetailsView";
 
 export function ServiceDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useGetServiceQuery(id ?? "", {
+  const { data, isLoading, isError } = useGetServiceByIdQuery(id ?? "", {
     skip: !id,
   });
 
@@ -25,7 +25,7 @@ export function ServiceDetailsPage() {
   return (
     <ServiceDetailsView
       service={data}
-      onEdit={() => navigate(`/vendor/services/edit/${data.id}`)}
+      onEdit={() => navigate(`/vendor/services/edit/${data._id}`)}
     />
   );
 }

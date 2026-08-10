@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useGetProfileQuery } from "@/services/userApi";
 import {
   useCreateServiceMutation,
-  useGetServiceQuery,
+  useGetServiceByIdQuery,
   useUpdateServiceMutation,
 } from "@/features/services";
 import {
@@ -49,7 +49,7 @@ export function ServiceFormPage({ mode }: Props) {
     );
   }
 
-  const svcQ = useGetServiceQuery(id ?? "", { skip: mode === "create" || !id });
+  const svcQ = useGetServiceByIdQuery(id ?? "", { skip: mode === "create" || !id });
   const [create, { isLoading: isCreating }] = useCreateServiceMutation();
   const [update, { isLoading: isUpdating }] = useUpdateServiceMutation();
   const isBusy = isCreating || isUpdating;
@@ -66,23 +66,19 @@ export function ServiceFormPage({ mode }: Props) {
   const initialValues: Partial<ServiceFormValues> | undefined =
     mode === "edit" && svcQ.data
       ? {
-          title: svcQ.data.title,
+          title: svcQ.data.name,
           category: svcQ.data.category ?? "",
           price: svcQ.data.price != null ? String(svcQ.data.price) : "",
-          pricingType: svcQ.data.pricingType ?? "fixed",
+          pricingType: "fixed",
           deliveryTimeDays:
-            svcQ.data.deliveryTimeDays != null
-              ? String(svcQ.data.deliveryTimeDays)
+            svcQ.data.deliveryTime != null
+              ? String(svcQ.data.deliveryTime)
               : "1",
-          about: svcQ.data.about ?? svcQ.data.description ?? "",
-          imagePreviewUrl: svcQ.data.imageUrl ?? "",
-          services: svcQ.data.services ?? [],
-          technologies: svcQ.data.technologies ?? {
-            frontend: "",
-            backend: "",
-            database: "",
-          },
-          benefits: svcQ.data.benefits ?? [],
+          about: svcQ.data.description ?? "",
+          imagePreviewUrl: svcQ.data.image ?? "",
+          services: svcQ.data.serviceIncludes ?? [],
+          technologies: svcQ.data.technologies ?? [],
+          benefits: svcQ.data.packageDetails ?? [],
         }
       : undefined;
 

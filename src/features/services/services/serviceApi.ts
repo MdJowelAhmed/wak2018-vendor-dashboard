@@ -30,36 +30,51 @@ export type CreateServiceProviderBody = {
   role: Extract<UserRole, "service">;
 };
 
+export type GetMyServicesResponse = {
+  success: boolean;
+  message: string;
+  pagination: {
+    total: number;
+    limit: number;
+    page: number;
+    totalPage: number;
+  };
+  data: Service[];
+};
+
 export const serviceApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getServices: build.query<Service[], void>({
-      query: () => "/vendor/services",
+    getCategories: build.query<any, void>({
+      query: () => "/categories",
+    }),
+    getMyServices: build.query<GetMyServicesResponse, { searchTerm?: string } | void>({
+      query: (arg) => ({
+        url: "/services/mine",
+        params: arg ? { searchTerm: arg.searchTerm } : undefined,
+      }),
       providesTags: (r) =>
-        r
+        r?.data
           ? [
               listTag,
-              ...r.map((s) => ({ type: "Services" as const, id: s.id })),
+              ...r.data.map((s) => ({ type: "Services" as const, id: s._id })),
             ]
           : [listTag],
     }),
-    getService: build.query<Service, string>({
-      query: (id) => `/vendor/services/${id}`,
+    getServiceById: build.query<Service, string>({
+      query: (id) => `/services/${id}`,
       providesTags: (_r, _e, id) => [{ type: "Services", id }],
     }),
-    createService: build.mutation<Service, CreateServiceInput | FormData>({
+    createService: build.mutation<any, FormData>({
       query: (body) => ({
-        url: "/vendor/services",
+        url: "/services/",
         method: "POST",
         body,
       }),
       invalidatesTags: [listTag],
     }),
-    updateService: build.mutation<
-      Service,
-      { id: string; data: FormData | Partial<Service> }
-    >({
+    updateService: build.mutation<any, { id: string; data: FormData }>({
       query: ({ id, data }) => ({
-        url: `/vendor/services/${id}`,
+        url: `/services/${id}`,
         method: "PATCH",
         body: data,
       }),
@@ -68,11 +83,11 @@ export const serviceApi = baseApi.injectEndpoints({
         { type: "Services" as const, id: arg.id },
       ],
     }),
-    createServiceProviderService: build.mutation<
-      Service,
-      CreateServiceProviderBody
-    >({
-      query: (body) => ({ url: "/api/services", method: "POST", body }),
+    deleteService: build.mutation<any, string>({
+      query: (id) => ({
+        url: `/services/${id}`,
+        method: "DELETE",
+      }),
       invalidatesTags: [listTag],
     }),
   }),
@@ -80,9 +95,10 @@ export const serviceApi = baseApi.injectEndpoints({
 });
 
 export const {
-  useGetServicesQuery,
-  useGetServiceQuery,
+  useGetCategoriesQuery,
+  useGetMyServicesQuery,
+  useGetServiceByIdQuery,
   useCreateServiceMutation,
   useUpdateServiceMutation,
-  useCreateServiceProviderServiceMutation,
+  useDeleteServiceMutation,
 } = serviceApi;

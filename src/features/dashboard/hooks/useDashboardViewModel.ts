@@ -7,7 +7,7 @@ import {
 } from "../services/analyticsApi";
 import { useGetServiceOrdersQuery } from "@/features/orders";
 import { useGetProductsQuery } from "@/features/products";
-import { useGetServicesQuery } from "@/features/services";
+import { useGetMyServicesQuery } from "@/features/services";
 import type {
   AnalyticsSummary,
   DashboardActiveDelivery,
@@ -190,7 +190,7 @@ function augment(
   s: ServiceOrder[] | undefined,
   d: Delivery[] | undefined,
   products: { id: string; stock: number }[] | undefined,
-  services: { id: string }[] | undefined,
+  services: any[] | undefined,
   role: UserRole,
 ): DashboardOverview {
   const out = { ...base };
@@ -247,7 +247,7 @@ export function useDashboardViewModel(role: UserRole | null) {
   const sOrdersQ = useGetServiceOrdersQuery();
   const delQ = useGetActiveDeliveriesQuery();
   const productsQ = useGetProductsQuery();
-  const servicesQ = useGetServicesQuery();
+  const servicesQ = useGetMyServicesQuery();
   const useDemo = demoEnabled();
 
   return useMemo(() => {
@@ -304,7 +304,7 @@ export function useDashboardViewModel(role: UserRole | null) {
           sOrdersQ.data,
           delQ.data,
           productsQ.data,
-          servicesQ.data,
+          servicesQ.data?.data,
           resolvedRole,
         ),
         meta: {
@@ -326,7 +326,7 @@ export function useDashboardViewModel(role: UserRole | null) {
           sOrdersQ.data,
           delQ.data,
           productsQ.data,
-          servicesQ.data,
+          servicesQ.data?.data,
           resolvedRole,
         ),
         meta: {
@@ -356,7 +356,7 @@ export function useDashboardViewModel(role: UserRole | null) {
           sOrdersQ.data,
           delQ.data,
           productsQ.data,
-          servicesQ.data,
+          servicesQ.data?.data,
           resolvedRole,
         ),
         meta: {

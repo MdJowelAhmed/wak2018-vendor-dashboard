@@ -15,12 +15,7 @@ export function ServicePricingCard({
   service: Service;
   onEdit: () => void;
 }) {
-  const price =
-    service.price ??
-    (service.packages?.length
-      ? Math.min(...service.packages.map((p) => p.price))
-      : 0);
-  const type = service.pricingType ?? "fixed";
+  const price = service.price ?? 0;
 
   return (
     <Card className="rounded-xl border-border/60 shadow-sm">
@@ -30,7 +25,7 @@ export function ServicePricingCard({
       <CardContent className="space-y-4">
         <div className="space-y-1">
           <div className="text-2xl font-semibold">{fmt(price)}</div>
-          <div className="text-muted-foreground text-sm capitalize">{type}</div>
+          <div className="text-muted-foreground text-sm capitalize">Fixed</div>
         </div>
         <Button
           type="button"

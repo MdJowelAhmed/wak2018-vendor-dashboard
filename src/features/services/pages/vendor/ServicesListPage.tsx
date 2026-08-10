@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Plus } from "lucide-react";
-import { useGetServicesQuery } from "@/features/services";
+import { useGetMyServicesQuery } from "@/features/services";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,12 +19,13 @@ import { useGetProfileQuery } from "@/services/userApi";
 import type { UserRole } from "@/features/auth/types/authTypes";
 
 export function ServicesListPage() {
-  const { data, isLoading, isError } = useGetServicesQuery();
+  const { data: res, isLoading, isError } = useGetMyServicesQuery();
   const authRole: UserRole | undefined = useSelector(
     (s: RootState) => s.auth.user?.role,
   );
   const { data: profile } = useGetProfileQuery();
   const role: UserRole | null = authRole ?? profile?.role ?? null;
+  const data = res?.data || [];
 
   return (
     <div className="space-y-4">
@@ -65,84 +66,42 @@ export function ServicesListPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Title</TableHead>
-                  {role === "service" ? (
-                    <>
-                      <TableHead>Type</TableHead>
-                      <TableHead className="text-right">Price</TableHead>
-                    </>
-                  ) : (
-                    <>
-                      <TableHead>Packages</TableHead>
-                      <TableHead className="text-right">
-                        From (min price)
-                      </TableHead>
-                    </>
-                  )}
+                  <TableHead>Delivery Time</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {(data ?? []).map((s) => {
-                  const prices = s.packages.map((p) => p.price);
-                  const minP = prices.length ? Math.min(...prices) : 0;
-                  return (
-                    <TableRow key={s.id}>
-                      <TableCell className="max-w-sm">
-                        <div className="font-medium">
-                          {role === "service" ? (
-                            <Link
-                              to={`/vendor/services/${s.id}`}
-                              className="hover:underline"
-                            >
-                              {s.title}
-                            </Link>
-                          ) : (
-                            s.title
-                          )}
-                        </div>
-                        <div className="text-muted-foreground line-clamp-1 text-sm">
-                          {s.description}
-                        </div>
-                      </TableCell>
-                      {role === "service" ? (
-                        <>
-                          <TableCell className="capitalize">
-                            {s.pricingType ?? "fixed"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {new Intl.NumberFormat(undefined, {
-                              style: "currency",
-                              currency: "USD",
-                            }).format(s.price ?? minP)}
-                          </TableCell>
-                        </>
-                      ) : (
-                        <>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {s.packages.map((p) => (
-                                <Badge
-                                  key={p.name}
-                                  variant="secondary"
-                                  className="capitalize"
-                                >
-                                  {p.name}
-                                </Badge>
-                              ))}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {new Intl.NumberFormat(undefined, {
-                              style: "currency",
-                              currency: "USD",
-                            }).format(minP)}
-                            +
-                          </TableCell>
-                        </>
-                      )}
-                    </TableRow>
-                  );
-                })}
-                {!data?.length && (
+                {data.map((s) => (
+                  <TableRow key={s._id}>
+                    <TableCell className="max-w-sm">
+                      <div className="font-medium">
+                        {role === "service" ? (
+                          <Link
+                            to={`/vendor/services/${s._id}`}
+                            className="hover:underline"
+                          >
+                            {s.name}
+                          </Link>
+                        ) : (
+                          s.name
+                        )}
+                      </div>
+                      <div className="text-muted-foreground line-clamp-1 text-sm">
+                        {s.description}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {s.deliveryTime} Days
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {new Intl.NumberFormat(undefined, {
+                        style: "currency",
+                        currency: "USD",
+                      }).format(s.price)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!data.length && (
                   <TableRow>
                     <TableCell
                       colSpan={3}

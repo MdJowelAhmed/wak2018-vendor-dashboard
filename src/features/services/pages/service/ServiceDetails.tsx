@@ -16,8 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SERVICE_DEMO } from "@/features/services";
-import { cn } from "@/utils/utils";
+import { useGetServiceByIdQuery } from "@/features/services";
+import { cn, getImageUrl } from "@/utils/utils";
 import {
   servicePageLoadTransition,
   serviceStatCardHover,
@@ -28,6 +28,7 @@ import {
   serviceTableStaggerParentVariants,
   serviceTopCardVariants,
 } from "@/features/services/motion/service-details-variants";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const bookings = [
   {
@@ -67,14 +68,20 @@ const tableRowClass =
 
 export function ServiceDetails() {
   const { id } = useParams();
-  const serviceId = Number(id);
+  const { data: service, isLoading, isError } = useGetServiceByIdQuery(id ?? "", {
+    skip: !id,
+  });
 
-  const service = useMemo(
-    () => SERVICE_DEMO.find((s) => s.id === serviceId),
-    [serviceId],
-  );
+  if (isLoading) {
+    return (
+      <div className="w-full space-y-4">
+        <Skeleton className="h-8 w-56" />
+        <Skeleton className="h-[420px] w-full" />
+      </div>
+    );
+  }
 
-  if (!service || !id || Number.isNaN(serviceId)) {
+  if (isError || !service || !id) {
     return (
       <div className="w-full text-sm text-muted-foreground">
         Service not found
@@ -90,9 +97,13 @@ export function ServiceDetails() {
   const pendingEarnings = totalEarnings - completedEarnings;
 
   const statusCls =
-    service.status === "Active"
+    service.status === "active"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : "border-zinc-200 bg-zinc-50 text-zinc-700";
+      : service.status === "draft"
+      ? "border-zinc-200 bg-zinc-50 text-zinc-700"
+      : "border-red-200 bg-red-50 text-red-700";
+  const statusLabel =
+    service.status === "active" ? "Active" : service.status === "draft" ? "Draft" : "Inactive";
 
   const statItems = [
     { title: "Total Earnings", value: fmtUsd(totalEarnings) },
@@ -115,26 +126,37 @@ export function ServiceDetails() {
       >
         <Card className="rounded-xl border-border/60 shadow-sm transition-shadow duration-200 hover:shadow-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">{service.title}</CardTitle>
-            <CardDescription>Service overview</CardDescription>
+            <div className="flex items-center gap-4">
+              {service.image && (
+                <img
+                  src={getImageUrl(service.image)}
+                  alt={service.name}
+                  className="size-16 rounded-md object-cover border border-border/50"
+                />
+              )}
+              <div>
+                <CardTitle className="text-xl">{service.name}</CardTitle>
+                <CardDescription>Service overview</CardDescription>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-1 text-sm">
               <div className="font-semibold tabular-nums">
                 {fmtUsd(service.price)}{" "}
                 <span className="text-muted-foreground font-medium">
-                  / {service.type}
+                  / fixed
                 </span>
               </div>
               <div className="text-muted-foreground">
-                Delivery time: {service.delivery}
+                Delivery time: {service.deliveryTime} Days
               </div>
             </div>
             <Badge
               variant="outline"
               className={cn("transition-colors duration-300", statusCls)}
             >
-              {service.status}
+              {statusLabel}
             </Badge>
           </CardContent>
         </Card>

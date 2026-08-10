@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link, useNavigate } from "react-router-dom";
@@ -11,27 +10,50 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SERVICE_DEMO, type ServiceRow } from "@/features/services";
+import {
+  useGetMyServicesQuery,
+  useDeleteServiceMutation,
+  useUpdateServiceMutation,
+} from "@/features/services";
+import { toast } from "sonner";
+import { CustomSpinner } from "@/components/common/CustomSpinner";
+import { getImageUrl } from "@/utils/utils";
 
 export function ServicesPage() {
   const navigate = useNavigate();
-  const [services, setServices] = useState<ServiceRow[]>(() =>
-    SERVICE_DEMO.map((s) => ({ ...s })),
-  );
+  const { data: servicesData, isLoading } = useGetMyServicesQuery();
+  const [deleteService] = useDeleteServiceMutation();
+  const [updateService] = useUpdateServiceMutation();
 
-  const rows = useMemo(() => services, [services]);
+  const services = servicesData?.data || [];
 
-  const fmtPrice = (price: number, type: ServiceRow["type"]) =>
-    `$${price} / ${type}`;
+  const fmtPrice = (price: number) => `$${price} (Fixed)`;
 
-  function remove(id: number) {
-    setServices((prev) => prev.filter((s) => s.id !== id));
+  async function remove(id: string) {
+    if (!window.confirm("Are you sure you want to delete this service?"))
+      return;
+    try {
+      await deleteService(id).unwrap();
+      toast.success("Service deleted successfully");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to delete service");
+    }
   }
 
-  function toggle(id: number, next: boolean) {
-    setServices((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, isActive: next } : s)),
-    );
+  async function toggle(id: string, currentStatus: string) {
+    const nextStatus = currentStatus === "active" ? "draft" : "active";
+    try {
+      const formData = new FormData();
+      formData.append("status", nextStatus);
+      await updateService({ id, data: formData }).unwrap();
+      toast.success(`Service marked as ${nextStatus}`);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to update service status");
+    }
+  }
+
+  if (isLoading) {
+    return <CustomSpinner />;
   }
 
   return (
@@ -54,7 +76,6 @@ export function ServicesPage() {
             <TableRow className="hover:bg-transparent">
               <TableHead>Service Name</TableHead>
               <TableHead>Price</TableHead>
-              <TableHead>Type</TableHead>
               <TableHead>Delivery Time</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Toggle</TableHead>
@@ -62,28 +83,41 @@ export function ServicesPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.length ? (
-              rows.map((s) => {
-                const statusBadge =
-                  s.isActive && s.status === "Active"
-                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                    : s.status === "Draft"
-                      ? "border-zinc-200 bg-zinc-50 text-zinc-700"
-                      : "border-red-200 bg-red-50 text-red-700";
+            {services.length ? (
+              services.map((s) => {
+                const isActive = s.status === "active";
 
-                const statusLabel = s.isActive ? s.status : "Disabled";
+                const statusBadge = isActive
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : s.status === "draft"
+                    ? "border-zinc-200 bg-zinc-50 text-zinc-700"
+                    : "border-red-200 bg-red-50 text-red-700";
+
+                const statusLabel = isActive
+                  ? "Active"
+                  : s.status === "draft"
+                    ? "Draft"
+                    : "Inactive";
 
                 return (
-                  <TableRow key={s.id} className="hover:bg-muted/30">
-                    <TableCell className="font-medium">{s.title}</TableCell>
+                  <TableRow key={s._id} className="hover:bg-muted/30">
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-3">
+                        {s.image && (
+                          <img
+                            src={getImageUrl(s.image)}
+                            alt={s.name}
+                            className="size-10 rounded-md object-cover border border-border/50"
+                          />
+                        )}
+                        <span>{s.name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell className="font-semibold tabular-nums">
-                      {fmtPrice(s.price, s.type)}
+                      {fmtPrice(s.price)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {s.type}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {s.delivery}
+                      {s.deliveryTime} Days
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusBadge}>
@@ -93,12 +127,10 @@ export function ServicesPage() {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch
-                          checked={s.isActive}
-                          onCheckedChange={(next) =>
-                            toggle(s.id, Boolean(next))
-                          }
+                          checked={isActive}
+                          onCheckedChange={() => toggle(s._id, s.status)}
                           className="data-[state=checked]:bg-[#895129]"
-                          aria-label={`Toggle ${s.title}`}
+                          aria-label={`Toggle ${s.name}`}
                         />
                       </div>
                     </TableCell>
@@ -112,20 +144,17 @@ export function ServicesPage() {
                         >
                           <button
                             type="button"
-                            onClick={() => void navigate(`/service/${s.id}`)}
+                            onClick={() => void navigate(`/service/${s._id}`)}
                           >
                             View
                           </button>
-                        </Button>
-                        <Button asChild variant="outline" size="sm">
-                          <Link to="/service/add-service">Edit</Link>
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
                           className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => remove(s.id)}
+                          onClick={() => remove(s._id)}
                         >
                           Delete
                         </Button>
@@ -137,10 +166,10 @@ export function ServicesPage() {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={7}
+                  colSpan={6}
                   className="text-muted-foreground py-12 text-center text-sm"
                 >
-                  No services.
+                  No services found. Add a new service to get started!
                 </TableCell>
               </TableRow>
             )}

@@ -29,7 +29,7 @@ export function AnalyticsKPI({
 }: {
   title: string;
   value: number | undefined;
-  changePct: number | undefined;
+  changePct?: number | undefined;
   loading?: boolean;
   format?: "number" | "currency" | "percent";
   suffix?: string;

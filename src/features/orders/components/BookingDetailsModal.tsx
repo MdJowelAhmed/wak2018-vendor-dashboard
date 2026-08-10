@@ -11,18 +11,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/utils/utils";
-import type {
-  DashboardBooking,
-  DashboardBookingStatus,
-} from "@/features/orders/model/dashboard-booking";
+import { toast } from "sonner";
+import {
+  useGetServiceOrderByIdQuery,
+  useDeliverServiceOrderMutation,
+} from "@/features/orders/services/orderApi";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const fmtUsd = (n: number) =>
   new Intl.NumberFormat(undefined, {
@@ -32,7 +27,8 @@ const fmtUsd = (n: number) =>
   }).format(n);
 
 function fmtDate(ymd: string) {
-  const d = new Date(ymd + "T12:00:00");
+  if (!ymd) return "—";
+  const d = new Date(ymd);
   if (Number.isNaN(d.getTime())) return ymd;
   return d.toLocaleDateString(undefined, {
     year: "numeric",
@@ -41,17 +37,15 @@ function fmtDate(ymd: string) {
   });
 }
 
-function statusBadgeClass(status: DashboardBookingStatus) {
+function statusBadgeClass(status: string) {
   switch (status) {
-    case "Completed":
+    case "completed":
       return "border-emerald-200 bg-emerald-50 text-emerald-800";
-    case "Ongoing":
+    case "in_progress":
       return "border-[#895129]/35 bg-[#895129]/10 text-[#895129]";
-    case "Pending":
+    case "pending":
       return "border-zinc-200 bg-zinc-50 text-zinc-800";
-    case "Rejected":
-      return "border-rose-200 bg-rose-50 text-rose-800";
-    case "Cancelled":
+    case "cancelled":
       return "border-red-200 bg-red-50 text-red-800";
     default:
       return "border-border bg-muted text-foreground";
@@ -88,17 +82,22 @@ function InfoItem({
 type BookingDetailsModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  booking: DashboardBooking | null;
-  onStatusChange: (id: number, status: DashboardBookingStatus) => void;
+  bookingId: string | null;
 };
 
 export function BookingDetailsModal({
   open,
   onOpenChange,
-  booking,
-  onStatusChange,
+  bookingId,
 }: BookingDetailsModalProps) {
   const navigate = useNavigate();
+
+  const { data: b, isLoading } = useGetServiceOrderByIdQuery(bookingId ?? "", {
+    skip: !bookingId,
+  });
+
+  const [deliverOrder, { isLoading: isDelivering }] =
+    useDeliverServiceOrderMutation();
 
   function close() {
     onOpenChange(false);
@@ -109,7 +108,33 @@ export function BookingDetailsModal({
     void navigate("/service/messages");
   }
 
-  if (!booking) {
+  async function handleDeliver() {
+    if (!bookingId) return;
+    try {
+      await deliverOrder(bookingId).unwrap();
+      toast.success("Order marked as delivered!");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to deliver order");
+    }
+  }
+
+  if (!bookingId) return null;
+
+  if (isLoading) {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-[min(96vw,56rem)] rounded-xl border-border/60 bg-white">
+          <div className="p-6 space-y-4">
+            <Skeleton className="h-6 w-1/3" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-32 w-full mt-4" />
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  if (!b) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[min(96vw,56rem)] rounded-xl border-border/60 bg-white">
@@ -119,27 +144,21 @@ export function BookingDetailsModal({
     );
   }
 
-  const b = booking;
-  const approvalLabel =
-    b.status !== "Completed"
-      ? "—"
-      : b.customerApproved
-        ? "Approved"
-        : "Awaiting customer approval";
-
   const timelineSteps = [
     { key: "created", label: "Created", done: true, date: b.createdAt },
     {
       key: "ongoing",
       label: "Ongoing",
-      done: b.status === "Ongoing" || b.status === "Completed",
-      date: b.status !== "Pending" ? b.date : undefined,
+      done: b.orderStatus === "in_progress" || b.orderStatus === "completed",
+      date: b.orderStatus !== "pending" ? b.updatedAt : undefined,
     },
     {
       key: "completed",
       label: "Completed",
-      done: b.status === "Completed",
-      date: b.status === "Completed" ? b.date : undefined,
+      done: b.orderStatus === "completed",
+      date:
+        b.completedAt ||
+        (b.orderStatus === "completed" ? b.updatedAt : undefined),
     },
   ];
 
@@ -154,8 +173,7 @@ export function BookingDetailsModal({
             Booking details
           </DialogTitle>
           <DialogDescription className="text-muted-foreground text-sm">
-            {b.bookingRef} · Manage status and view delivery & communication
-            context.
+            {b.orderId} · Manage status and view delivery context.
           </DialogDescription>
         </DialogHeader>
 
@@ -215,13 +233,12 @@ export function BookingDetailsModal({
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <InfoItem
                     label="Service name"
-                    value={b.service}
+                    value={b.service?.name}
                     className="sm:col-span-2"
                   />
-                  <InfoItem label="Category" value={b.category} />
                   <InfoItem
                     label="Description"
-                    value={b.description}
+                    value={b.service?.description}
                     className="sm:col-span-2"
                   />
                 </div>
@@ -234,18 +251,10 @@ export function BookingDetailsModal({
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <InfoItem
                     label="Name"
-                    value={b.customer}
+                    value={b.customer?.name}
                     className="sm:col-span-2"
                   />
-                  <InfoItem label="Email" value={b.customerEmail} />
-                  <InfoItem label="Phone" value={b.customerPhone} />
-                  <InfoItem
-                    label="Location"
-                    value={[b.customerCity, b.customerCountry]
-                      .filter(Boolean)
-                      .join(", ")}
-                    className="sm:col-span-2"
-                  />
+                  <InfoItem label="Email" value={b.customer?.email} />
                 </div>
               </div>
 
@@ -254,41 +263,29 @@ export function BookingDetailsModal({
                 <SectionTitle>Booking info</SectionTitle>
                 <Separator />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <InfoItem label="Booking ID" value={b.bookingRef} />
-                  <InfoItem label="Date" value={fmtDate(b.date)} />
-                  <InfoItem label="Time" value={b.scheduledAt} />
+                  <InfoItem label="Booking ID" value={b.orderId} />
+                  <InfoItem label="Date" value={fmtDate(b.createdAt)} />
+                  <InfoItem label="Status" value="" className="hidden" />
                   <div className="space-y-2 sm:col-span-2">
                     <div className="text-muted-foreground text-xs">Status</div>
-                    <Select
-                      value={b.status}
-                      onValueChange={(v) =>
-                        onStatusChange(b.id, v as DashboardBookingStatus)
-                      }
-                    >
-                      <SelectTrigger className="h-10 w-full max-w-xs border-border/60">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Ongoing">Ongoing</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                        <SelectItem value="Rejected">Rejected</SelectItem>
-                        <SelectItem value="Cancelled">Cancelled</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <div className="flex flex-wrap items-center gap-2 pt-1">
                       <Badge
                         variant="outline"
-                        className={cn("text-xs", statusBadgeClass(b.status))}
+                        className={cn(
+                          "text-xs capitalize",
+                          statusBadgeClass(b.orderStatus),
+                        )}
                       >
-                        {b.status}
+                        {b.orderStatus === "in_progress"
+                          ? "Ongoing"
+                          : b.orderStatus}
                       </Badge>
                     </div>
                   </div>
                   <InfoItem
-                    label="Approval status"
-                    value={approvalLabel}
-                    className="sm:col-span-2"
+                    label="Payment Status"
+                    value={b.paymentStatus || "Unpaid"}
+                    className="sm:col-span-2 capitalize"
                   />
                 </div>
               </div>
@@ -298,19 +295,14 @@ export function BookingDetailsModal({
                 <SectionTitle>Pricing</SectionTitle>
                 <Separator />
                 <div className="grid grid-cols-1 gap-3 rounded-xl border border-border/60 bg-muted/15 p-4 sm:grid-cols-2">
-                  <InfoItem label="Base price" value={fmtUsd(b.basePrice)} />
                   <InfoItem
-                    label="Custom offer"
-                    value={
-                      b.customOfferPrice != null
-                        ? fmtUsd(b.customOfferPrice)
-                        : "—"
-                    }
+                    label="Base price"
+                    value={fmtUsd(b.service?.price || 0)}
                   />
                   <div className="border-border/60 flex items-center justify-between border-t pt-3 sm:col-span-2">
                     <span className="text-muted-foreground text-sm">Total</span>
                     <span className="text-[#895129] text-lg font-semibold tabular-nums">
-                      {fmtUsd(b.amount)}
+                      {fmtUsd(b.price || 0)}
                     </span>
                   </div>
                 </div>
@@ -322,54 +314,24 @@ export function BookingDetailsModal({
                 <Separator />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <InfoItem
-                    label="Delivery window"
-                    value={`${b.deliveryDays} days`}
+                    label="Expected Delivery"
+                    value={fmtDate(b.deliveryDate)}
                   />
-                  <InfoItem label="Deadline" value={fmtDate(b.deadline)} />
-                  <div className="sm:col-span-2">
-                    <div className="text-muted-foreground text-xs">
-                      Progress
-                    </div>
-                    <div className="mt-2 flex items-center gap-3">
-                      <div className="bg-muted h-2 flex-1 overflow-hidden rounded-full">
-                        <div
-                          className="h-full rounded-full bg-[#895129] transition-all"
-                          style={{
-                            width: `${Math.min(100, Math.max(0, b.deliveryProgress))}%`,
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm font-medium tabular-nums">
-                        {b.deliveryProgress}%
-                      </span>
-                    </div>
-                  </div>
+                  {b.completedAt && (
+                    <InfoItem
+                      label="Completed At"
+                      value={fmtDate(b.completedAt)}
+                    />
+                  )}
                 </div>
-              </div>
-
-              {/* Communication */}
-              <div className="space-y-3 lg:col-span-2">
-                <SectionTitle>Communication</SectionTitle>
-                <Separator />
-                <div className="flex flex-col gap-3 rounded-xl border border-border/60 bg-muted/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-muted-foreground text-xs">
-                      Last message
-                    </div>
-                    <p className="text-foreground mt-1 text-sm leading-relaxed line-clamp-2">
-                      {b.lastMessagePreview}
-                    </p>
+                {b.deliveryDescription && (
+                  <div className="mt-4 rounded-lg bg-muted/30 p-4 border border-border/50 text-sm">
+                    <span className="font-semibold text-xs text-muted-foreground block mb-2">
+                      Delivery Note
+                    </span>
+                    {b.deliveryDescription}
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="shrink-0 border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10"
-                    onClick={openChat}
-                  >
-                    <MessageCircle className="mr-2 size-4" />
-                    Open chat
-                  </Button>
-                </div>
+                )}
               </div>
             </div>
 
@@ -379,35 +341,37 @@ export function BookingDetailsModal({
             <div className="space-y-3">
               <SectionTitle>Actions</SectionTitle>
               <div className="flex flex-row flex-wrap items-center gap-2">
-                {b.status === "Pending" ? (
+                {b.orderStatus === "in_progress" ||
+                b.orderStatus === "pending" ? (
                   <Button
                     type="button"
                     className="bg-[#895129] hover:bg-[#7b4723]"
-                    onClick={() => onStatusChange(b.id, "Ongoing")}
+                    onClick={handleDeliver}
+                    disabled={isDelivering}
                   >
-                    Accept booking
+                    {isDelivering ? "Delivering..." : "Deliver Order"}
                   </Button>
                 ) : null}
-                {b.status === "Ongoing" ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10"
-                    onClick={() => onStatusChange(b.id, "Completed")}
-                  >
-                    Mark as completed
-                  </Button>
-                ) : null}
-                {b.status === "Completed" ? (
+                {b.orderStatus === "completed" ? (
                   <p className="text-muted-foreground text-sm">
                     No further actions — booking is completed.
                   </p>
                 ) : null}
-                {b.status === "Rejected" || b.status === "Cancelled" ? (
+                {b.orderStatus === "cancelled" ? (
                   <p className="text-muted-foreground text-sm">
                     No actions available for this booking.
                   </p>
                 ) : null}
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="shrink-0 border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10 ml-auto"
+                  onClick={openChat}
+                >
+                  <MessageCircle className="mr-2 size-4" />
+                  Open chat
+                </Button>
               </div>
             </div>
           </div>

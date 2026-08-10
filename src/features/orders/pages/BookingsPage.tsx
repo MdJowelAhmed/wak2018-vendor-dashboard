@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -10,13 +9,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
@@ -25,19 +17,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { BookingDetailsModal } from "@/features/orders/components/BookingDetailsModal";
-import {
-  bookingFromOffer,
-  type DashboardBooking,
-  type DashboardBookingStatus,
-} from "@/features/orders/model/dashboard-booking";
 import { cn } from "@/utils/utils";
-
-type BookingFromOfferState = {
-  offerId: string;
-  title: string;
-  customer: string;
-  amount: number;
-};
+import { useGetServiceOrdersQuery } from "@/features/orders/services/orderApi";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const fmtUsd = (n: number) =>
   new Intl.NumberFormat(undefined, {
@@ -46,123 +28,36 @@ const fmtUsd = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
-function StatusBadge({ status }: { status: DashboardBookingStatus }) {
+function fmtDate(ymd: string) {
+  if (!ymd) return "—";
+  const d = new Date(ymd);
+  if (Number.isNaN(d.getTime())) return ymd;
+  return d.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+}
+
+function StatusBadge({ status }: { status: string }) {
   const cls =
-    status === "Completed"
+    status === "completed"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-      : status === "Ongoing"
+      : status === "in_progress"
         ? "border-[#895129]/35 bg-[#895129]/10 text-[#895129]"
-        : status === "Pending"
+        : status === "pending"
           ? "border-zinc-200 bg-zinc-50 text-zinc-700"
-          : status === "Rejected"
-            ? "border-rose-200 bg-rose-50 text-rose-700"
-            : "border-red-200 bg-red-50 text-red-700";
+          : "border-red-200 bg-red-50 text-red-700"; // cancelled
   return (
-    <Badge variant="outline" className={cn(cls)}>
-      {status}
+    <Badge variant="outline" className={cn("capitalize", cls)}>
+      {status === "in_progress" ? "Ongoing" : status}
     </Badge>
   );
 }
 
 export function BookingsPage() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const processedOfferIds = useRef<Set<string>>(new Set());
-
-  const [bookings, setBookings] = useState<DashboardBooking[]>([
-    {
-      id: 1,
-      bookingRef: "BK-1001",
-      service: "Full-Stack Web Development",
-      category: "IT Services",
-      description: "End-to-end app delivery with React, Node, and PostgreSQL.",
-      customer: "John Doe",
-      customerEmail: "john.doe@example.com",
-      customerPhone: "+1 (555) 010-2031",
-      customerCity: "Austin",
-      customerCountry: "United States",
-      date: "2025-05-01",
-      scheduledAt: "2:00 PM",
-      amount: 250,
-      basePrice: 200,
-      customOfferPrice: 250,
-      status: "Ongoing",
-      customerApproved: false,
-      deliveryDays: 7,
-      deadline: "2025-05-08",
-      deliveryProgress: 45,
-      lastMessagePreview: "Can you finish today?",
-      createdAt: "2025-04-28",
-    },
-  ]);
-
-  const [detailsId, setDetailsId] = useState<number | null>(null);
-  const details = useMemo(
-    () => bookings.find((b) => b.id === detailsId) ?? null,
-    [bookings, detailsId],
-  );
-
-  useEffect(() => {
-    const payload = (
-      location.state as { fromOffer?: BookingFromOfferState } | null
-    )?.fromOffer;
-    if (!payload?.offerId || processedOfferIds.current.has(payload.offerId))
-      return;
-    processedOfferIds.current.add(payload.offerId);
-    const today = new Date().toISOString().slice(0, 10);
-    setBookings((prev) => {
-      const nextId = prev.reduce((max, b) => Math.max(max, b.id), 0) + 1;
-      return [
-        ...prev,
-        bookingFromOffer({
-          id: nextId,
-          title: payload.title,
-          customer: payload.customer,
-          amount: payload.amount,
-          dateYmd: today,
-        }),
-      ];
-    });
-    navigate(location.pathname, { replace: true, state: null });
-  }, [location.pathname, location.state, navigate]);
-
-  function setStatus(id: number, next: DashboardBookingStatus) {
-    setBookings((prev) =>
-      prev.map((b) => {
-        if (b.id !== id) return b;
-        if (next === "Completed")
-          return { ...b, status: next, customerApproved: false };
-        return { ...b, status: next };
-      }),
-    );
-  }
-
-  function approvalLabel(b: DashboardBooking) {
-    if (b.status !== "Completed") return null;
-    if (b.customerApproved) return "Completed ✅";
-    return "Waiting for customer approval";
-  }
-
-  useEffect(() => {
-    const pending = bookings.filter(
-      (b) => b.status === "Completed" && !b.customerApproved,
-    );
-    if (!pending.length) return;
-
-    const timers = pending.map((b) =>
-      window.setTimeout(() => {
-        setBookings((prev) =>
-          prev.map((x) =>
-            x.id === b.id ? { ...x, customerApproved: true } : x,
-          ),
-        );
-      }, 3000),
-    );
-
-    return () => {
-      for (const t of timers) window.clearTimeout(t);
-    };
-  }, [bookings]);
+  const { data: apiOrders = [], isLoading } = useGetServiceOrdersQuery();
+  const [detailsId, setDetailsId] = useState<string | null>(null);
 
   return (
     <div className="w-full space-y-6">
@@ -177,7 +72,7 @@ export function BookingsPage() {
         <CardHeader>
           <CardTitle className="text-base">Bookings</CardTitle>
           <CardDescription>
-            Update status and simulate customer approval.
+            View all your service orders and bookings.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -185,67 +80,49 @@ export function BookingsPage() {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
+                  <TableHead>Booking Ref</TableHead>
                   <TableHead>Service Name</TableHead>
                   <TableHead>Customer</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Approval</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bookings.map((b) => {
-                  const approval = approvalLabel(b);
-                  return (
-                    <TableRow key={b.id} className="hover:bg-muted/30">
-                      <TableCell className="font-medium">{b.service}</TableCell>
-                      <TableCell>{b.customer}</TableCell>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-6">
+                      <Skeleton className="h-6 w-full max-w-sm mx-auto" />
+                    </TableCell>
+                  </TableRow>
+                ) : apiOrders.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="text-center py-6 text-muted-foreground"
+                    >
+                      No bookings found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  apiOrders.map((b) => (
+                    <TableRow key={b._id} className="hover:bg-muted/30">
+                      <TableCell className="font-medium text-xs text-muted-foreground">
+                        {b.orderId}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {b.service?.name || "—"}
+                      </TableCell>
+                      <TableCell>{b.customer?.name || "—"}</TableCell>
                       <TableCell className="text-muted-foreground">
-                        {b.date}
+                        {fmtDate(b.createdAt)}
                       </TableCell>
                       <TableCell className="text-right font-medium tabular-nums">
-                        {fmtUsd(b.amount)}
+                        {fmtUsd(b.price || 0)}
                       </TableCell>
                       <TableCell>
-                        <Select
-                          value={b.status}
-                          onValueChange={(v) =>
-                            setStatus(b.id, v as DashboardBookingStatus)
-                          }
-                        >
-                          <SelectTrigger className="w-[150px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Pending">Pending</SelectItem>
-                            <SelectItem value="Ongoing">Ongoing</SelectItem>
-                            <SelectItem value="Completed">Completed</SelectItem>
-                            <SelectItem value="Rejected">Rejected</SelectItem>
-                            <SelectItem value="Cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        {b.status === "Completed" ? (
-                          b.customerApproved ? (
-                            <Badge
-                              variant="outline"
-                              className="border-emerald-200 bg-emerald-50 text-emerald-700"
-                            >
-                              {approval}
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="outline"
-                              className="border-amber-200 bg-amber-50 text-amber-700"
-                            >
-                              {approval}
-                            </Badge>
-                          )
-                        ) : (
-                          <StatusBadge status={b.status} />
-                        )}
+                        <StatusBadge status={b.orderStatus} />
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -253,14 +130,14 @@ export function BookingsPage() {
                           size="sm"
                           variant="outline"
                           className="border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10"
-                          onClick={() => setDetailsId(b.id)}
+                          onClick={() => setDetailsId(b._id)}
                         >
                           View Details
                         </Button>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
+                  ))
+                )}
               </TableBody>
             </Table>
           </div>
@@ -272,8 +149,7 @@ export function BookingsPage() {
         onOpenChange={(open) => {
           if (!open) setDetailsId(null);
         }}
-        booking={details}
-        onStatusChange={setStatus}
+        bookingId={detailsId}
       />
     </div>
   );

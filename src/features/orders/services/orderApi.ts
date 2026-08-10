@@ -1,13 +1,20 @@
-import { baseApi } from '@/services/baseApi'
-import type { ProductOrder, ProductOrderStatus, ServiceOrder, ServiceOrderStatus } from '@/types/api'
+import { baseApi } from "@/services/baseApi";
+import type {
+  ProductOrder,
+  ProductOrderStatus,
+  ServiceOrder,
+} from "@/types/api";
 
-const list = { type: 'Orders' as const, id: 'LIST' as const }
+const list = { type: "Orders" as const, id: "LIST" as const };
 
 export const orderApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getProductOrders: build.query<ProductOrder[], { status?: ProductOrderStatus } | void>({
+    getProductOrders: build.query<
+      ProductOrder[],
+      { status?: ProductOrderStatus } | void
+    >({
       query: (q) => ({
-        url: '/product-orders/vendor/my-orders',
+        url: "/product-orders/vendor/my-orders",
         params: q && q.status ? { status: q.status } : undefined,
       }),
       transformResponse: (response: any) => {
@@ -15,24 +22,39 @@ export const orderApi = baseApi.injectEndpoints({
         return data.map((o: any) => ({
           ...o,
           id: o._id,
-          type: 'product',
+          type: "product",
           status: o.orderStatus,
           total: o.grandTotal || 0,
           quantity: o.totalQuantity || 0,
-          customerName: o.customer?.name || 'Unknown Customer',
-          productId: o.items?.[0]?.product || 'Unknown Product',
-          productName: 'Product Item', // Fallback, since product name isn't returned
+          customerName: o.customer?.name || "Unknown Customer",
+          productId: o.items?.[0]?.product || "Unknown Product",
+          productName: "Product Item", // Fallback, since product name isn't returned
         })) as ProductOrder[];
       },
-      providesTags: (r) => (r ? [list, ...r.map((o) => ({ type: 'Orders' as const, id: o.id }))] : [list]),
+      providesTags: (r) =>
+        r
+          ? [list, ...r.map((o) => ({ type: "Orders" as const, id: o.id }))]
+          : [list],
     }),
-    getServiceOrders: build.query<ServiceOrder[], { status?: ServiceOrderStatus } | void>({
-      queryFn: () => ({ data: [] }),
-      providesTags: (r) => (r ? [list, ...r.map((o) => ({ type: 'Orders' as const, id: o.id }))] : [list]),
+    getServiceOrders: build.query<any[], void>({
+      query: () => "/service-orders/",
+      transformResponse: (res: any) => res.data || [],
+      providesTags: (r) =>
+        r
+          ? [
+              list,
+              ...r.map((o: any) => ({ type: "Orders" as const, id: o._id })),
+            ]
+          : [list],
+    }),
+    getServiceOrderById: build.query<any, string>({
+      query: (id) => `/service-orders/${id}`,
+      transformResponse: (res: any) => res.data,
+      providesTags: (_r, _e, id) => [{ type: "Orders", id }],
     }),
     getOrderById: build.query<ProductOrder | ServiceOrder, string>({
       query: (id) => `/orders/${id}`,
-      providesTags: (_r, _e, id) => [{ type: 'Orders', id }],
+      providesTags: (_r, _e, id) => [{ type: "Orders", id }],
     }),
     updateProductOrderStatus: build.mutation<
       ProductOrder,
@@ -40,30 +62,30 @@ export const orderApi = baseApi.injectEndpoints({
     >({
       query: ({ id, status }) => ({
         url: `/orders/products/${id}/status`,
-        method: 'PATCH',
+        method: "PATCH",
         body: { status },
       }),
-      invalidatesTags: (_r, _e, { id }) => [list, { type: 'Orders' as const, id }],
+      invalidatesTags: (_r, _e, { id }) => [
+        list,
+        { type: "Orders" as const, id },
+      ],
     }),
-    updateServiceOrderStatus: build.mutation<
-      ServiceOrder,
-      { id: string; status: ServiceOrderStatus }
-    >({
-      query: ({ id, status }) => ({
-        url: `/orders/services/${id}/status`,
-        method: 'PATCH',
-        body: { status },
+    deliverServiceOrder: build.mutation<any, string>({
+      query: (id) => ({
+        url: `/service-orders/${id}/deliver`,
+        method: "PATCH",
       }),
-      invalidatesTags: (_r, _e, { id }) => [list, { type: 'Orders' as const, id }],
+      invalidatesTags: (_r, _e, id) => [list, { type: "Orders" as const, id }],
     }),
   }),
   overrideExisting: false,
-})
+});
 
 export const {
   useGetProductOrdersQuery,
   useGetServiceOrdersQuery,
+  useGetServiceOrderByIdQuery,
   useGetOrderByIdQuery,
   useUpdateProductOrderStatusMutation,
-  useUpdateServiceOrderStatusMutation,
-} = orderApi
+  useDeliverServiceOrderMutation,
+} = orderApi;

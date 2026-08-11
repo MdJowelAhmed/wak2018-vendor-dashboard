@@ -11,8 +11,8 @@ export function AnalyticsPage() {
   const [range, setRange] = useState<AnalyticsRangeKey>("7d");
   const year = new Date().getFullYear();
 
-  const overviewQ = useGetDashboardOverviewQuery();
-  const monthlyRevenueQ = useGetMonthlyRevenueQuery({ year });
+  const overviewQ = useGetDashboardOverviewQuery({ role: 'service' });
+  const monthlyRevenueQ = useGetMonthlyRevenueQuery({ year, role: 'service' });
 
   const chartPoints = useMemo<AnalyticsRevenuePoint[]>(() => {
     if (!monthlyRevenueQ.data) return [];

@@ -18,8 +18,16 @@ export const analyticsApi = baseApi.injectEndpoints({
       query: () => "/vendor/analytics/summary",
       providesTags: [tag],
     }),
-    getDashboardOverview: build.query<DashboardOverview, void>({
-      query: () => "/vendors/analytics/overview",
+    getDashboardOverview: build.query<
+      DashboardOverview,
+      { role?: "vendor" | "service" } | void
+    >({
+      query: (arg) => {
+        const role = (arg as { role?: "vendor" | "service" })?.role ?? "vendor";
+        return role === "service"
+          ? "/service-providers/analytics/overview"
+          : "/vendors/analytics/overview";
+      },
       transformResponse: (res: any) => {
         const d = res?.data || {};
         return {
@@ -29,7 +37,11 @@ export const analyticsApi = baseApi.injectEndpoints({
           activeDeliveries: d.activeDeliveries ?? 0,
           products: {
             ...DASHBOARD_STATIC_DEMO.products,
-            total: d.totalProducts ?? 0,
+            total: d.totalProducts ?? d.totalServices ?? 0,
+          },
+          services: {
+            ...DASHBOARD_STATIC_DEMO.services,
+            total: d.totalServices ?? 0,
           },
         };
       },
@@ -64,9 +76,15 @@ export const analyticsApi = baseApi.injectEndpoints({
     }),
     getMonthlyRevenue: build.query<
       { month: string; revenue: number }[],
-      { year: number }
+      { year: number; role?: "vendor" | "service" }
     >({
-      query: ({ year }) => `/vendors/analytics/monthly-revenue?year=${year}`,
+      query: ({ year, role }) => {
+        const endpoint =
+          role === "service"
+            ? "/service-providers/analytics/monthly-revenue"
+            : "/vendors/analytics/monthly-revenue";
+        return `${endpoint}?year=${year}`;
+      },
       transformResponse: (res: any) => res?.data || [],
       providesTags: [tag],
     }),

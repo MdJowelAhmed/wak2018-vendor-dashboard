@@ -3,16 +3,15 @@ import {
   useGetDashboardOverviewQuery,
   useGetMonthlyRevenueQuery,
 } from "@/features/dashboard";
-import type { AnalyticsRangeKey, AnalyticsRevenuePoint } from "@/types/api";
+import type { AnalyticsRevenuePoint } from "@/types/api";
 import { AnalyticsKPI } from "@/features/dashboard/components/analytics/AnalyticsKPI";
 import { ServiceRevenueChart } from "@/features/dashboard/components/analytics/ServiceRevenueChart";
 
 export function AnalyticsPage() {
-  const [range, setRange] = useState<AnalyticsRangeKey>("7d");
-  const year = new Date().getFullYear();
+  const [year, setYear] = useState<number>(new Date().getFullYear());
 
-  const overviewQ = useGetDashboardOverviewQuery({ role: 'service' });
-  const monthlyRevenueQ = useGetMonthlyRevenueQuery({ year, role: 'service' });
+  const overviewQ = useGetDashboardOverviewQuery({ role: "service" });
+  const monthlyRevenueQ = useGetMonthlyRevenueQuery({ year, role: "service" });
 
   const chartPoints = useMemo<AnalyticsRevenuePoint[]>(() => {
     if (!monthlyRevenueQ.data) return [];
@@ -56,8 +55,8 @@ export function AnalyticsPage() {
       </div>
 
       <ServiceRevenueChart
-        range={range}
-        onChangeRange={setRange}
+        year={year}
+        onChangeYear={setYear}
         points={chartPoints}
         isLoading={false}
       />

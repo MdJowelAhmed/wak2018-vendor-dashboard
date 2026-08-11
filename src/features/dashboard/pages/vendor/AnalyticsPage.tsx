@@ -4,7 +4,7 @@ import {
   useGetMonthlyRevenueQuery,
 } from "@/features/dashboard";
 import { useGetProfileQuery } from "@/services/userApi";
-import type { AnalyticsRangeKey, AnalyticsRevenuePoint } from "@/types/api";
+import type { AnalyticsRevenuePoint } from "@/types/api";
 import { AnalyticsKPI } from "@/features/dashboard/components/analytics/AnalyticsKPI";
 import { RevenueChart } from "@/features/dashboard/components/analytics/RevenueChart";
 
@@ -16,8 +16,7 @@ export function AnalyticsPage() {
   const { data: profile } = useGetProfileQuery();
   const role = useMemo(() => roleKey(profile?.role), [profile?.role]);
 
-  const [range, setRange] = useState<AnalyticsRangeKey>("7d");
-  const year = new Date().getFullYear();
+  const [year, setYear] = useState<number>(new Date().getFullYear());
 
   const overviewQ = useGetDashboardOverviewQuery({ role });
   const monthlyRevenueQ = useGetMonthlyRevenueQuery({ year, role });
@@ -68,8 +67,8 @@ export function AnalyticsPage() {
       </div>
 
       <RevenueChart
-        range={range}
-        onChangeRange={setRange}
+        year={year}
+        onChangeYear={setYear}
         points={chartPoints}
         isLoading={monthlyRevenueQ.isLoading}
       />

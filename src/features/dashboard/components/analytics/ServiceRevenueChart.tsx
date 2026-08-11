@@ -1,5 +1,12 @@
 import { useMemo, useState } from "react";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   CartesianGrid,
   Legend,
   Line,
@@ -16,22 +23,21 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AnalyticsRangeKey, AnalyticsRevenuePoint } from "@/types/api";
+import type { AnalyticsRevenuePoint } from "@/types/api";
 import { cn } from "@/utils/utils";
 
 export function ServiceRevenueChart({
   points,
   isLoading,
-  range,
-  onChangeRange,
+  year,
+  onChangeYear,
   className,
 }: {
   points: AnalyticsRevenuePoint[] | undefined;
   isLoading?: boolean;
-  range: AnalyticsRangeKey;
-  onChangeRange: (r: AnalyticsRangeKey) => void;
+  year: number;
+  onChangeYear: (y: number) => void;
   className?: string;
 }) {
   const data = useMemo(() => points ?? [], [points]);
@@ -48,19 +54,22 @@ export function ServiceRevenueChart({
             Service earnings (approved only) and bookings over time.
           </CardDescription>
         </div>
-        <div className="bg-muted inline-flex rounded-lg p-1">
-          {(["7d", "30d", "90d"] as const).map((r) => (
-            <Button
-              key={r}
-              type="button"
-              variant={range === r ? "default" : "ghost"}
-              size="sm"
-              className="h-8 px-3"
-              onClick={() => onChangeRange(r)}
-            >
-              {r === "7d" ? "7 Days" : r === "30d" ? "30 Days" : "90 Days"}
-            </Button>
-          ))}
+        <div className="inline-flex">
+          <Select
+            value={String(year)}
+            onValueChange={(v) => onChangeYear(Number(v))}
+          >
+            <SelectTrigger className="w-[110px] h-9">
+              <SelectValue placeholder="Year" />
+            </SelectTrigger>
+            <SelectContent>
+              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - 5 + i).map((y) => (
+                <SelectItem key={y} value={String(y)}>
+                  {y}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>

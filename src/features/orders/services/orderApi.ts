@@ -3,6 +3,7 @@ import type {
   ProductOrder,
   ProductOrderStatus,
   ServiceOrder,
+  ServiceOrderStatus,
 } from "@/types/api";
 
 const list = { type: "Orders" as const, id: "LIST" as const };
@@ -70,6 +71,20 @@ export const orderApi = baseApi.injectEndpoints({
         { type: "Orders" as const, id },
       ],
     }),
+    updateServiceOrderStatus: build.mutation<
+      ServiceOrder,
+      { id: string; status: ServiceOrderStatus }
+    >({
+      query: ({ id, status }) => ({
+        url: `/service-orders/${id}/status`,
+        method: "PATCH",
+        body: { status },
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        list,
+        { type: "Orders" as const, id },
+      ],
+    }),
     deliverServiceOrder: build.mutation<any, string>({
       query: (id) => ({
         url: `/service-orders/${id}/deliver`,
@@ -87,5 +102,6 @@ export const {
   useGetServiceOrderByIdQuery,
   useGetOrderByIdQuery,
   useUpdateProductOrderStatusMutation,
+  useUpdateServiceOrderStatusMutation,
   useDeliverServiceOrderMutation,
 } = orderApi;

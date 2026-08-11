@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Plus } from "lucide-react";
 import { useGetMyServicesQuery } from "@/features/services";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";

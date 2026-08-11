@@ -5,6 +5,10 @@ import {
   useGetProductOrdersQuery,
   useGetServiceOrdersQuery,
 } from "@/features/orders";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/app/store";
+import { useGetProfileQuery } from "@/services/userApi";
+import type { UserRole } from "@/features/auth/types/authTypes";
 import type {
   Order,
   ProductOrderStatus,
@@ -42,8 +46,14 @@ function formatDate(iso: string) {
 }
 
 export function OrdersListPage() {
-  const pQ = useGetProductOrdersQuery();
-  const sQ = useGetServiceOrdersQuery();
+  const authRole: UserRole | undefined = useSelector(
+    (s: RootState) => s.auth.user?.role,
+  );
+  const { data: profile } = useGetProfileQuery();
+  const role: UserRole | null = authRole ?? profile?.role ?? null;
+
+  const pQ = useGetProductOrdersQuery(undefined, { skip: role !== "vendor" });
+  const sQ = useGetServiceOrdersQuery(undefined, { skip: role !== "service" });
 
   const [status, setStatus] = useState<StatusFilter>("all");
   const [deliveryType, setDeliveryType] = useState<DeliveryTypeFilter>("all");

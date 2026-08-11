@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { ChevronsUpDown, X } from "lucide-react";
 import {
@@ -22,107 +22,37 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/utils/utils";
 import {
-  SERVICE_PROVIDER_PROFILE_LS_KEY,
-  emptyServiceCountrySelection,
-  normalizeServiceCountrySelection,
-} from "@/utils/service-provider-profile-storage";
-import {
   useUpdateServiceProviderProfileMutation,
+  useUpdateUserProfileMutation,
   useGetLanguagesQuery,
 } from "@/services/profileApi";
-import {
-  CountryMultiSelect,
-  type ServiceCountrySelection,
-} from "@/components/CountryMultiSelect";
-import { DynamicListInput } from "@/features/services/components/DynamicListInput";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { getImageUrl } from "@/utils/utils";
 
 type ExperienceLevel = "beginner" | "intermediate" | "expert" | "";
 type Availability = "fullTime" | "partTime" | "weekends" | "";
 
 export type ServiceProviderProfileData = {
-  businessName: string;
-  ownerName: string;
+  name: string;
   phone: string;
   email: string;
   address: string;
-  category: string[]; // multi-select (service categories)
-  serviceArea: string;
-  /** Global availability; defaults new services in Add Service. */
-  serviceLocation: ServiceCountrySelection;
 
   experienceLevel: ExperienceLevel;
   years: string;
   skills: string[];
   portfolio: string;
-  languages: string[]; // multi-select
+  languages: string[];
   availability: Availability;
-
-  serviceTitle: string;
-  serviceCategory: string;
-  price: string;
-  deliveryTime: string;
-  description: string;
-  features: string[];
-  images: string[]; // preview urls
 };
-
-const ONBOARDING_KEY = "service_onboarding_v1";
-
-const categoryOptions = [
-  "Home Services",
-  "Cleaning",
-  "Plumbing",
-  "Electrical",
-  "Carpentry",
-  "Painting",
-  "Appliance Repair",
-  "Beauty & Wellness",
-  "Fitness",
-  "Tutoring",
-  "IT Support",
-  "Design",
-] as const;
 
 function normalizeTag(s: string) {
   return s.trim().replace(/\s+/g, " ");
-}
-
-function safeLoad(): ServiceProviderProfileData | null {
-  try {
-    const raw = localStorage.getItem(SERVICE_PROVIDER_PROFILE_LS_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed as ServiceProviderProfileData;
-  } catch {
-    return null;
-  }
-}
-
-function safeLoadOnboarding(): Partial<Record<string, any>> | null {
-  try {
-    const raw = localStorage.getItem(ONBOARDING_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object") return null;
-    return parsed as Partial<Record<string, any>>;
-  } catch {
-    return null;
-  }
-}
-
-function safeSave(v: ServiceProviderProfileData) {
-  try {
-    localStorage.setItem(SERVICE_PROVIDER_PROFILE_LS_KEY, JSON.stringify(v));
-  } catch {
-    // ignore
-  }
 }
 
 function MultiSelect({
@@ -197,8 +127,11 @@ function MultiSelect({
 }
 
 export function ServiceProfileSettings({ profile }: { profile: any }) {
-  const imageRef = useRef<HTMLInputElement | null>(null);
-  const [updateProfile] = useUpdateServiceProviderProfileMutation();
+  const [updateServiceProviderProfile, { isLoading: isSpLoading }] =
+    useUpdateServiceProviderProfileMutation();
+  const [updateUserProfile, { isLoading: isUserLoading }] =
+    useUpdateUserProfileMutation();
+
   const { data: languagesRes } = useGetLanguagesQuery();
   const dynamicLanguages = useMemo(
     () => languagesRes?.data || [],
@@ -206,136 +139,66 @@ export function ServiceProfileSettings({ profile }: { profile: any }) {
   );
 
   const initial = useMemo(() => {
-    const stored = safeLoad();
-    if (stored) {
-      return {
-        ...stored,
-        serviceLocation: normalizeServiceCountrySelection(
-          stored.serviceLocation,
-        ),
-      };
-    }
-    const onboarding = safeLoadOnboarding();
-    const fullName =
-      `${profile?.firstName ?? profile?.name ?? ""} ${profile?.lastName ?? ""}`.trim();
     return {
-      businessName: String(
-        profile?.serviceProvider?.title ?? onboarding?.businessName ?? "",
-      ),
-      ownerName: String(onboarding?.ownerName ?? fullName),
-      phone: String(profile?.phone ?? onboarding?.phone ?? ""),
-      email: String(profile?.email ?? onboarding?.email ?? ""),
-      address: String(profile?.address ?? onboarding?.address ?? ""),
-      category: Array.isArray(onboarding?.serviceCategories)
-        ? (onboarding?.serviceCategories as string[])
-        : [],
-      serviceArea: String(onboarding?.serviceArea ?? ""),
-      serviceLocation: emptyServiceCountrySelection(),
+      name: String(profile?.name ?? ""),
+      phone: String(profile?.phone ?? ""),
+      email: String(profile?.email ?? ""),
+      address: String(profile?.address ?? ""),
 
       experienceLevel:
-        (profile?.serviceProvider?.experienceLevel as ExperienceLevel) ??
-        (onboarding?.experienceLevel as ExperienceLevel) ??
-        "",
-      years: String(
-        profile?.serviceProvider?.yearsOfExperience ??
-          onboarding?.yearsExperience ??
-          "",
-      ),
+        (profile?.serviceProvider?.experienceLevel as ExperienceLevel) ?? "",
+      years: String(profile?.serviceProvider?.yearsOfExperience ?? ""),
       skills: Array.isArray(profile?.serviceProvider?.skills)
         ? (profile.serviceProvider.skills as string[])
-        : Array.isArray(onboarding?.skills)
-          ? (onboarding?.skills as string[])
-          : [],
-      portfolio:
-        profile?.serviceProvider?.portfolioLink ??
-        (Array.isArray(onboarding?.portfolioLinks)
-          ? (onboarding?.portfolioLinks as string[]).join("\n")
-          : String(onboarding?.portfolio ?? "")),
+        : [],
+      portfolio: String(profile?.serviceProvider?.portfolioLink ?? ""),
       languages: Array.isArray(profile?.serviceProvider?.languages)
         ? (profile.serviceProvider.languages as string[])
-        : Array.isArray(onboarding?.languages)
-          ? (onboarding?.languages as string[])
-          : [],
-      availability:
-        (profile?.serviceProvider?.availability as Availability) ??
-        (onboarding?.availability as Availability) ??
-        "",
-
-      serviceTitle: String(onboarding?.serviceTitle ?? ""),
-      serviceCategory: String(onboarding?.serviceCategory ?? ""),
-      price: String(onboarding?.price ?? ""),
-      deliveryTime: String(onboarding?.deliveryTime ?? ""),
-      description: String(onboarding?.description ?? ""),
-      features: Array.isArray(onboarding?.features)
-        ? (onboarding?.features as string[])
         : [],
-      images: [],
+      availability:
+        (profile?.serviceProvider?.availability as Availability) ?? "",
     } satisfies ServiceProviderProfileData;
-  }, [profile?.email, profile?.firstName, profile?.lastName, profile?.phone]);
+  }, [profile]);
 
   const [v, setV] = useState<ServiceProviderProfileData>(initial);
   const [errors, setErrors] = useState<
     Partial<Record<keyof ServiceProviderProfileData, string>>
   >({});
   const [skillDraft, setSkillDraft] = useState("");
+  const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    setV(initial);
+  }, [initial]);
+
+  const isLoading = isSpLoading || isUserLoading;
 
   const canSave = useMemo(() => {
     return (
-      v.businessName.trim().length > 0 &&
-      v.ownerName.trim().length > 0 &&
+      v.name.trim().length > 0 &&
       v.phone.trim().length > 0 &&
-      v.email.trim().length > 0 &&
       v.address.trim().length > 0 &&
-      v.category.length > 0 &&
-      v.serviceArea.trim().length > 0 &&
       v.experienceLevel !== "" &&
       v.years.trim().length > 0 &&
       v.skills.length > 0 &&
       v.languages.length > 0 &&
-      v.availability !== "" &&
-      v.serviceTitle.trim().length > 0 &&
-      v.serviceCategory.trim().length > 0 &&
-      v.price.trim().length > 0 &&
-      v.deliveryTime.trim().length > 0 &&
-      v.description.trim().length > 0
+      v.availability !== ""
     );
   }, [v]);
 
   function validate() {
     const e: Partial<Record<keyof ServiceProviderProfileData, string>> = {};
 
-    // Business
-    if (!v.businessName.trim()) e.businessName = "Business name is required.";
-    if (!v.ownerName.trim()) e.ownerName = "Owner name is required.";
+    if (!v.name.trim()) e.name = "Name is required.";
     if (!v.phone.trim()) e.phone = "Phone is required.";
-    if (!v.email.trim()) e.email = "Email is required.";
     if (!v.address.trim()) e.address = "Address is required.";
-    if (!v.category.length) e.category = "Select at least one category.";
-    if (!v.serviceArea.trim()) e.serviceArea = "Service area is required.";
 
-    // Professional
     if (!v.experienceLevel) e.experienceLevel = "Select experience level.";
     if (!v.years.trim()) e.years = "Years of experience is required.";
     if (!v.skills.length) e.skills = "Add at least one skill.";
     if (!v.languages.length) e.languages = "Select at least one language.";
     if (!v.availability) e.availability = "Select availability.";
 
-    // Service setup
-    if (!v.serviceTitle.trim()) e.serviceTitle = "Service title is required.";
-    if (!v.serviceCategory.trim()) e.serviceCategory = "Category is required.";
-    if (
-      !v.price.trim() ||
-      Number.isNaN(Number(v.price)) ||
-      Number(v.price) <= 0
-    )
-      e.price = "Enter a valid starting price.";
-    if (
-      !v.deliveryTime.trim() ||
-      Number.isNaN(Number(v.deliveryTime)) ||
-      Number(v.deliveryTime) <= 0
-    )
-      e.deliveryTime = "Enter a valid delivery time.";
-    if (!v.description.trim()) e.description = "Description is required.";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -362,7 +225,16 @@ export function ServiceProfileSettings({ profile }: { profile: any }) {
     }
 
     try {
-      await updateProfile({
+      const formData = new FormData();
+      formData.append("name", v.name.trim());
+      formData.append("phone", v.phone.trim());
+      formData.append("address", v.address.trim());
+      if (profileImageFile) {
+        formData.append("profileImage", profileImageFile);
+      }
+      await updateUserProfile(formData).unwrap();
+
+      await updateServiceProviderProfile({
         experienceLevel: v.experienceLevel,
         yearsOfExperience: Number(v.years) || 0,
         portfolioLink: v.portfolio,
@@ -371,7 +243,6 @@ export function ServiceProfileSettings({ profile }: { profile: any }) {
         availability: v.availability,
       }).unwrap();
 
-      safeSave(v); // Keep local storage sync for other fields not covered by API yet
       toast.success("Profile updated successfully!");
     } catch (err) {
       toast.error("Failed to update profile.");
@@ -382,38 +253,68 @@ export function ServiceProfileSettings({ profile }: { profile: any }) {
     <div className="space-y-6">
       <Card className="rounded-xl border-border/60 shadow-sm">
         <CardHeader>
-          <CardTitle>Business Information</CardTitle>
+          <CardTitle>Personal Information</CardTitle>
           <CardDescription>
-            Update business and contact details shown to customers.
+            Update your contact and location details.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6">
+          <div className="grid gap-4 sm:max-w-[250px]">
+            <Label htmlFor="profileImage">Profile Image</Label>
+            <div className="flex items-center gap-4">
+              <div className="relative size-20 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
+                {profileImageFile ? (
+                  <img
+                    src={URL.createObjectURL(profileImageFile)}
+                    alt="Preview"
+                    className="size-full object-cover"
+                  />
+                ) : profile?.profileImage ? (
+                  <img
+                    src={getImageUrl(profile.profileImage)}
+                    alt="Existing profile"
+                    className="size-full object-cover"
+                  />
+                ) : (
+                  <div className="flex size-full items-center justify-center text-xs text-muted-foreground">
+                    No image
+                  </div>
+                )}
+              </div>
+              <div className="grid gap-2">
+                <Input
+                  id="profileImage"
+                  type="file"
+                  accept="image/*"
+                  className="w-full text-xs"
+                  onChange={(e) =>
+                    setProfileImageFile(e.target.files?.[0] || null)
+                  }
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="businessName">Business Name</Label>
+              <Label htmlFor="name">Full Name</Label>
               <Input
-                id="businessName"
-                value={v.businessName}
-                onChange={(e) =>
-                  setV((p) => ({ ...p, businessName: e.target.value }))
-                }
+                id="name"
+                value={v.name}
+                onChange={(e) => setV((p) => ({ ...p, name: e.target.value }))}
               />
-              {errors.businessName ? (
-                <p className="text-sm text-red-500">{errors.businessName}</p>
+              {errors.name ? (
+                <p className="text-sm text-red-500">{errors.name}</p>
               ) : null}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="ownerName">Owner Name</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="ownerName"
-                value={v.ownerName}
-                onChange={(e) =>
-                  setV((p) => ({ ...p, ownerName: e.target.value }))
-                }
+                id="email"
+                value={v.email}
+                readOnly
+                className="bg-muted/30"
               />
-              {errors.ownerName ? (
-                <p className="text-sm text-red-500">{errors.ownerName}</p>
-              ) : null}
             </div>
           </div>
 
@@ -430,78 +331,18 @@ export function ServiceProfileSettings({ profile }: { profile: any }) {
               ) : null}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="address">Address</Label>
               <Input
-                id="email"
-                value={v.email}
-                readOnly
-                className="bg-muted/30"
-              />
-              {errors.email ? (
-                <p className="text-sm text-red-500">{errors.email}</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="address">Address</Label>
-            <Input
-              id="address"
-              value={v.address}
-              onChange={(e) => setV((p) => ({ ...p, address: e.target.value }))}
-            />
-            {errors.address ? (
-              <p className="text-sm text-red-500">{errors.address}</p>
-            ) : null}
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label>Service Category (multi-select)</Label>
-              <MultiSelect
-                value={v.category}
-                onChange={(next) => setV((p) => ({ ...p, category: next }))}
-                options={categoryOptions}
-                placeholder="Select one or more categories"
-              />
-              {errors.category ? (
-                <p className="text-sm text-red-500">{errors.category}</p>
-              ) : null}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="serviceArea">Service Area</Label>
-              <Input
-                id="serviceArea"
-                value={v.serviceArea}
+                id="address"
+                value={v.address}
                 onChange={(e) =>
-                  setV((p) => ({ ...p, serviceArea: e.target.value }))
+                  setV((p) => ({ ...p, address: e.target.value }))
                 }
               />
-              {errors.serviceArea ? (
-                <p className="text-sm text-red-500">{errors.serviceArea}</p>
+              {errors.address ? (
+                <p className="text-sm text-red-500">{errors.address}</p>
               ) : null}
             </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="service-location">Service Location</Label>
-            <CountryMultiSelect
-              id="service-location"
-              value={v.serviceLocation}
-              onChange={(serviceLocation) =>
-                setV((p) => ({ ...p, serviceLocation }))
-              }
-            />
-            <p className="text-muted-foreground text-xs leading-relaxed">
-              Optional but recommended. Saved for your account and used as the
-              default country list when you{" "}
-              <span className="font-medium text-[#895129]">
-                add a new service
-              </span>{" "}
-              (you can change it per listing). Choose{" "}
-              <span className="font-medium">All countries</span> for global
-              availability.
-            </p>
           </div>
         </CardContent>
       </Card>
@@ -644,169 +485,15 @@ export function ServiceProfileSettings({ profile }: { profile: any }) {
               />
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <Card className="rounded-xl border-border/60 shadow-sm">
-        <CardHeader>
-          <CardTitle>Service Setup</CardTitle>
-          <CardDescription>
-            Service offering details, features and images.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="serviceTitle">Service Title</Label>
-              <Input
-                id="serviceTitle"
-                value={v.serviceTitle}
-                onChange={(e) =>
-                  setV((p) => ({ ...p, serviceTitle: e.target.value }))
-                }
-                placeholder="e.g. AC Repair & Maintenance"
-              />
-              {errors.serviceTitle ? (
-                <p className="text-sm text-red-500">{errors.serviceTitle}</p>
-              ) : null}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="serviceCategory">Category</Label>
-              <Input
-                id="serviceCategory"
-                value={v.serviceCategory}
-                onChange={(e) =>
-                  setV((p) => ({ ...p, serviceCategory: e.target.value }))
-                }
-                placeholder="e.g. IT Support"
-              />
-              {errors.serviceCategory ? (
-                <p className="text-sm text-red-500">{errors.serviceCategory}</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="price">Starting Price</Label>
-              <Input
-                id="price"
-                inputMode="numeric"
-                value={v.price}
-                onChange={(e) =>
-                  setV((p) => ({
-                    ...p,
-                    price: e.target.value.replace(/[^\d.]/g, ""),
-                  }))
-                }
-                placeholder="e.g. 150"
-              />
-              {errors.price ? (
-                <p className="text-sm text-red-500">{errors.price}</p>
-              ) : null}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="deliveryTime">Delivery Time (days)</Label>
-              <Input
-                id="deliveryTime"
-                inputMode="numeric"
-                value={v.deliveryTime}
-                onChange={(e) =>
-                  setV((p) => ({
-                    ...p,
-                    deliveryTime: e.target.value.replace(/[^\d]/g, ""),
-                  }))
-                }
-                placeholder="e.g. 2"
-              />
-              {errors.deliveryTime ? (
-                <p className="text-sm text-red-500">{errors.deliveryTime}</p>
-              ) : null}
-            </div>
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={v.description}
-              onChange={(e) =>
-                setV((p) => ({ ...p, description: e.target.value }))
-              }
-              placeholder="Describe your service, what’s included, and what customers should expect…"
-            />
-            {errors.description ? (
-              <p className="text-sm text-red-500">{errors.description}</p>
-            ) : null}
-          </div>
-
-          <DynamicListInput
-            title="Features"
-            addLabel="Add Feature"
-            value={v.features}
-            onChange={(features) => setV((p) => ({ ...p, features }))}
-            placeholder="e.g. Free inspection"
-          />
-
-          <div className="grid gap-2">
-            <Label>Images upload</Label>
-            <input
-              ref={imageRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="block w-full text-sm file:mr-4 file:rounded-xl file:border-0 file:bg-[#895129] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-[#6f3f1f]"
-              onChange={(e) => {
-                const files = Array.from(e.target.files ?? []);
-                if (!files.length) return;
-                const nextUrls = files.map((f) => URL.createObjectURL(f));
-                setV((p) => ({ ...p, images: [...p.images, ...nextUrls] }));
-                e.currentTarget.value = "";
-              }}
-            />
-            {v.images.length ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {v.images.map((url, idx) => (
-                  <div
-                    key={`${url}-${idx}`}
-                    className="relative overflow-hidden rounded-xl border border-border/60 bg-muted/20"
-                  >
-                    <img
-                      src={url}
-                      alt=""
-                      className="h-24 w-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-2 top-2 rounded-md bg-background/80 p-1 text-muted-foreground hover:text-foreground"
-                      onClick={() =>
-                        setV((p) => ({
-                          ...p,
-                          images: p.images.filter((_, i) => i !== idx),
-                        }))
-                      }
-                      aria-label="Remove image"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Add multiple images. Previews appear here.
-              </p>
-            )}
-          </div>
-
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-4">
             <Button
               type="button"
               className="bg-[#895129] hover:bg-[#7b4723]"
-              disabled={!canSave}
-              onClick={save}
+              disabled={!canSave || isLoading}
+              onClick={() => void save()}
             >
-              Save Changes
+              {isLoading ? "Saving…" : "Save Changes"}
             </Button>
           </div>
         </CardContent>

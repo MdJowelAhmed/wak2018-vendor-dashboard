@@ -108,9 +108,9 @@ export function VendorLayout() {
               onClick={() => setMobileOpen(false)}
             >
               <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm overflow-hidden">
-                {data?.vendor?.logo ? (
+                {data?.vendor?.logo || data?.profileImage ? (
                   <img
-                    src={getImageUrl(data.vendor.logo)}
+                    src={getImageUrl(data?.vendor?.logo || data?.profileImage)}
                     alt="Logo"
                     className="h-full w-full object-cover"
                   />
@@ -357,8 +357,12 @@ export function VendorLayout() {
                       className="relative h-8 w-8 rounded-full"
                     >
                       <Avatar className="h-8 w-8">
-                        {data?.vendor?.logo && (
-                          <AvatarImage src={getImageUrl(data.vendor.logo)} />
+                        {(data?.vendor?.logo || data?.profileImage) && (
+                          <AvatarImage
+                            src={getImageUrl(
+                              data?.vendor?.logo || data?.profileImage,
+                            )}
+                          />
                         )}
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {data?.name?.charAt(0) || <User className="size-4" />}

@@ -1,19 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { FileText, Paperclip, Phone, Send, X } from "lucide-react";
+import { FileText, Paperclip, Send, X } from "lucide-react";
 import { toast } from "sonner";
-import { CallModal } from "@/features/chat/components/CallModal";
-import {
-  ChatOfferMessage,
-  type OfferBubble,
-  type OfferStatus,
-} from "@/features/chat/components/ChatOfferMessage";
-import {
-  SendOfferModal,
-  type OfferFormValues,
-} from "@/features/chat/components/SendOfferModal";
+import { SendOfferModal } from "@/features/chat/components/SendOfferModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useChatRealtime } from "@/features/chat/hooks/useChatRealtime";
 import {
   Card,
   CardContent,
@@ -22,125 +13,71 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/utils/utils";
-
-type Conversation = {
-  id: number;
-  bookingId: string;
-  customer: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-};
-
-type ChatTextMessage = {
-  id: number;
-  sender: "customer" | "provider";
-  time: string;
-  variant?: "text";
-  text: string;
-  status?: "sent" | "delivered" | "seen";
-  fileUrl?: string;
-  fileType?: "image" | "file";
-  fileName?: string;
-};
-
-type ChatOfferMessageRow = {
-  id: number;
-  sender: "customer" | "provider";
-  time: string;
-  variant: "offer";
-  offer: OfferBubble;
-};
-
-type ChatMessage = ChatTextMessage | ChatOfferMessageRow;
+import { cn, getImageUrl } from "@/utils/utils";
+import {
+  useGetChatsQuery,
+  useGetChatMessagesQuery,
+  useSendMessageMutation,
+} from "@/features/chat/services/messageApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
+import type { ChatMessage as APIMessage } from "@/types/api";
 
 type PendingAttachment = {
   id: string;
   fileUrl: string;
   fileType: "image" | "file";
   fileName: string;
-};
-
-const conversationsSeed: Conversation[] = [
-  {
-    id: 1,
-    bookingId: "BK-2031",
-    customer: "Mira K.",
-    lastMessage: "Can you finish today?",
-    time: "2 min ago",
-    unread: 2,
-  },
-];
-
-/** Service dashboard: signed-in user is always the provider in this demo. */
-const VIEWER_ROLE: "provider" | "customer" = "provider";
-
-const messagesSeed: Record<number, ChatMessage[]> = {
-  1: [
-    {
-      id: 1,
-      sender: "customer",
-      text: "Hi, is this service available?",
-      time: "10:00 AM",
-      status: "seen",
-    },
-    {
-      id: 2,
-      sender: "provider",
-      text: "Yes, I can help you.",
-      time: "10:02 AM",
-      status: "seen",
-    },
-    {
-      id: 3,
-      sender: "customer",
-      text: "Can you finish today?",
-      time: "10:05 AM",
-      status: "delivered",
-    },
-  ],
+  rawFile: File;
 };
 
 export function MessagesPage() {
-  const navigate = useNavigate();
-  const [conversations, setConversations] =
-    useState<Conversation[]>(conversationsSeed);
-  const [activeId, setActiveId] = useState<number | null>(
-    conversationsSeed[0]?.id ?? null,
-  );
-  const [messagesByConvo, setMessagesByConvo] =
-    useState<Record<number, ChatMessage[]>>(messagesSeed);
+  const { data: profileRes } = useGetUserProfileQuery();
+  const sessionUser = profileRes?.data;
+
+  const { data: chats = [], isLoading: isLoadingChats } =
+    useGetChatsQuery("service provider");
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // Automatically select the first chat if none is selected
+  useEffect(() => {
+    if (!activeId && chats.length > 0) {
+      setActiveId(chats[0]._id);
+    }
+  }, [chats, activeId]);
+
+  const { data: messages = [], isLoading: isLoadingMessages } =
+    useGetChatMessagesQuery(activeId!, {
+      skip: !activeId,
+    });
+
+  useChatRealtime(activeId || undefined);
+
+  const [sendMessageMutation, { isLoading: isSending }] =
+    useSendMessageMutation();
+
   const [draft, setDraft] = useState("");
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
-  const [typing, setTyping] = useState(false);
-  const [callOpen, setCallOpen] = useState(false);
   const [offerOpen, setOfferOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const attachRef = useRef<HTMLInputElement | null>(null);
 
   const active = useMemo(
     () =>
-      activeId == null
-        ? null
-        : (conversations.find((c) => c.id === activeId) ?? null),
-    [activeId, conversations],
-  );
-  const msgs = useMemo(
-    () => (active ? (messagesByConvo[active.id] ?? []) : []),
-    [active, messagesByConvo],
+      activeId == null ? null : (chats.find((c) => c._id === activeId) ?? null),
+    [activeId, chats],
   );
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeId, msgs.length, typing]);
+    const timer = setTimeout(() => {
+      endRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [activeId, messages, pendingFiles.length, isSending]);
 
-  function selectConversation(id: number) {
+  function selectConversation(id: string) {
     setActiveId(id);
-    setConversations((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, unread: 0 } : c)),
-    );
     setPendingFiles([]);
   }
 
@@ -153,6 +90,7 @@ export function MessagesPage() {
         fileUrl: URL.createObjectURL(f),
         fileType: isImage ? "image" : "file",
         fileName: f.name,
+        rawFile: f,
       };
     });
     setPendingFiles((prev) => [...prev, ...next]);
@@ -162,179 +100,60 @@ export function MessagesPage() {
     setPendingFiles((prev) => prev.filter((p) => p.id !== id));
   }
 
-  function sendOfferFromModal(values: OfferFormValues) {
-    if (!active) return;
-    const now = new Date();
-    const time = now.toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const offer: OfferBubble = {
-      offerId: `off-${Date.now()}`,
-      title: values.title,
-      description: values.description,
-      price: values.price,
-      deliveryDays: values.deliveryDays,
-      revisions: values.revisions,
-      status: "pending",
-    };
-    const row: ChatOfferMessageRow = {
-      id: Date.now(),
-      sender: "provider",
-      time,
-      variant: "offer",
-      offer,
-    };
-    setMessagesByConvo((prev) => ({
-      ...prev,
-      [active.id]: [...(prev[active.id] ?? []), row],
-    }));
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === active.id
-          ? { ...c, lastMessage: `Offer: ${values.title}`, time: "just now" }
-          : c,
-      ),
-    );
-    toast.success("Offer sent");
+  function sendOfferFromModal() {
+    // Left empty for now, as offer messages are custom to the UI
+    toast.success("Offers feature coming soon to real API!");
   }
 
-  function setOfferStatus(
-    convoId: number,
-    messageId: number,
-    status: OfferStatus,
-  ) {
-    setMessagesByConvo((prev) => ({
-      ...prev,
-      [convoId]: (prev[convoId] ?? []).map((m) =>
-        m.variant === "offer" && m.id === messageId
-          ? { ...m, offer: { ...m.offer, status } }
-          : m,
-      ),
-    }));
-  }
-
-  function withdrawOffer(
-    convoId: number,
-    messageId: number,
-    offer: OfferBubble,
-  ) {
-    if (offer.status !== "pending") return;
-    setOfferStatus(convoId, messageId, "withdrawn");
-    toast.message("Offer withdrawn");
-  }
-
-  function acceptOffer(
-    convoId: number,
-    messageId: number,
-    offer: OfferBubble,
-    customerName: string,
-  ) {
-    if (offer.status !== "pending") return;
-    setOfferStatus(convoId, messageId, "accepted");
-    navigate("/service/bookings", {
-      replace: false,
-      state: {
-        fromOffer: {
-          offerId: offer.offerId,
-          title: offer.title,
-          customer: customerName,
-          amount: offer.price,
-        },
-      },
-    });
-    toast.success("Offer accepted — new booking added");
-  }
-
-  function rejectOffer(convoId: number, messageId: number, offer: OfferBubble) {
-    if (offer.status !== "pending") return;
-    setOfferStatus(convoId, messageId, "rejected");
-    toast.message("Offer declined");
-  }
-
-  function send() {
+  async function send() {
     if (!active) return;
     const text = draft.trim();
     const hasAttachments = pendingFiles.length > 0;
     if (!text && !hasAttachments) return;
 
-    const now = new Date();
-    const time = now.toLocaleTimeString(undefined, {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    const baseId = Date.now();
+    try {
+      if (hasAttachments) {
+        // Send files
+        for (const file of pendingFiles) {
+          const formData = new FormData();
+          formData.append("chat", active._id);
+          formData.append("type", file.fileType);
+          if (file.fileType === "image") {
+            formData.append("image", file.rawFile);
+          } else {
+            formData.append("doc", file.rawFile);
+          }
 
-    const attachmentMessages: ChatTextMessage[] = pendingFiles.map(
-      (p, idx) => ({
-        id: baseId + idx,
-        sender: "provider",
-        text: idx === 0 ? text : "",
-        time,
-        status: "sent",
-        fileUrl: p.fileUrl,
-        fileType: p.fileType,
-        fileName: p.fileName,
-      }),
-    );
+          // Attach text only to the first message if there are multiple files
+          if (file === pendingFiles[0] && text) {
+            formData.append("text", text);
+          } else {
+            formData.append("text", "");
+          }
+          await sendMessageMutation(formData).unwrap();
+        }
+      } else {
+        // Send text only
+        const formData = new FormData();
+        formData.append("chat", active._id);
+        formData.append("type", "text");
+        formData.append("text", text);
+        await sendMessageMutation(formData).unwrap();
+      }
 
-    const nextMessages: ChatMessage[] = hasAttachments
-      ? attachmentMessages
-      : [
-          {
-            id: baseId,
-            sender: "provider",
-            text,
-            time,
-            status: "sent",
-          } satisfies ChatTextMessage,
-        ];
-
-    setMessagesByConvo((prev) => ({
-      ...prev,
-      [active.id]: [...(prev[active.id] ?? []), ...nextMessages],
-    }));
-
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === active.id ? { ...c, lastMessage: text, time: "just now" } : c,
-      ),
-    );
-
-    setDraft("");
-    setPendingFiles([]);
-
-    // Optional UX: simulate customer typing + reply (static demo).
-    setTyping(true);
-    window.setTimeout(() => {
-      setTyping(false);
-      const reply: ChatTextMessage = {
-        id: Date.now() + 1,
-        sender: "customer",
-        text: "Great, thanks!",
-        time: new Date().toLocaleTimeString(undefined, {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        status: "delivered",
-      };
-      setMessagesByConvo((prev) => ({
-        ...prev,
-        [active.id]: [...(prev[active.id] ?? []), reply],
-      }));
-      setConversations((prev) =>
-        prev.map((c) =>
-          c.id === active.id
-            ? { ...c, lastMessage: reply.text, time: "just now" }
-            : c,
-        ),
-      );
-    }, 900);
+      setDraft("");
+      setPendingFiles([]);
+    } catch (err) {
+      toast.error("Failed to send message");
+    }
   }
 
-  const offerDefaultTitle = active
-    ? `Custom service · ${active.bookingId}`
-    : "Custom service";
+  const offerDefaultTitle = active ? `Custom service` : "Custom service";
+
+  function getOtherParticipantName(chat: any) {
+    const p = chat.anotherParticipant || chat.participants?.[0];
+    return p?.name || "Customer";
+  }
 
   return (
     <div className="w-full space-y-6 bg-[#FFFFFF]">
@@ -345,7 +164,24 @@ export function MessagesPage() {
         </p>
       </div>
 
-      <CallModal open={callOpen} onOpenChange={setCallOpen} />
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95 backdrop-blur-md">
+          <button
+            onClick={() => setPreviewImage(null)}
+            className="absolute top-6 right-6 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-white transition-all hover:scale-105 hover:bg-white/20"
+            aria-label="Close image preview"
+          >
+            <X className="size-6" />
+          </button>
+          <img
+            src={previewImage}
+            alt="Preview"
+            className="h-full w-full object-contain p-4 sm:p-12"
+          />
+        </div>
+      )}
+
       <SendOfferModal
         open={offerOpen}
         onOpenChange={setOfferOpen}
@@ -361,14 +197,19 @@ export function MessagesPage() {
             <CardDescription>Customers and recent messages</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
-            {conversations.length ? (
-              conversations.map((c) => {
-                const isActive = c.id === activeId;
+            {isLoadingChats ? (
+              <div className="text-muted-foreground text-sm">
+                Loading chats...
+              </div>
+            ) : chats.length ? (
+              chats.map((c) => {
+                const isActive = c._id === activeId;
+                const name = getOtherParticipantName(c);
                 return (
                   <button
-                    key={c.id}
+                    key={c._id}
                     type="button"
-                    onClick={() => selectConversation(c.id)}
+                    onClick={() => selectConversation(c._id)}
                     className={cn(
                       "w-full rounded-xl border border-border/60 p-3 text-left transition",
                       isActive
@@ -379,24 +220,19 @@ export function MessagesPage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <div className="font-semibold truncate">
-                            {c.customer}
-                          </div>
-                          <Badge variant="outline" className="text-xs">
-                            {c.bookingId}
-                          </Badge>
+                          <div className="font-semibold truncate">{name}</div>
                         </div>
                         <div className="text-muted-foreground mt-1 line-clamp-1 text-sm">
-                          {c.lastMessage}
+                          {c.lastMessage?.text ||
+                            (c.lastMessage?.attachment
+                              ? "Sent an attachment"
+                              : "New chat started")}
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
-                        <div className="text-muted-foreground text-xs">
-                          {c.time}
-                        </div>
-                        {c.unread ? (
+                        {c.unreadCount ? (
                           <div className="mt-1 inline-flex min-w-6 items-center justify-center rounded-full bg-[#895129] px-2 py-0.5 text-xs font-semibold text-white">
-                            {c.unread}
+                            {c.unreadCount}
                           </div>
                         ) : null}
                       </div>
@@ -420,23 +256,10 @@ export function MessagesPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
                   <div className="min-w-0 flex-1">
                     <CardTitle className="truncate leading-tight">
-                      {active.customer}
+                      {getOtherParticipantName(active)}
                     </CardTitle>
-                    <CardDescription className="mt-0.5 leading-normal">
-                      Booking: {active.bookingId}
-                    </CardDescription>
                   </div>
                   <div className="flex flex-row flex-wrap items-center gap-2.5 sm:gap-3 sm:shrink-0">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      aria-label="Call"
-                      className="h-10 min-h-10 shrink-0 border-[#895129]/35 px-3.5 text-sm leading-none text-[#895129] hover:bg-[#895129]/10"
-                      onClick={() => setCallOpen(true)}
-                    >
-                      <Phone className="size-4 shrink-0" />
-                      <span className="hidden sm:inline">Call</span>
-                    </Button>
                     <Button
                       type="button"
                       aria-label="Send offer"
@@ -458,111 +281,107 @@ export function MessagesPage() {
               <CardContent className="flex h-[calc(70svh-7.25rem)] flex-col">
                 <div className="flex-1 overflow-y-auto pr-1">
                   <div className="space-y-3">
-                    {msgs.map((m) => {
-                      if (m.variant === "offer") {
-                        const mine = m.sender === "provider";
-                        const isSenderView = m.sender === VIEWER_ROLE;
+                    {isLoadingMessages ? (
+                      <div className="text-muted-foreground text-sm text-center pt-4">
+                        Loading messages...
+                      </div>
+                    ) : (
+                      [...messages].reverse().map((m: APIMessage) => {
+                        const mine =
+                          typeof m.sender === "object"
+                            ? m.sender?._id === sessionUser?._id
+                            : m.sender === sessionUser?._id;
+                        const timeString = new Date(
+                          m.createdAt,
+                        ).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        });
+
                         return (
-                          <ChatOfferMessage
-                            key={m.id}
-                            mine={mine}
-                            time={m.time}
-                            offer={m.offer}
-                            isSenderView={isSenderView}
-                            onAccept={() =>
-                              acceptOffer(
-                                active.id,
-                                m.id,
-                                m.offer,
-                                active.customer,
-                              )
-                            }
-                            onReject={() =>
-                              rejectOffer(active.id, m.id, m.offer)
-                            }
-                            onWithdraw={() =>
-                              withdrawOffer(active.id, m.id, m.offer)
-                            }
-                          />
-                        );
-                      }
-                      const mine = m.sender === "provider";
-                      return (
-                        <div
-                          key={m.id}
-                          className={cn(
-                            "flex",
-                            mine ? "justify-end" : "justify-start",
-                          )}
-                        >
                           <div
+                            key={m._id}
                             className={cn(
-                              "max-w-[78%] rounded-2xl px-4 py-2 text-sm shadow-sm",
-                              mine
-                                ? "bg-[#895129] text-white"
-                                : "bg-muted text-foreground",
+                              "flex",
+                              mine ? "justify-end" : "justify-start",
                             )}
                           >
-                            {m.text ? (
-                              <div className="whitespace-pre-wrap">
-                                {m.text}
-                              </div>
-                            ) : null}
-                            {m.fileUrl && m.fileType === "image" ? (
-                              <div className={cn(m.text ? "mt-2" : "")}>
-                                <img
-                                  src={m.fileUrl}
-                                  alt={m.fileName ?? "attachment"}
-                                  className="h-auto w-[200px] max-w-full rounded-xl object-cover"
-                                />
-                              </div>
-                            ) : null}
-                            {m.fileUrl && m.fileType === "file" ? (
-                              <a
-                                href={m.fileUrl}
-                                download={m.fileName ?? undefined}
-                                className={cn(
-                                  "mt-2 inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-sm",
-                                  mine
-                                    ? "bg-white/10 text-white hover:bg-white/15"
-                                    : "bg-background/60 hover:bg-background",
-                                )}
-                              >
-                                <FileText
-                                  className={cn(
-                                    "size-4",
-                                    mine
-                                      ? "text-white/90"
-                                      : "text-muted-foreground",
-                                  )}
-                                />
-                                <span className="truncate max-w-[220px]">
-                                  {m.fileName ?? "Attachment"}
-                                </span>
-                              </a>
-                            ) : null}
                             <div
                               className={cn(
-                                "mt-1 flex items-center justify-end gap-2 text-[11px]",
+                                "max-w-[78%] rounded-2xl px-4 py-2 text-sm shadow-sm",
                                 mine
-                                  ? "text-white/80"
-                                  : "text-muted-foreground",
+                                  ? "bg-[#895129] text-white"
+                                  : "bg-muted text-foreground",
                               )}
                             >
-                              <span>{m.time}</span>
-                              {mine && m.status ? (
-                                <span className="opacity-80">{m.status}</span>
+                              {m.text ? (
+                                <div className="whitespace-pre-wrap">
+                                  {m.text}
+                                </div>
                               ) : null}
+                              {m.attachment && m.type === "image" ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setPreviewImage(getImageUrl(m.attachment))
+                                  }
+                                  className={cn(
+                                    "block text-left",
+                                    m.text ? "mt-2" : "",
+                                  )}
+                                >
+                                  <img
+                                    src={getImageUrl(m.attachment)}
+                                    alt={"attachment"}
+                                    className="h-auto w-[200px] max-w-full rounded-xl object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                                  />
+                                </button>
+                              ) : null}
+                              {m.attachment && m.type === "file" ? (
+                                <a
+                                  href={getImageUrl(m.attachment)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={cn(
+                                    "mt-2 inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-sm",
+                                    mine
+                                      ? "bg-white/10 text-white hover:bg-white/15"
+                                      : "bg-background/60 hover:bg-background",
+                                  )}
+                                >
+                                  <FileText
+                                    className={cn(
+                                      "size-4",
+                                      mine
+                                        ? "text-white/90"
+                                        : "text-muted-foreground",
+                                    )}
+                                  />
+                                  <span className="truncate max-w-[220px]">
+                                    Document File
+                                  </span>
+                                </a>
+                              ) : null}
+                              <div
+                                className={cn(
+                                  "mt-1 flex items-center justify-end gap-2 text-[11px]",
+                                  mine
+                                    ? "text-white/80"
+                                    : "text-muted-foreground",
+                                )}
+                              >
+                                <span>{timeString}</span>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
 
-                    {typing ? (
-                      <div className="flex justify-start">
-                        <div className="bg-muted text-muted-foreground rounded-2xl px-4 py-2 text-sm">
-                          Typing…
+                    {isSending ? (
+                      <div className="flex justify-end">
+                        <div className="bg-[#895129]/60 text-white rounded-2xl px-4 py-2 text-sm">
+                          Sending...
                         </div>
                       </div>
                     ) : null}
@@ -605,7 +424,9 @@ export function MessagesPage() {
                     type="button"
                     className="bg-[#895129] hover:bg-[#7b4723]"
                     onClick={send}
-                    disabled={!draft.trim() && pendingFiles.length === 0}
+                    disabled={
+                      (!draft.trim() && pendingFiles.length === 0) || isSending
+                    }
                   >
                     Send
                   </Button>

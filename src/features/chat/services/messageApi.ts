@@ -1,42 +1,78 @@
 import { baseApi } from "@/services/baseApi";
-import type { Conversation, Message } from "@/types/api";
+import type { Chat, ChatMessage } from "@/types/api";
+
+type PaginatedResponse<T> = {
+  success: boolean;
+  message: string;
+  pagination: {
+    total: number;
+    limit: number;
+    page: number;
+    totalPage: number;
+  };
+  data: T;
+};
+
+type SingleResponse<T> = {
+  success: boolean;
+  message: string;
+  data: T;
+};
 
 export const messageApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getConversations: build.query<Conversation[], void>({
-      query: () => "/messages/conversations",
-      providesTags: (r) =>
-        r
+    getChats: build.query<Chat[], string>({
+      query: (searchTerm = "") => `/chats/mine?searchTerm=${searchTerm}`,
+      transformResponse: (response: PaginatedResponse<Chat[]>) => response.data,
+      providesTags: (result) =>
+        result
           ? [
               { type: "Conversations" as const, id: "LIST" },
-              ...r.map((c) => ({ type: "Conversations" as const, id: c.id })),
+              ...result.map((c) => ({
+                type: "Conversations" as const,
+                id: c._id,
+              })),
             ]
           : [{ type: "Conversations" as const, id: "LIST" }],
     }),
-    getMessages: build.query<Message[], string>({
-      query: (conversationId) => `/messages/${conversationId}`,
+    getChatMessages: build.query<ChatMessage[], string>({
+      query: (chatId) => `/messages/chats/${chatId}`,
+      transformResponse: (response: PaginatedResponse<ChatMessage[]>) =>
+        response.data,
       providesTags: (_r, _e, id) => [{ type: "Messages" as const, id }],
     }),
-    sendMessage: build.mutation<
-      Message,
-      { conversationId: string; body: string }
-    >({
-      query: ({ conversationId, body }) => ({
-        url: `/messages/${conversationId}`,
+    createChat: build.mutation<Chat, { participants: string[] }>({
+      query: (body) => ({
+        url: `/chats/`,
         method: "POST",
-        body: { body },
+        body,
       }),
-      invalidatesTags: (_r, _e, { conversationId }) => [
-        { type: "Messages" as const, id: conversationId },
-        { type: "Conversations" as const, id: "LIST" },
-      ],
+      transformResponse: (response: SingleResponse<Chat>) => response.data,
+      invalidatesTags: [{ type: "Conversations" as const, id: "LIST" }],
+    }),
+    sendMessage: build.mutation<ChatMessage, FormData>({
+      query: (body) => ({
+        url: `/messages/`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: SingleResponse<ChatMessage>) =>
+        response.data,
+      invalidatesTags: (_r, _e, formData) => {
+        const chatId = formData.get("chat") as string;
+        return [
+          { type: "Messages" as const, id: chatId },
+          { type: "Conversations" as const, id: "LIST" },
+        ];
+      },
     }),
   }),
-  overrideExisting: false,
+  overrideExisting: true,
 });
 
 export const {
-  useGetConversationsQuery,
-  useGetMessagesQuery,
+  useGetChatsQuery,
+  useGetChatMessagesQuery,
+  useCreateChatMutation,
   useSendMessageMutation,
 } = messageApi;

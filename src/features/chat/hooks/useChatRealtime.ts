@@ -21,18 +21,21 @@ export function useChatRealtime(conversationId?: string) {
       );
     };
 
-    const onReceive = (p: { conversationId?: string }) => {
-      if (p?.conversationId !== conversationId) return;
+    const onReceive = (p: any) => {
+      const id = p?.conversationId || p?.chat;
+      if (id !== conversationId) return;
       invalidate();
     };
-    const onTyping = (p: { conversationId?: string }) => {
-      if (p?.conversationId !== conversationId) return;
+    const onTyping = (p: any) => {
+      const id = p?.conversationId || p?.chat;
+      if (id !== conversationId) return;
       setPeerTyping(true);
       if (t.current) window.clearTimeout(t.current);
       t.current = window.setTimeout(() => setPeerTyping(false), 1200);
     };
-    const onSeen = (p: { conversationId?: string }) => {
-      if (p?.conversationId !== conversationId) return;
+    const onSeen = (p: any) => {
+      const id = p?.conversationId || p?.chat;
+      if (id !== conversationId) return;
       invalidate();
     };
 

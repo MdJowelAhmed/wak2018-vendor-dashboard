@@ -413,29 +413,32 @@ export type DashboardOverview = {
   };
 };
 
-export type Conversation = {
-  id: string;
-  title: string;
-  participantName: string;
-  lastMessage?: string;
-  updatedAt: string;
-  context: "product" | "service";
+export type Participant = {
+  _id: string;
+  name: string;
+  profileImage: string;
 };
 
-export type Message = {
-  id: string;
-  conversationId: string;
-  senderId?: string;
-  receiverId?: string;
-  /** Back-compat (existing demo) */
-  body?: string;
-  /** Canonical field */
-  message?: string;
-  type?: "text" | "image" | "file";
-  fileUrl?: string;
-  fileName?: string;
+export type Chat = {
+  _id: string;
+  participants: Participant[];
+  updatedAt: string;
+  unreadCount: number;
+  lastMessage: any | null;
+  anotherParticipant?: Participant;
+};
+
+export type ChatMessage = {
+  _id: string;
+  chat: string;
+  sender: Participant | string;
+  text: string;
+  attachment: string;
+  type: "text" | "image" | "file";
+  seenBy: string[];
   createdAt: string;
-  seen?: boolean;
+  updatedAt?: string;
+  isSeen?: boolean;
 };
 
 export type MilestoneStatus = "pending" | "active" | "submitted" | "approved";

@@ -1,16 +1,35 @@
-import type { Socket } from 'socket.io-client'
+import { io, type Socket } from "socket.io-client";
+
+let socket: Socket | null = null;
 
 export function getSocket(): Socket | null {
-  return null
+  return socket;
 }
 
 export function disconnectSocket() {
-  // no connection in static demo
+  if (socket) {
+    socket.disconnect();
+    socket = null;
+  }
 }
 
-/**
- * Static demo mode: no real WebSocket — all data is local via RTK + `static-api-data`.
- */
 export function connectSocket() {
-  return null
+  if (!socket) {
+    const token = localStorage.getItem("token");
+    const socketUrl =
+      import.meta.env.VITE_SOCKET_URL ||
+      import.meta.env.VITE_API_BASE_URL ||
+      "http://10.10.26.172:4060";
+      
+    // Usually socket server is at the base URL origin
+    const urlObj = new URL(socketUrl);
+    const origin = urlObj.origin;
+
+    socket = io(origin, {
+      auth: { token },
+      transports: ["websocket"],
+      reconnection: true,
+    });
+  }
+  return socket;
 }

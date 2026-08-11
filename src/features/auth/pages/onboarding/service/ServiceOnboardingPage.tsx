@@ -21,7 +21,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useUpdateServiceProviderProfileMutation } from "@/services/profileApi";
+import {
+  useUpdateServiceProviderProfileMutation,
+  useGetLanguagesQuery,
+} from "@/services/profileApi";
 
 const STORAGE_KEY = "service_onboarding_v1";
 
@@ -91,16 +94,6 @@ const categoryOptions = [
   "Tutoring",
   "IT Support",
   "Design",
-];
-
-const languageOptions = [
-  "English",
-  "Arabic",
-  "French",
-  "Spanish",
-  "Hindi",
-  "Bengali",
-  "Urdu",
 ];
 
 type StepId = 2 | 3 | 4 | 5 | 6;
@@ -484,6 +477,12 @@ function Step3Professional({
   setData: (patch: Partial<OnboardingData>) => void;
   errors: Partial<Record<keyof OnboardingData, string>>;
 }) {
+  const { data: languagesRes } = useGetLanguagesQuery();
+  const dynamicLanguages = useMemo(
+    () => languagesRes?.data || [],
+    [languagesRes],
+  );
+
   return (
     <div className="grid gap-6">
       <div>
@@ -565,7 +564,7 @@ function Step3Professional({
         <MultiSelect
           value={data.languages}
           onChange={(v) => setData({ languages: v })}
-          options={languageOptions}
+          options={dynamicLanguages}
           placeholder="Select languages"
         />
         {errors.languages ? (

@@ -18,23 +18,33 @@ import {
 import { toast } from "sonner";
 import { CustomSpinner } from "@/components/common/CustomSpinner";
 import { getImageUrl } from "@/utils/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useState } from "react";
 
 export function ServicesPage() {
   const navigate = useNavigate();
   const { data: servicesData, isLoading } = useGetMyServicesQuery();
   const [deleteService] = useDeleteServiceMutation();
   const [updateService] = useUpdateServiceMutation();
+  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
 
   const services = servicesData?.data || [];
 
   const fmtPrice = (price: number) => `$${price} (Fixed)`;
 
-  async function remove(id: string) {
-    if (!window.confirm("Are you sure you want to delete this service?"))
-      return;
+  async function remove() {
+    if (!serviceToDelete) return;
     try {
-      await deleteService(id).unwrap();
+      await deleteService(serviceToDelete).unwrap();
       toast.success("Service deleted successfully");
+      setServiceToDelete(null);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to delete service");
     }
@@ -154,7 +164,7 @@ export function ServicesPage() {
                           variant="outline"
                           size="sm"
                           className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                          onClick={() => remove(s._id)}
+                          onClick={() => setServiceToDelete(s._id)}
                         >
                           Delete
                         </Button>
@@ -176,6 +186,29 @@ export function ServicesPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog
+        open={!!serviceToDelete}
+        onOpenChange={(open) => !open && setServiceToDelete(null)}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this service? This action cannot
+              be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 flex sm:justify-between space-x-2">
+            <Button variant="outline" onClick={() => setServiceToDelete(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={remove}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

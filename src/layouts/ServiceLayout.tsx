@@ -59,7 +59,13 @@ const serviceNav: MenuItem[] = [
   { to: "/service/settings/profile", label: "Settings", icon: Settings },
 ];
 
-function ServiceSidebar({ onNavigate }: { onNavigate?: () => void }) {
+function ServiceSidebar({
+  onNavigate,
+  data,
+}: {
+  onNavigate?: () => void;
+  data?: any;
+}) {
   const activePerms = getActiveServiceControllerPermissions();
   const location = useLocation();
   const [openSettings, setOpenSettings] = useState(false);
@@ -70,8 +76,15 @@ function ServiceSidebar({ onNavigate }: { onNavigate?: () => void }) {
   }, [settingsActive]);
 
   const items = useMemo(() => {
-    if (!activePerms) return serviceNav;
-    const allowed = new Set(activePerms);
+    let permsToCheck = null;
+    if (activePerms) {
+      permsToCheck = activePerms;
+    } else if (data?.role === "staff") {
+      permsToCheck = data?.permissions || data?.staff?.permissions || [];
+    }
+
+    if (!permsToCheck) return serviceNav;
+    const allowed = new Set(permsToCheck);
     return serviceNav.filter((i) => {
       if (i.to === "/service/controllers") return false;
       if (i.to === "/service/dashboard") return allowed.has("dashboard");
@@ -84,7 +97,7 @@ function ServiceSidebar({ onNavigate }: { onNavigate?: () => void }) {
       if (i.to.startsWith("/service/settings")) return allowed.has("settings");
       return true;
     });
-  }, [activePerms]);
+  }, [activePerms, data]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -289,7 +302,7 @@ export function ServiceLayout() {
             )}
           </div>
 
-          <ServiceSidebar onNavigate={() => setMobileOpen(false)} />
+          <ServiceSidebar onNavigate={() => setMobileOpen(false)} data={data} />
 
           <Separator className="my-2" />
           <div className="p-2">

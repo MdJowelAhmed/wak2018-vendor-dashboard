@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Link,
   NavLink,
@@ -76,6 +76,26 @@ export function VendorLayout() {
     if (settingsActive) setOpenSettings(true);
   }, [settingsActive]);
 
+  const items = useMemo(() => {
+    if (data?.role === "staff") {
+      const allowed = new Set(
+        data?.permissions || data?.staff?.permissions || [],
+      );
+      return vendorNav.filter((i) => {
+        if (i.to === "/vendor/controllers") return false;
+        if (i.to === "/vendor/dashboard") return allowed.has("dashboard");
+        if (i.to === "/vendor/products") return allowed.has("products");
+        if (i.to === "/vendor/orders") return allowed.has("orders");
+        if (i.to === "/vendor/delivery-requests") return allowed.has("deliveries");
+        if (i.to === "/vendor/earnings") return allowed.has("earnings");
+        if (i.to === "/vendor/analytics") return allowed.has("analytics");
+        if (i.to === "/vendor/customers") return allowed.has("customers");
+        return true;
+      });
+    }
+    return vendorNav;
+  }, [data]);
+
   function handleLogout() {
     localStorage.removeItem("token");
     dispatch(logout());
@@ -136,165 +156,131 @@ export function VendorLayout() {
             <div className="min-h-0 flex-1 overflow-y-auto">
               <LayoutGroup>
                 <nav className="flex flex-col gap-1 px-2 py-2">
-                  {vendorNav.map((item) => {
-                    if (item.to !== "/vendor/controllers") {
-                      return (
-                        <NavLink
-                          key={item.to}
-                          to={item.to}
-                          className={({ isActive }) =>
-                            cn(
-                              "relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-                              isActive
-                                ? "text-primary"
-                                : "text-gray-600 hover:bg-white/70 hover:text-gray-900",
-                            )
-                          }
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {({ isActive }) => (
-                            <>
-                              {isActive ? (
-                                <motion.span
-                                  layoutId="vendor-active-pill"
-                                  className="absolute inset-0 rounded-xl bg-primary/10 ring-1 ring-primary/20"
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 520,
-                                    damping: 42,
-                                  }}
-                                />
-                              ) : null}
-                              <span className="relative flex items-center gap-2">
-                                <item.icon className="size-4" />
-                                {item.label}
-                              </span>
-                            </>
-                          )}
-                        </NavLink>
-                      );
-                    }
-
-                    return (
-                      <div key={item.to} className="space-y-1">
-                        <NavLink
-                          to={item.to}
-                          className={({ isActive }) =>
-                            cn(
-                              "relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-                              isActive
-                                ? "text-primary"
-                                : "text-gray-600 hover:bg-white/70 hover:text-gray-900",
-                            )
-                          }
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          {({ isActive }) => (
-                            <>
-                              {isActive ? (
-                                <motion.span
-                                  layoutId="vendor-active-pill"
-                                  className="absolute inset-0 rounded-xl bg-primary/10 ring-1 ring-primary/20"
-                                  transition={{
-                                    type: "spring",
-                                    stiffness: 520,
-                                    damping: 42,
-                                  }}
-                                />
-                              ) : null}
-                              <span className="relative flex items-center gap-2">
-                                <item.icon className="size-4" />
-                                {item.label}
-                              </span>
-                            </>
-                          )}
-                        </NavLink>
-
-                        <button
-                          type="button"
-                          className={cn(
-                            "flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
-                            settingsActive
-                              ? "bg-primary/10 text-primary"
-                              : "text-gray-600 hover:bg-white/70 hover:text-gray-900",
-                          )}
-                          onClick={() => setOpenSettings((v) => !v)}
-                        >
-                          <span className="flex items-center gap-2">
-                            <Settings className="size-4" />
-                            Settings
+                  {items.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) =>
+                        cn(
+                          "relative flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                          isActive
+                            ? "text-primary"
+                            : "text-gray-600 hover:bg-white/70 hover:text-gray-900",
+                        )
+                      }
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {({ isActive }) => (
+                        <>
+                          {isActive ? (
+                            <motion.span
+                              layoutId="vendor-active-pill"
+                              className="absolute inset-0 rounded-xl bg-primary/10 ring-1 ring-primary/20"
+                              transition={{
+                                type: "spring",
+                                stiffness: 520,
+                                damping: 42,
+                              }}
+                            />
+                          ) : null}
+                          <span className="relative flex items-center gap-2">
+                            <item.icon className="size-4" />
+                            {item.label}
                           </span>
-                          {openSettings ? (
-                            <ChevronDown className="size-4" />
-                          ) : (
-                            <ChevronRight className="size-4" />
-                          )}
-                        </button>
+                        </>
+                      )}
+                    </NavLink>
+                  ))}
 
-                        <div
-                          className={cn(
-                            "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
-                            openSettings
-                              ? "max-h-40 opacity-100"
-                              : "max-h-0 opacity-0",
-                          )}
-                        >
-                          <div className="flex flex-col gap-0.5 py-1">
-                            {[
-                              {
-                                to: "/vendor/settings/profile",
-                                label: "Profile",
-                              },
-                              {
-                                to: "/vendor/settings/security",
-                                label: "Security",
-                              },
-                              { to: "/vendor/settings/legal", label: "Legal" },
-                              {
-                                to: "/vendor/settings/support",
-                                label: "Support",
-                              },
-                            ].map((c) => (
-                              <NavLink
-                                key={c.to}
-                                to={c.to}
-                                className={({ isActive }) =>
-                                  cn(
-                                    "relative flex items-center gap-2 rounded-xl py-1.5 text-xs font-medium transition-colors",
-                                    "pl-8 pr-3",
-                                    isActive
-                                      ? "text-primary"
-                                      : "text-gray-600 hover:bg-white/70 hover:text-gray-900",
-                                  )
-                                }
-                                onClick={() => setMobileOpen(false)}
-                              >
-                                {({ isActive }) => (
-                                  <>
-                                    {isActive ? (
-                                      <motion.span
-                                        layoutId="vendor-active-subpill"
-                                        className="absolute inset-0 rounded-xl bg-primary/10 ring-1 ring-primary/20"
-                                        transition={{
-                                          type: "spring",
-                                          stiffness: 520,
-                                          damping: 42,
-                                        }}
-                                      />
-                                    ) : null}
-                                    <span className="relative flex items-center gap-2">
-                                      <Circle className="size-2 fill-current opacity-70" />
-                                      {c.label}
-                                    </span>
-                                  </>
-                                )}
-                              </NavLink>
-                            ))}
-                          </div>
+                  {(data?.role !== "staff" ||
+                    new Set(
+                      data?.permissions || data?.staff?.permissions || [],
+                    ).has("settings")) && (
+                    <div className="space-y-1">
+                      <button
+                        type="button"
+                        className={cn(
+                          "flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm font-medium transition-colors",
+                          settingsActive
+                            ? "bg-primary/10 text-primary"
+                            : "text-gray-600 hover:bg-white/70 hover:text-gray-900",
+                        )}
+                        onClick={() => setOpenSettings((v) => !v)}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Settings className="size-4" />
+                          Settings
+                        </span>
+                        {openSettings ? (
+                          <ChevronDown className="size-4" />
+                        ) : (
+                          <ChevronRight className="size-4" />
+                        )}
+                      </button>
+
+                      <div
+                        className={cn(
+                          "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
+                          openSettings
+                            ? "max-h-40 opacity-100"
+                            : "max-h-0 opacity-0",
+                        )}
+                      >
+                        <div className="flex flex-col gap-0.5 py-1">
+                          {[
+                            {
+                              to: "/vendor/settings/profile",
+                              label: "Profile",
+                            },
+                            {
+                              to: "/vendor/settings/security",
+                              label: "Security",
+                            },
+                            { to: "/vendor/settings/legal", label: "Legal" },
+                            {
+                              to: "/vendor/settings/support",
+                              label: "Support",
+                            },
+                          ].map((c) => (
+                            <NavLink
+                              key={c.to}
+                              to={c.to}
+                              className={({ isActive }) =>
+                                cn(
+                                  "relative flex items-center gap-2 rounded-xl py-1.5 text-xs font-medium transition-colors",
+                                  "pl-8 pr-3",
+                                  isActive
+                                    ? "text-primary"
+                                    : "text-gray-600 hover:bg-white/70 hover:text-gray-900",
+                                )
+                              }
+                              onClick={() => setMobileOpen(false)}
+                            >
+                              {({ isActive }) => (
+                                <>
+                                  {isActive ? (
+                                    <motion.span
+                                      layoutId="vendor-active-subpill"
+                                      className="absolute inset-0 rounded-xl bg-primary/10 ring-1 ring-primary/20"
+                                      transition={{
+                                        type: "spring",
+                                        stiffness: 520,
+                                        damping: 42,
+                                      }}
+                                    />
+                                  ) : null}
+                                  <span className="relative flex items-center gap-2">
+                                    <Circle className="size-2 fill-current opacity-70" />
+                                    {c.label}
+                                  </span>
+                                </>
+                              )}
+                            </NavLink>
+                          ))}
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  )}
                 </nav>
               </LayoutGroup>
             </div>

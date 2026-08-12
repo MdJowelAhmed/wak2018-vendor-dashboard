@@ -56,7 +56,16 @@ export function LoginPage() {
         const { accessToken, role: apiRole } = res.data;
 
         // Map backend role to frontend app role
-        const appRole = apiRole === "service_provider" ? "service" : "vendor";
+        let appRole = "vendor";
+        if (apiRole === "service_provider") {
+          appRole = "service";
+        } else if (apiRole === "staff") {
+          const resDataAny = res.data as any;
+          const actualStaffType = resDataAny.staffType || resDataAny.staff?.staffType;
+          if (actualStaffType === "service_provider") {
+            appRole = "service";
+          }
+        }
 
         let userId = "unknown";
         let userEmail = email.trim().toLowerCase();

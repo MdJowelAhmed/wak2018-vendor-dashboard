@@ -11,16 +11,22 @@ const list = { type: "Orders" as const, id: "LIST" as const };
 export const orderApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getProductOrders: build.query<
-      ProductOrder[],
-      { status?: ProductOrderStatus } | void
+      { data: ProductOrder[]; pagination: any },
+      { status?: ProductOrderStatus; page?: number; limit?: number } | void
     >({
-      query: (q) => ({
-        url: "/product-orders/vendor/my-orders",
-        params: q && q.status ? { status: q.status } : undefined,
-      }),
+      query: (q: any) => {
+        const params: Record<string, any> = {};
+        if (q?.status) params.status = q.status;
+        if (q?.page) params.page = q.page;
+        if (q?.limit) params.limit = q.limit;
+        return {
+          url: "/product-orders/vendor/my-orders",
+          params,
+        };
+      },
       transformResponse: (response: any) => {
         const data = response?.data || [];
-        return data.map((o: any) => ({
+        const mappedData = data.map((o: any) => ({
           ...o,
           id: o._id,
           type: "product",
@@ -28,14 +34,42 @@ export const orderApi = baseApi.injectEndpoints({
           total: o.grandTotal || 0,
           quantity: o.totalQuantity || 0,
           customerName: o.customer?.name || "Unknown Customer",
-          productId: o.items?.[0]?.product || "Unknown Product",
-          productName: "Product Item", // Fallback, since product name isn't returned
+          productId:
+            o.items?.[0]?.product?._id ||
+            o.items?.[0]?.product ||
+            "Unknown Product",
+          productName: o.items?.[0]?.product?.name || "Product Item",
         })) as ProductOrder[];
+        return { data: mappedData, pagination: response?.pagination };
       },
       providesTags: (r) =>
-        r
-          ? [list, ...r.map((o) => ({ type: "Orders" as const, id: o.id }))]
+        r?.data
+          ? [
+              list,
+              ...r.data.map((o) => ({ type: "Orders" as const, id: o.id })),
+            ]
           : [list],
+    }),
+    getProductOrderById: build.query<ProductOrder, string>({
+      query: (id) => `/product-orders/vendor/my-orders/${id}`,
+      transformResponse: (response: any) => {
+        const o = response.data;
+        return {
+          ...o,
+          id: o._id,
+          type: "product",
+          status: o.orderStatus,
+          total: o.grandTotal || 0,
+          quantity: o.totalQuantity || 0,
+          customerName: o.customer?.name || "Unknown Customer",
+          productId:
+            o.items?.[0]?.product?._id ||
+            o.items?.[0]?.product ||
+            "Unknown Product",
+          productName: o.items?.[0]?.product?.name || "Product Item",
+        } as ProductOrder;
+      },
+      providesTags: (_r, _e, id) => [{ type: "Orders", id }],
     }),
     getServiceOrders: build.query<any[], void>({
       query: () => "/service-orders/",
@@ -98,6 +132,7 @@ export const orderApi = baseApi.injectEndpoints({
 
 export const {
   useGetProductOrdersQuery,
+  useGetProductOrderByIdQuery,
   useGetServiceOrdersQuery,
   useGetServiceOrderByIdQuery,
   useGetOrderByIdQuery,

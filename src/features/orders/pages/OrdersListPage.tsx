@@ -52,14 +52,18 @@ export function OrdersListPage() {
   const { data: profile } = useGetProfileQuery();
   const role: UserRole | null = authRole ?? profile?.role ?? null;
 
-  const pQ = useGetProductOrdersQuery(undefined, { skip: role !== "vendor" });
-  const sQ = useGetServiceOrdersQuery(undefined, { skip: role !== "service" });
-
   const [status, setStatus] = useState<StatusFilter>("all");
   const [deliveryType, setDeliveryType] = useState<DeliveryTypeFilter>("all");
+  const [page, setPage] = useState(1);
+
+  const pQ = useGetProductOrdersQuery(
+    { status: status === "all" ? undefined : (status as ProductOrderStatus), page, limit: 10 },
+    { skip: role !== "vendor" }
+  );
+  const sQ = useGetServiceOrdersQuery(undefined, { skip: role !== "service" });
 
   const rows = useMemo(() => {
-    const all: Order[] = [...(pQ.data ?? []), ...(sQ.data ?? [])];
+    const all: Order[] = [...(pQ.data?.data ?? []), ...(sQ.data ?? [])];
     const filtered = all.filter((o) => {
       if (status !== "all" && o.status !== status) return false;
       if (deliveryType !== "all") {
@@ -151,64 +155,90 @@ export function OrdersListPage() {
           {isLoading ? (
             <Skeleton className="h-48 w-full" />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Delivery Type</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead className="w-[1%] text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rows.map((o) => (
-                  <TableRow key={o.id}>
-                    <TableCell className="font-medium">
-                      {'orderId' in o && o.orderId ? o.orderId : `#${o.id}`}
-                    </TableCell>
-                    <TableCell>{o.customerName}</TableCell>
-                    <TableCell className="capitalize">{o.type}</TableCell>
-                    <TableCell>
-                      <OrderStatusBadge status={o.status as any} />
-                    </TableCell>
-                    <TableCell className="capitalize">
-                      {o.deliveryType ?? "—"}
-                    </TableCell>
-                    <TableCell>
-                      {new Intl.NumberFormat(undefined, {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(o.total)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
-                      {formatDate(o.createdAt)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild size="sm" variant="outline">
-                        <Link to={`/vendor/orders/${o.id}`}>
-                          <Eye className="mr-2 size-4" />
-                          View
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {!rows.length ? (
+            <div className="space-y-4">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="text-muted-foreground py-6 text-center"
-                    >
-                      No orders match your filters.
-                    </TableCell>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Delivery Type</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="w-[1%] text-right">Action</TableHead>
                   </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {rows.map((o) => (
+                    <TableRow key={o.id}>
+                      <TableCell className="font-medium">
+                        {'orderId' in o && o.orderId ? o.orderId : `#${o.id}`}
+                      </TableCell>
+                      <TableCell>{o.customerName}</TableCell>
+                      <TableCell className="capitalize">{o.type}</TableCell>
+                      <TableCell>
+                        <OrderStatusBadge status={o.status as any} />
+                      </TableCell>
+                      <TableCell className="capitalize">
+                        {o.deliveryType ?? "—"}
+                      </TableCell>
+                      <TableCell>
+                        {new Intl.NumberFormat(undefined, {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(o.total)}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {formatDate(o.createdAt)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild size="sm" variant="outline">
+                          <Link to={`/vendor/orders/${o.id}`}>
+                            <Eye className="mr-2 size-4" />
+                            View
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {!rows.length ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={8}
+                        className="text-muted-foreground py-6 text-center"
+                      >
+                        No orders match your filters.
+                      </TableCell>
+                    </TableRow>
+                  ) : null}
+                </TableBody>
+              </Table>
+              
+              {pQ.data?.pagination && pQ.data.pagination.totalPage > 1 && (
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Page {page} of {pQ.data.pagination.totalPage}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === pQ.data.pagination.totalPage}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -69,12 +69,11 @@ export function DeliveryRequestsPage() {
 
   const customerNameByOrderId = useMemo(() => {
     const map = new Map<string, string>();
-    for (const o of productOrdersQ.data ?? [])
-      map.set(o.id, o.customer?.name ?? o.customerName ?? "");
-    for (const o of serviceOrdersQ.data ?? [])
-      map.set(o.id, o.customer?.name ?? o.customerName ?? "");
+    for (const o of productOrdersQ.data?.data ?? []) map.set(o.id, o.customerName);
+    for (const o of serviceOrdersQ.data ?? []) map.set(o._id, o.customer?.name);
     return map;
-  }, [productOrdersQ.data, serviceOrdersQ.data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productOrdersQ.data?.data, serviceOrdersQ.data]);
 
   const filteredSorted = useMemo(() => {
     const q = search.trim().toLowerCase();

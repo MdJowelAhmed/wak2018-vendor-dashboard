@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,7 +10,8 @@ import { DeliveryStatusCard } from "@/features/orders/components/DeliveryStatusC
 import { StatusDropdown } from "@/features/orders/components/StatusDropdown";
 import { MilestoneList } from "@/features/orders/components/MilestoneList";
 import {
-  useGetOrderByIdQuery,
+  useGetProductOrderByIdQuery,
+  useGetServiceOrderByIdQuery,
   useUpdateProductOrderStatusMutation,
   useUpdateServiceOrderStatusMutation,
 } from "@/features/orders";
@@ -25,7 +26,7 @@ import type {
   ServiceOrderStatus,
 } from "@/types/api";
 import { useDeliveryRealtime } from "@/features/delivery";
-import { useGetProfileQuery } from '@/services/userApi';
+import { useGetProfileQuery } from "@/services/userApi";
 import {
   orderDetailsButtonMotionProps,
   orderDetailsCardVariants,
@@ -54,10 +55,20 @@ export function OrderDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const orderQ = useGetOrderByIdQuery(id ?? "", {
-    skip: !id,
+  const { pathname } = useLocation();
+  const isVendor = pathname.startsWith("/vendor");
+
+  const productOrderQ = useGetProductOrderByIdQuery(id ?? "", {
+    skip: !id || !isVendor,
     pollingInterval: 4000,
   });
+
+  const serviceOrderQ = useGetServiceOrderByIdQuery(id ?? "", {
+    skip: !id || isVendor,
+    pollingInterval: 4000,
+  });
+
+  const orderQ = isVendor ? productOrderQ : serviceOrderQ;
   const order = orderQ.data as Order | undefined;
 
   const deliveryQ = useGetDeliveryStatusQuery(
@@ -105,36 +116,44 @@ export function OrderDetailsPage() {
 
   const customer = order.customer ?? { name: order.customerName };
   const displayItems = order.items?.map((it: any) => ({
-    name: it.name || (order.type === 'product' ? 'Product Item' : (order as any).serviceName),
+    name:
+      it.name ||
+      (order.type === "product" ? "Product Item" : (order as any).serviceName),
     quantity: it.quantity || 1,
     price: it.price ?? it.unitPrice ?? 0,
     total: it.unitTotal ?? (it.price ?? it.unitPrice ?? 0) * (it.quantity || 1),
   })) ?? [
     {
-      name: order.type === "product" ? order.productName : (order as any).serviceName,
+      name:
+        order.type === "product"
+          ? order.productName
+          : (order as any).serviceName,
       quantity: (order as any).quantity ?? 1,
       price: order.total,
       total: order.total,
     },
   ];
 
-  const subtotal = order.type === 'product' && order.subTotal !== undefined 
-    ? order.subTotal 
-    : displayItems.reduce((a, it) => a + it.total, 0);
+  const subtotal =
+    order.type === "product" && order.subTotal !== undefined
+      ? order.subTotal
+      : displayItems.reduce((a, it) => a + it.total, 0);
 
-  const deliveryFee = order.type === 'product' && order.shippingFee !== undefined
-    ? order.shippingFee
-    : order.deliveryType
-    ? order.deliveryType === "international"
-      ? 15
-      : 5
-    : 0;
+  const deliveryFee =
+    order.type === "product" && order.shippingFee !== undefined
+      ? order.shippingFee
+      : order.deliveryType
+        ? order.deliveryType === "international"
+          ? 15
+          : 5
+        : 0;
 
-  const discount = order.type === 'product' ? (order.discount || 0) : 0;
+  const discount = order.type === "product" ? order.discount || 0 : 0;
 
-  const total = order.type === 'product' && order.grandTotal !== undefined
-    ? order.grandTotal
-    : subtotal + deliveryFee - discount;
+  const total =
+    order.type === "product" && order.grandTotal !== undefined
+      ? order.grandTotal
+      : subtotal + deliveryFee - discount;
 
   const vendorId =
     profile?.id ?? localStorage.getItem("vendor_id") ?? "demo-vendor";
@@ -243,15 +262,19 @@ export function OrderDetailsPage() {
               <CardTitle>Customer details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
-              {order.type === 'product' && order.shippingAddress ? (
+              {order.type === "product" && order.shippingAddress ? (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <div className="text-muted-foreground">Name</div>
-                    <div className="font-medium">{order.shippingAddress.fullName}</div>
+                    <div className="font-medium">
+                      {order.shippingAddress.fullName}
+                    </div>
                   </div>
                   <div>
                     <div className="text-muted-foreground">Phone</div>
-                    <div className="font-medium">{order.shippingAddress.phone ?? "—"}</div>
+                    <div className="font-medium">
+                      {order.shippingAddress.phone ?? "—"}
+                    </div>
                   </div>
                   <div className="sm:col-span-2">
                     <div className="text-muted-foreground">Address</div>
@@ -261,8 +284,10 @@ export function OrderDetailsPage() {
                         order.shippingAddress.city,
                         order.shippingAddress.state,
                         order.shippingAddress.postalCode,
-                        order.shippingAddress.country
-                      ].filter(Boolean).join(", ") || "—"}
+                        order.shippingAddress.country,
+                      ]
+                        .filter(Boolean)
+                        .join(", ") || "—"}
                     </div>
                   </div>
                 </div>
@@ -587,7 +612,9 @@ export function OrderDetailsPage() {
               </div>
               {discount > 0 && (
                 <div className="flex items-center justify-between text-green-600">
-                  <span className="text-muted-foreground text-green-600">Discount</span>
+                  <span className="text-muted-foreground text-green-600">
+                    Discount
+                  </span>
                   <span className="font-medium tabular-nums">
                     -{fmtMoney(discount)}
                   </span>

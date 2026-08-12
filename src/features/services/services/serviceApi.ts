@@ -47,7 +47,10 @@ export const serviceApi = baseApi.injectEndpoints({
     getCategories: build.query<any, void>({
       query: () => "/categories",
     }),
-    getMyServices: build.query<GetMyServicesResponse, { searchTerm?: string } | void>({
+    getMyServices: build.query<
+      GetMyServicesResponse,
+      { searchTerm?: string } | void
+    >({
       query: (arg) => ({
         url: "/services/mine",
         params: arg ? { searchTerm: arg.searchTerm } : undefined,
@@ -61,7 +64,8 @@ export const serviceApi = baseApi.injectEndpoints({
           : [listTag],
     }),
     getServiceById: build.query<Service, string>({
-      query: (id) => `/services/${id}`,
+      query: (id) => `/services/${id}/mine`,
+      transformResponse: (res: any) => res.data,
       providesTags: (_r, _e, id) => [{ type: "Services", id }],
     }),
     createService: build.mutation<any, FormData>({

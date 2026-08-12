@@ -259,7 +259,7 @@ export function AddServicePage() {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((c) => (
+                    {categories.map((c: any) => (
                       <SelectItem key={c.value} value={c.value}>
                         {c.label}
                       </SelectItem>

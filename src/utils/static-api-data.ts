@@ -4,7 +4,6 @@ import type {
   AdminUser,
   DashboardOverview,
   Delivery,
-  Message,
   Milestone,
   Product,
   ProductOrder,
@@ -105,7 +104,7 @@ function makeProducts(): Product[] {
   ]
 }
 
-function makeServices(): Service[] {
+function makeServices(): any[] {
   const pkg = (n: 'basic' | 'standard' | 'premium', price: number) => ({
     name: n,
     price,
@@ -347,7 +346,7 @@ const store = {
         createdAt: iso(new Date(2025, 3, 1)),
       },
     ],
-  } as Record<string, Message[]>,
+  } as Record<string, any[]>,
   conversations: [
     {
       id: 'c1',
@@ -812,7 +811,7 @@ export async function getStaticRequestResult(args: string | FetchArgs): Promise<
           return { frontend: '', backend: '', database: '' }
         }
 
-        const s: Service = {
+        const s: any = {
           id: `s${++nextId}`,
           title,
           description,
@@ -842,7 +841,7 @@ export async function getStaticRequestResult(args: string | FetchArgs): Promise<
       if (!pk?.basic || !pk?.standard || !pk?.premium) {
         return { error: { status: 400, data: { message: 'Invalid packages' } } }
       }
-      const s: Service = {
+      const s: any = {
         id: `s${++nextId}`,
         title: b?.title || 'Service',
         description: b?.description || '',
@@ -871,19 +870,20 @@ export async function getStaticRequestResult(args: string | FetchArgs): Promise<
             return fallback
           }
         }
+        const svc: any = store.services[i];
         store.services[i] = {
-          ...store.services[i]!,
-          title: String(fd.get('title') || store.services[i]!.title),
-          about: String(fd.get('about') || store.services[i]!.about || store.services[i]!.description),
-          description: String(fd.get('about') || fd.get('description') || store.services[i]!.description),
-          category: String(fd.get('category') || store.services[i]!.category || '') || undefined,
-          pricingType: (String(fd.get('pricingType') || store.services[i]!.pricingType || 'fixed') as 'hourly' | 'fixed'),
-          price: Number(fd.get('price') || store.services[i]!.price || 0),
-          deliveryTimeDays: Number(fd.get('deliveryTimeDays') || store.services[i]!.deliveryTimeDays || 1),
-          imageUrl: String(fd.get('imageUrl') || store.services[i]!.imageUrl || ''),
-          services: parseArr(servicesRaw, store.services[i]!.services),
+          ...svc,
+          title: String(fd.get('title') || svc.title),
+          about: String(fd.get('about') || svc.about || svc.description),
+          description: String(fd.get('about') || fd.get('description') || svc.description),
+          category: String(fd.get('category') || svc.category || '') || undefined,
+          pricingType: (String(fd.get('pricingType') || svc.pricingType || 'fixed') as 'hourly' | 'fixed'),
+          price: Number(fd.get('price') || svc.price || 0),
+          deliveryTimeDays: Number(fd.get('deliveryTimeDays') || svc.deliveryTimeDays || 1),
+          imageUrl: String(fd.get('imageUrl') || svc.imageUrl || ''),
+          services: parseArr(servicesRaw, svc.services),
           technologies: (() => {
-            if (!techRaw) return store.services[i]!.technologies
+            if (!techRaw) return svc.technologies
             try {
               const o = JSON.parse(techRaw) as unknown
               if (o && typeof o === 'object') {
@@ -897,9 +897,9 @@ export async function getStaticRequestResult(args: string | FetchArgs): Promise<
             } catch {
               // ignore
             }
-            return store.services[i]!.technologies
+            return svc.technologies
           })(),
-          benefits: parseArr(benefitsRaw, store.services[i]!.benefits),
+          benefits: parseArr(benefitsRaw, svc.benefits),
         }
         return { data: { ...store.services[i]! } }
       }
@@ -1131,7 +1131,7 @@ export async function getStaticRequestResult(args: string | FetchArgs): Promise<
         return { error: { status: 400, data: { message: 'Select at least one country or all countries' } } }
       }
 
-      const s: Service = {
+      const s: any = {
         id: `s${++nextId}`,
         title,
         description,
@@ -1344,7 +1344,7 @@ export async function getStaticRequestResult(args: string | FetchArgs): Promise<
         return { error: { status: 404, data: { message: 'Not found' } } }
       }
       const b = p.body as { body: string }
-      const msg: Message = {
+      const msg: any = {
         id: `m${++nextId}`,
         conversationId: convId,
         senderId: 'user-1',

@@ -68,7 +68,7 @@ export const serviceApi = baseApi.injectEndpoints({
       transformResponse: (res: any) => res.data,
       providesTags: (_r, _e, id) => [{ type: "Services", id }],
     }),
-    createService: build.mutation<any, FormData>({
+    createService: build.mutation<any, FormData | any>({
       query: (body) => ({
         url: "/services/",
         method: "POST",

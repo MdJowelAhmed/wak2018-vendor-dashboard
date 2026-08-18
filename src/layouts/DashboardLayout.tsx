@@ -13,7 +13,6 @@ import {
   Circle,
   Home,
   LogOut,
-  MapPin,
   Menu,
   Package,
   Shield,

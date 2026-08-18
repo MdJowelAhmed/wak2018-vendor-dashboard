@@ -10,6 +10,34 @@ const statusStyles: Record<string, { label: string; className: string }> = {
     label: "Confirmed",
     className: "border-transparent bg-sky-600 text-white",
   },
+  processing: {
+    label: "Processing",
+    className: "border-transparent bg-blue-600 text-white",
+  },
+  shipped: {
+    label: "Shipped",
+    className: "border-transparent bg-indigo-600 text-white",
+  },
+  out_for_delivery: {
+    label: "Out For Delivery",
+    className: "border-transparent bg-purple-600 text-white",
+  },
+  delivered: {
+    label: "Delivered",
+    className: "border-transparent bg-emerald-600 text-white",
+  },
+  cancelled: {
+    label: "Cancelled",
+    className: "border-transparent bg-rose-600 text-white",
+  },
+  refunded: {
+    label: "Refunded",
+    className: "border-transparent bg-gray-600 text-white",
+  },
+  ready_for_pickup: {
+    label: "Ready For Pickup",
+    className: "border-transparent bg-teal-600 text-white",
+  },
   ready: {
     label: "Ready",
     className: "border-transparent bg-violet-600 text-white",
@@ -21,14 +49,6 @@ const statusStyles: Record<string, { label: string; className: string }> = {
   shipment_created: {
     label: "Shipment Created",
     className: "border-transparent bg-orange-600 text-white",
-  },
-  delivered: {
-    label: "Delivered",
-    className: "border-transparent bg-emerald-600 text-white",
-  },
-  processing: {
-    label: "Processing",
-    className: "border-transparent bg-blue-600 text-white",
   },
   accepted: {
     label: "Accepted",

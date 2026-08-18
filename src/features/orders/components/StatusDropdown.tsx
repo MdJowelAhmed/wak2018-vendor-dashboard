@@ -15,9 +15,14 @@ const productFlow = [
   "confirmed",
   "processing",
   "ready",
+  "ready_for_pickup",
   "delivery_requested",
   "shipment_created",
+  "shipped",
+  "out_for_delivery",
   "delivered",
+  "cancelled",
+  "refunded",
 ] as const;
 const serviceFlow = [
   "pending",
@@ -26,15 +31,19 @@ const serviceFlow = [
   "completed",
 ] as const;
 
-const productLabels: Record<ProductOrderStatus, string> = {
+const productLabels: Record<string, string> = {
   pending: "Pending",
   confirmed: "Confirmed",
   processing: "Processing",
   ready: "Ready",
+  ready_for_pickup: "Ready For Pickup",
   delivery_requested: "Delivery Requested",
   shipment_created: "Shipment Created",
+  shipped: "Shipped",
+  out_for_delivery: "Out For Delivery",
   delivered: "Delivered",
   cancelled: "Cancelled",
+  refunded: "Refunded",
 };
 
 const serviceLabels: Record<ServiceOrderStatus, string> = {

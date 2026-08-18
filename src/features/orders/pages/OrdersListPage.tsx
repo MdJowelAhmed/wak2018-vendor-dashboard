@@ -9,10 +9,12 @@ import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store";
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { UserRole } from "@/features/auth/types/authTypes";
-import type {
-  Order,
-  ProductOrderStatus,
-  ServiceOrderStatus,
+import {
+  PRODUCT_ORDER_STATUS,
+  PRODUCT_ORDER_DELIVERY_TYPE,
+  type Order,
+  type ProductOrderStatus,
+  type ServiceOrderStatus,
 } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -34,8 +36,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/status-badge";
 
-type StatusFilter = "all" | ProductOrderStatus | ServiceOrderStatus;
-type DeliveryTypeFilter = "all" | "local" | "international" | "none";
+type StatusFilter = "all" | `${PRODUCT_ORDER_STATUS}`;
+type DeliveryTypeFilter = "all" | `${PRODUCT_ORDER_DELIVERY_TYPE}`;
 
 function formatDate(iso: string) {
   try {
@@ -58,7 +60,12 @@ export function OrdersListPage() {
   const [page, setPage] = useState(1);
 
   const pQ = useGetProductOrdersQuery(
-    { status: status === "all" ? undefined : (status as ProductOrderStatus), page, limit: 10 },
+    {
+      status: status === "all" ? undefined : (status as ProductOrderStatus),
+      deliveryType: deliveryType === "all" ? undefined : deliveryType,
+      page,
+      limit: 10,
+    },
     { skip: role !== "vendor" }
   );
   const sQ = useGetServiceOrdersQuery(undefined, { skip: role !== "service" });
@@ -68,10 +75,8 @@ export function OrdersListPage() {
     const filtered = all.filter((o) => {
       if (status !== "all" && o.status !== status) return false;
       if (deliveryType !== "all") {
-        const dt = o.deliveryType ?? "none";
-        if (deliveryType === "none" && dt !== null && dt !== "none")
-          return false;
-        if (deliveryType !== "none" && dt !== deliveryType) return false;
+        const dt = o.deliveryType;
+        if (dt !== deliveryType) return false;
       }
       return true;
     });
@@ -106,22 +111,15 @@ export function OrdersListPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="processing">Processing</SelectItem>
-                <SelectItem value="ready">Ready</SelectItem>
-                <SelectItem value="delivery_requested">
-                  Delivery requested
-                </SelectItem>
-                <SelectItem value="shipment_created">
-                  Shipment created
-                </SelectItem>
-                <SelectItem value="delivered">Delivered</SelectItem>
-                <SelectItem value="accepted">Accepted (service)</SelectItem>
-                <SelectItem value="in_progress">
-                  In progress (service)
-                </SelectItem>
-                <SelectItem value="completed">Completed (service)</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.PENDING}>Pending</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.CONFIRMED}>Confirmed</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.PROCESSING}>Processing</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.SHIPPED}>Shipped</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.OUT_FOR_DELIVERY}>Out For Delivery</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.DELIVERED}>Delivered</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.CANCELLED}>Cancelled</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.REFUNDED}>Refunded</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_STATUS.READY_FOR_PICKUP}>Ready For Pickup</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -136,9 +134,8 @@ export function OrdersListPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
-                <SelectItem value="none">Not arranged</SelectItem>
-                <SelectItem value="local">Local</SelectItem>
-                <SelectItem value="international">International</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_DELIVERY_TYPE.LOCAL}>Local</SelectItem>
+                <SelectItem value={PRODUCT_ORDER_DELIVERY_TYPE.INTERNATIONAL}>International</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -67,15 +67,28 @@ export type Service = {
   slug: string;
 };
 
+export enum PRODUCT_ORDER_STATUS {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  PROCESSING = 'processing',
+  SHIPPED = 'shipped',
+  OUT_FOR_DELIVERY = 'out_for_delivery',
+  DELIVERED = 'delivered',
+  CANCELLED = 'cancelled',
+  REFUNDED = 'refunded',
+  READY_FOR_PICKUP = 'ready_for_pickup',
+}
+
+export enum PRODUCT_ORDER_DELIVERY_TYPE {
+  LOCAL = 'local',
+  INTERNATIONAL = 'international',
+}
+
 export type ProductOrderStatus =
-  | "pending"
-  | "confirmed"
-  | "processing"
+  | `${PRODUCT_ORDER_STATUS}`
   | "ready"
   | "delivery_requested"
-  | "shipment_created"
-  | "delivered"
-  | "cancelled";
+  | "shipment_created";
 
 export type ServiceOrderStatus =
   | "pending"

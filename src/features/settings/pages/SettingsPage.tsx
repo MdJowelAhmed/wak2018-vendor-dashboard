@@ -35,11 +35,11 @@ export function SettingsPage() {
           </p>
         </div>
       </div>
-      {sessionUser && (
+      {/* {sessionUser && (
         <p className="text-muted-foreground text-sm">
           Signed in as {sessionUser.email} · role: {sessionUser.role}
         </p>
-      )}
+      )} */}
 
       {section === "profile" ? (
         sessionUser?.role?.includes("service") ? (

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { RootState } from "@/app/store";
-import { useGetProfileQuery } from "@/services/userApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import { ServiceFormPage } from "@/features/services/pages/vendor/ServiceFormPage";
 import type { UserRole } from "@/features/auth/types/authTypes";
 
@@ -31,7 +31,8 @@ export function ServiceCreatePage() {
   const authRole: UserRole | undefined = useSelector(
     (s: RootState) => s.auth.user?.role,
   );
-  const { data: profile } = useGetProfileQuery();
+  const { data: profileRes } = useGetUserProfileQuery();
+  const profile = profileRes?.data;
   const role: UserRole | null = authRole ?? profile?.role ?? null;
   if (role === "service") {
     return <ServiceFormPage mode="create" />;

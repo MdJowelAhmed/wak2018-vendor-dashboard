@@ -35,7 +35,9 @@ export function MessagesPage() {
   const sessionUser = profileRes?.data;
 
   const { data: chats = [], isLoading: isLoadingChats } =
-    useGetChatsQuery("service provider");
+    useGetChatsQuery("service provider", {
+      pollingInterval: 4000,
+    });
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // Automatically select the first chat if none is selected
@@ -48,6 +50,7 @@ export function MessagesPage() {
   const { data: messages = [], isLoading: isLoadingMessages } =
     useGetChatMessagesQuery(activeId!, {
       skip: !activeId,
+      pollingInterval: 3000,
     });
 
   useChatRealtime(activeId || undefined);

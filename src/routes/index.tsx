@@ -57,11 +57,7 @@ const DriverQueuePage = lazy(() =>
     default: m.DriverQueuePage,
   })),
 );
-const MessagesPage = lazy(() =>
-  import("@/features/chat/pages/MessagesPage").then((m) => ({
-    default: m.MessagesPage,
-  })),
-);
+
 const ChatPage = lazy(() =>
   import("@/features/chat/pages/ChatPage").then((m) => ({
     default: m.ChatPage,
@@ -297,7 +293,7 @@ const router = createBrowserRouter([
                   { path: "return-address", element: <ReturnAddressPage /> },
                   { path: "add-return-address", element: <ReturnAddressPage /> },
                   { path: "earnings", element: <EarningsPage /> },
-                  { path: "messages", element: <MessagesPage /> },
+                  { path: "messages", element: <ServiceMessagesPage /> },
                   { path: "chat/:conversationId", element: <ChatPage /> },
                   { path: "analytics", element: <AnalyticsPage /> },
                   { path: "controllers", element: <ControllerManagement /> },

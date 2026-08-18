@@ -37,6 +37,7 @@ import { LogoutModal } from "@/components/LogoutModal";
 import { useAppDispatch } from "@/app/hooks";
 import { logout } from "@/features/auth/authSlice";
 import { useGetUserProfileQuery } from "@/services/profileApi";
+import { connectSocket } from "@/utils/socket";
 import { NotificationDropdown } from "@/features/notifications/components/NotificationDropdown";
 import { cn, getImageUrl } from "@/utils/utils";
 import {
@@ -237,6 +238,10 @@ export function ServiceLayout() {
   const data = profileResponse?.data;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  useEffect(() => {
+    connectSocket();
+  }, []);
 
   useEffect(() => {
     const controllerId = new URLSearchParams(location.search).get("controller");

@@ -12,11 +12,12 @@ export const orderApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getProductOrders: build.query<
       { data: ProductOrder[]; pagination: any },
-      { status?: ProductOrderStatus; page?: number; limit?: number } | void
+      { status?: ProductOrderStatus; deliveryType?: string; page?: number; limit?: number } | void
     >({
       query: (q: any) => {
         const params: Record<string, any> = {};
         if (q?.status) params.status = q.status;
+        if (q?.deliveryType) params.deliveryType = q.deliveryType;
         if (q?.page) params.page = q.page;
         if (q?.limit) params.limit = q.limit;
         return {

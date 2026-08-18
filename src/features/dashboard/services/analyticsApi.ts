@@ -1,5 +1,4 @@
 import { baseApi } from "@/services/baseApi";
-import { DASHBOARD_STATIC_DEMO } from "../hooks/static-demo";
 import type {
   AnalyticsDashboardStats,
   AnalyticsRangeKey,
@@ -31,17 +30,23 @@ export const analyticsApi = baseApi.injectEndpoints({
       transformResponse: (res: any) => {
         const d = res?.data || {};
         return {
-          ...DASHBOARD_STATIC_DEMO,
           totalRevenue: d.totalRevenue ?? 0,
           totalOrders: d.totalOrders ?? 0,
           activeDeliveries: d.activeDeliveries ?? 0,
+          activeServices: d.activeServices ?? 0,
+          revenueWeekly: d.revenueWeekly ?? [],
+          revenueMonthly: d.revenueMonthly ?? [],
+          recentOrders: d.recentOrders ?? [],
+          activeDeliveriesList: d.activeDeliveriesList ?? [],
           products: {
-            ...DASHBOARD_STATIC_DEMO.products,
-            total: d.totalProducts ?? d.totalServices ?? 0,
+            total: d.totalProducts ?? d.products?.total ?? 0,
+            lowStockCount: d.lowStockCount ?? d.products?.lowStockCount ?? 0,
+            topProduct: d.topProduct ?? d.products?.topProduct ?? { id: "—", name: "—" },
           },
           services: {
-            ...DASHBOARD_STATIC_DEMO.services,
-            total: d.totalServices ?? 0,
+            total: d.totalServices ?? d.services?.total ?? 0,
+            active: d.activeServices ?? d.services?.active ?? 0,
+            topService: d.topService ?? d.services?.topService ?? { id: "—", name: "—" },
           },
         };
       },

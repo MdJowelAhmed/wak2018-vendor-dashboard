@@ -15,7 +15,7 @@ import {
   useRequestLocalDeliveryMutation,
 } from "@/features/delivery";
 import { useUpdateProductOrderStatusMutation } from "@/features/orders";
-import { useGetProfileQuery } from "@/services/userApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import { cn } from "@/utils/utils";
 import {
   DeliveryTypeSelector,
@@ -40,7 +40,8 @@ export function DeliveryModal({
   disabled?: boolean;
   onDone?: () => void;
 }) {
-  const { data: profile } = useGetProfileQuery();
+  const { data: profileRes } = useGetUserProfileQuery();
+  const profile = profileRes?.data;
   const vendorId =
     profile?.id ?? localStorage.getItem("vendor_id") ?? "demo-vendor";
   const vendorPickup =

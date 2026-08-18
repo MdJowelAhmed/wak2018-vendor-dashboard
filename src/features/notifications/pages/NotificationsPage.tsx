@@ -14,21 +14,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/utils/utils";
-import {
-  vendorNotifications,
-  serviceNotifications,
-} from "../data/mockNotifications";
 import type { NotificationItem } from "../types";
 
 type NotificationsPageProps = {
   role: "vendor" | "service";
 };
 
-export function NotificationsPage({ role }: NotificationsPageProps) {
-  const initialList =
-    role === "vendor" ? vendorNotifications : serviceNotifications;
+export function NotificationsPage({ role: _role }: NotificationsPageProps) {
   const [notifications, setNotifications] =
-    useState<NotificationItem[]>(initialList);
+    useState<NotificationItem[]>([]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

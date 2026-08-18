@@ -18,7 +18,6 @@ import type {
   RevenueChartPoint,
   ServiceOrder,
 } from "@/types/api";
-import { DASHBOARD_STATIC_DEMO } from "./static-demo";
 import type { UserRole } from "@/features/auth/types/authTypes";
 
 const demoEnabled = () => import.meta.env.VITE_DASHBOARD_DEMO !== "false";
@@ -150,10 +149,8 @@ function buildFromAnalytics(
     totalOrders: role === "vendor" ? a.productOrders : a.serviceOrders,
     activeDeliveries: role === "vendor" ? a.pendingDeliveries : 0,
     activeServices: role === "service" ? a.servicesCount : 0,
-    revenueWeekly: series.length ? series : DASHBOARD_STATIC_DEMO.revenueWeekly,
-    revenueMonthly: DASHBOARD_STATIC_DEMO.revenueMonthly.map((p) =>
-      role === "vendor" ? { ...p, service: 0 } : { ...p, product: 0 },
-    ),
+    revenueWeekly: series,
+    revenueMonthly: [],
     recentOrders:
       role === "vendor"
         ? buildRecentFromOrders(p, [])
@@ -318,28 +315,7 @@ export function useDashboardViewModel(role: UserRole | null) {
         refetch,
       };
     }
-    if (useDemo) {
-      return {
-        data: augment(
-          { ...DASHBOARD_STATIC_DEMO },
-          pOrdersQ.data,
-          sOrdersQ.data,
-          delQ.data,
-          productsQ.data,
-          servicesQ.data?.data,
-          resolvedRole,
-        ),
-        meta: {
-          productOrdersCount,
-          serviceOrdersCount,
-          serviceCompletedCount,
-        },
-        isDemo: true,
-        isLoading: false,
-        isError: false,
-        refetch,
-      };
-    }
+
     if (analyticsQ.data) {
       const built = buildFromAnalytics(
         analyticsQ.data,

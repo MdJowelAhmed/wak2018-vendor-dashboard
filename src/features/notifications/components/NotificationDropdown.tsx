@@ -20,10 +20,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/utils/utils";
-import {
-  vendorNotifications,
-  serviceNotifications,
-} from "../data/mockNotifications";
 import type { NotificationItem } from "../types";
 
 type NotificationDropdownProps = {
@@ -32,14 +28,11 @@ type NotificationDropdownProps = {
 };
 
 export function NotificationDropdown({
-  role,
+  role: _role,
   viewAllUrl,
 }: NotificationDropdownProps) {
   const navigate = useNavigate();
-  const initialData =
-    role === "vendor" ? vendorNotifications : serviceNotifications;
-  const [notifications, setNotifications] =
-    useState<NotificationItem[]>(initialData);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [open, setOpen] = useState(false);
 
   const unreadCount = notifications.filter((n) => !n.read).length;

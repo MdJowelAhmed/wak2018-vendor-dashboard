@@ -66,12 +66,11 @@ export const deliveryApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getDeliveryRequests: build.query<
       Delivery[],
-      { searchTerm?: string; status?: string } | void
+      { searchTerm?: string } | void
     >({
       query: (arg) => {
         const params: Record<string, any> = {};
         if (arg?.searchTerm) params.searchTerm = arg.searchTerm;
-        if (arg?.status) params.status = arg.status;
         return {
           url: "/vendors/delivery-requests/",
           params,

@@ -29,10 +29,6 @@ function sortByCreatedDesc(a: Delivery, b: Delivery) {
   return b.createdAt > a.createdAt ? 1 : -1;
 }
 
-type Filters = {
-  status: string;
-};
-
 export function DeliveryRequestsPage() {
   // Real-time readiness (socket is stubbed in demo mode).
   // listenDeliveryUpdates(): prepared alias for future custom subscriptions.
@@ -42,11 +38,9 @@ export function DeliveryRequestsPage() {
   listenDeliveryUpdates();
 
   const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState<Filters>({ status: "" });
 
   const { data, isLoading, isError } = useGetDeliveryRequestsQuery({
     searchTerm: search.trim() || undefined,
-    status: filters.status || undefined,
   });
 
   const productOrdersQ = useGetProductOrdersQuery();
@@ -81,31 +75,16 @@ export function DeliveryRequestsPage() {
   const filteredSorted = useMemo(() => {
     const q = search.trim().toLowerCase();
 
-    let out = rows.filter((d) => {
-      const status = String(d.deliveryStatus ?? "").toLowerCase();
-      if (filters.status) {
-        const f = filters.status.toLowerCase();
-        const ok =
-          (f === "pending" &&
-            (status === "pending" || status === "requested")) ||
-          (f === "in_transit" &&
-            (status === "in_transit" || status === "picked_up")) ||
-          status === f;
-        if (!ok) return false;
-      }
-
+    return rows.filter((d) => {
       if (q) {
         const customer =
           customerNameByOrderId.get(d.orderId)?.toLowerCase() ?? "";
         const orderId = (d.orderId ?? "").toLowerCase();
         if (!orderId.includes(q) && !customer.includes(q)) return false;
       }
-
       return true;
     });
-
-    return out;
-  }, [rows, search, filters.status, customerNameByOrderId]);
+  }, [rows, search, customerNameByOrderId]);
 
   const local = useMemo(
     () => filteredSorted.filter((d) => (d.type ?? "local") !== "international"),
@@ -206,37 +185,9 @@ export function DeliveryRequestsPage() {
                   placeholder="Search by Order ID or Customer name"
                   className="bg-white border border-gray-200 rounded-xl shadow-sm"
                 />
-
-                <select
-                  className="h-9 bg-white border border-gray-200 rounded-xl shadow-sm px-3 text-sm"
-                  value={filters.status}
-                  onChange={(e) => {
-                    setFilters((p) => ({ ...p, status: e.target.value }));
-                    setPage(1);
-                  }}
-                >
-                  <option value="">All</option>
-                  <option value="pending">Pending</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="in_transit">In Transit</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setSearch("");
-                    setFilters({ status: "" });
-                    setPage(1);
-                  }}
-                >
-                  Reset
-                </Button>
-              </div>
+              
             </div>
           </div>
 

@@ -14,7 +14,6 @@ import {
   PRODUCT_ORDER_DELIVERY_TYPE,
   type Order,
   type ProductOrderStatus,
-  type ServiceOrderStatus,
 } from "@/types/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

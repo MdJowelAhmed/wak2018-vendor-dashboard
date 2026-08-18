@@ -67,25 +67,31 @@ export type Service = {
   slug: string;
 };
 
-export enum PRODUCT_ORDER_STATUS {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed',
-  PROCESSING = 'processing',
-  SHIPPED = 'shipped',
-  OUT_FOR_DELIVERY = 'out_for_delivery',
-  DELIVERED = 'delivered',
-  CANCELLED = 'cancelled',
-  REFUNDED = 'refunded',
-  READY_FOR_PICKUP = 'ready_for_pickup',
-}
+export const PRODUCT_ORDER_STATUS = {
+  PENDING: "pending",
+  CONFIRMED: "confirmed",
+  PROCESSING: "processing",
+  SHIPPED: "shipped",
+  OUT_FOR_DELIVERY: "out_for_delivery",
+  DELIVERED: "delivered",
+  CANCELLED: "cancelled",
+  REFUNDED: "refunded",
+  READY_FOR_PICKUP: "ready_for_pickup",
+} as const;
 
-export enum PRODUCT_ORDER_DELIVERY_TYPE {
-  LOCAL = 'local',
-  INTERNATIONAL = 'international',
-}
+export type PRODUCT_ORDER_STATUS =
+  (typeof PRODUCT_ORDER_STATUS)[keyof typeof PRODUCT_ORDER_STATUS];
+
+export const PRODUCT_ORDER_DELIVERY_TYPE = {
+  LOCAL: "local",
+  INTERNATIONAL: "international",
+} as const;
+
+export type PRODUCT_ORDER_DELIVERY_TYPE =
+  (typeof PRODUCT_ORDER_DELIVERY_TYPE)[keyof typeof PRODUCT_ORDER_DELIVERY_TYPE];
 
 export type ProductOrderStatus =
-  | `${PRODUCT_ORDER_STATUS}`
+  | PRODUCT_ORDER_STATUS
   | "ready"
   | "delivery_requested"
   | "shipment_created";

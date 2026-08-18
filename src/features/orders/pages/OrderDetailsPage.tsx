@@ -24,6 +24,8 @@ import type {
   Order,
   ProductOrderStatus,
   ServiceOrderStatus,
+} from "@/types/api";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import { useDeliveryRealtime } from "@/features/delivery";
 import {
   orderDetailsButtonMotionProps,
@@ -73,6 +75,9 @@ export function OrderDetailsPage() {
     { orderId: id ?? "" },
     { skip: !id, pollingInterval: 4000 },
   );
+
+  const { data: profileRes } = useGetUserProfileQuery();
+  const profile = profileRes?.data;
 
   const [updateP] = useUpdateProductOrderStatusMutation();
   const [updateS] = useUpdateServiceOrderStatusMutation();

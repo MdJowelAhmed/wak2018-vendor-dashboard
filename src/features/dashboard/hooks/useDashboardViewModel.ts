@@ -64,6 +64,10 @@ function mapProductStatus(s: ProductOrder["status"]): {
       display: "Delivery Requested",
       key: "shipment_created",
     },
+    shipped: { display: "Delivery Requested", key: "shipped" },
+    out_for_delivery: { display: "Delivery Requested", key: "out_for_delivery" },
+    ready_for_pickup: { display: "Ready", key: "ready_for_pickup" },
+    refunded: { display: "Cancelled", key: "refunded" },
     delivered: { display: "Delivered", key: "delivered" },
     cancelled: { display: "Cancelled", key: "cancelled" },
   };

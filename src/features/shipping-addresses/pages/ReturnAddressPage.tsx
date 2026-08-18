@@ -34,7 +34,7 @@ import {
 import type { ShippingAddressPayload } from "../types/shippingAddressTypes";
 
 export function ReturnAddressPage() {
-  const { data: addressResponse, isLoading, isFetching } =
+  const { data: addressResponse, isLoading } =
     useGetShippingAddressesQuery();
   const [createAddress, { isLoading: isCreating }] =
     useCreateShippingAddressMutation();

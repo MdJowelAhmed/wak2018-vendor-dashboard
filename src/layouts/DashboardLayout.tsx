@@ -51,7 +51,6 @@ const vendorNav: MenuItem[] = [
   { to: "/vendor/products", label: "Products", icon: Package },
   { to: "/vendor/orders", label: "Orders", icon: ShoppingCart },
   { to: "/vendor/delivery-requests", label: "Delivery requests", icon: Truck },
-  { to: "/vendor/add-return-address", label: "Add Return Address", icon: MapPin },
   { to: "/vendor/earnings", label: "Earnings & Payouts", icon: Wallet },
   { to: "/vendor/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/vendor/customers", label: "Customer management", icon: Users },
@@ -89,7 +88,6 @@ export function VendorLayout() {
         if (i.to === "/vendor/products") return allowed.has("products");
         if (i.to === "/vendor/orders") return allowed.has("orders");
         if (i.to === "/vendor/delivery-requests") return allowed.has("deliveries");
-        if (i.to === "/vendor/add-return-address") return allowed.has("deliveries") || allowed.has("settings") || true;
         if (i.to === "/vendor/earnings") return allowed.has("earnings");
         if (i.to === "/vendor/analytics") return allowed.has("analytics");
         if (i.to === "/vendor/customers") return allowed.has("customers");
@@ -225,7 +223,7 @@ export function VendorLayout() {
                         className={cn(
                           "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
                           openSettings
-                            ? "max-h-40 opacity-100"
+                            ? "max-h-60 opacity-100"
                             : "max-h-0 opacity-0",
                         )}
                       >
@@ -238,6 +236,10 @@ export function VendorLayout() {
                             {
                               to: "/vendor/settings/security",
                               label: "Security",
+                            },
+                            {
+                              to: "/vendor/settings/return-address",
+                              label: "Add Return Address",
                             },
                             { to: "/vendor/settings/legal", label: "Legal" },
                             {

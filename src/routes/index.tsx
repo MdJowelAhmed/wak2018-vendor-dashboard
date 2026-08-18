@@ -308,6 +308,8 @@ const router = createBrowserRouter([
                   { path: "settings", element: <SettingsPage /> },
                   { path: "settings/profile", element: <SettingsPage /> },
                   { path: "settings/security", element: <SettingsPage /> },
+                  { path: "settings/return-address", element: <SettingsPage /> },
+                  { path: "settings/add-return-address", element: <SettingsPage /> },
                   { path: "settings/legal", element: <SettingsPage /> },
                   { path: "settings/support", element: <SettingsPage /> },
                 ],

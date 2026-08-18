@@ -41,7 +41,13 @@ export function DeliveryRequestsPage() {
   }
   listenDeliveryUpdates();
 
-  const { data, isLoading, isError } = useGetDeliveryRequestsQuery();
+  const [search, setSearch] = useState("");
+  const [filters, setFilters] = useState<Filters>({ status: "" });
+
+  const { data, isLoading, isError } = useGetDeliveryRequestsQuery({
+    searchTerm: search.trim() || undefined,
+    status: filters.status || undefined,
+  });
 
   const productOrdersQ = useGetProductOrdersQuery();
   const serviceOrdersQ = useGetServiceOrdersQuery();
@@ -56,9 +62,6 @@ export function DeliveryRequestsPage() {
   const [activeTab, setActiveTab] = useState<"local" | "international">(
     "local",
   );
-
-  const [search, setSearch] = useState("");
-  const [filters, setFilters] = useState<Filters>({ status: "" });
   const [page, setPage] = useState(1);
   const itemsPerPage = 6;
 

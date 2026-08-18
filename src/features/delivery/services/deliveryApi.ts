@@ -64,8 +64,19 @@ function mapDeliveryData(d: any): Delivery {
 
 export const deliveryApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getDeliveryRequests: build.query<Delivery[], void>({
-      query: () => "/vendors/delivery-requests/",
+    getDeliveryRequests: build.query<
+      Delivery[],
+      { searchTerm?: string; status?: string } | void
+    >({
+      query: (arg) => {
+        const params: Record<string, any> = {};
+        if (arg?.searchTerm) params.searchTerm = arg.searchTerm;
+        if (arg?.status) params.status = arg.status;
+        return {
+          url: "/vendors/delivery-requests/",
+          params,
+        };
+      },
       transformResponse: (res: any) => {
         const data = res?.data || [];
         return data.map(mapDeliveryData);

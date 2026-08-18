@@ -222,7 +222,7 @@ export function VendorLayout() {
                         className={cn(
                           "overflow-hidden transition-[max-height,opacity] duration-200 ease-out",
                           openSettings
-                            ? "max-h-40 opacity-100"
+                            ? "max-h-60 opacity-100"
                             : "max-h-0 opacity-0",
                         )}
                       >
@@ -235,6 +235,10 @@ export function VendorLayout() {
                             {
                               to: "/vendor/settings/security",
                               label: "Security",
+                            },
+                            {
+                              to: "/vendor/settings/return-address",
+                              label: "Add Return Address",
                             },
                             { to: "/vendor/settings/legal", label: "Legal" },
                             {

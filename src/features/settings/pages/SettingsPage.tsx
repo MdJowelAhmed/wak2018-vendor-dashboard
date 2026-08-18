@@ -6,6 +6,7 @@ import { ServiceProfileSettings } from "@/features/settings/components/ServicePr
 import { SecuritySettings } from "@/features/settings/components/SecuritySettings";
 import { LegalSettings } from "@/features/settings/components/LegalSettings";
 import { SupportSettings } from "@/features/settings/components/SupportSettings";
+import { ReturnAddressPage } from "@/features/shipping-addresses/pages/ReturnAddressPage";
 
 export function SettingsPage() {
   const location = useLocation();
@@ -16,11 +17,13 @@ export function SettingsPage() {
   const p = location.pathname;
   const section = p.endsWith("/security")
     ? "security"
-    : p.endsWith("/legal")
-      ? "legal"
-      : p.endsWith("/support")
-        ? "support"
-        : "profile";
+    : p.endsWith("/return-address") || p.endsWith("/add-return-address")
+      ? "return-address"
+      : p.endsWith("/legal")
+        ? "legal"
+        : p.endsWith("/support")
+          ? "support"
+          : "profile";
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -28,15 +31,15 @@ export function SettingsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Settings</h1>
           <p className="text-muted-foreground">
-            Profile, security, legal documents, and support.
+            Profile, security, return address, legal documents, and support.
           </p>
         </div>
       </div>
-      {sessionUser && (
+      {/* {sessionUser && (
         <p className="text-muted-foreground text-sm">
           Signed in as {sessionUser.email} · role: {sessionUser.role}
         </p>
-      )}
+      )} */}
 
       {section === "profile" ? (
         sessionUser?.role?.includes("service") ? (
@@ -46,8 +49,10 @@ export function SettingsPage() {
         )
       ) : null}
       {section === "security" ? <SecuritySettings /> : null}
+      {section === "return-address" ? <ReturnAddressPage /> : null}
       {section === "legal" ? <LegalSettings /> : null}
       {section === "support" ? <SupportSettings /> : null}
     </div>
   );
 }
+

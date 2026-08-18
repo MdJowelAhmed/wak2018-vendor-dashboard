@@ -7,7 +7,7 @@ import {
 } from "@/features/orders";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/app/store";
-import { useGetProfileQuery } from "@/services/userApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { UserRole } from "@/features/auth/types/authTypes";
 import type {
   Order,
@@ -39,7 +39,7 @@ type DeliveryTypeFilter = "all" | "local" | "international" | "none";
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleString();
+    return new Date(iso).toLocaleDateString();
   } catch {
     return iso;
   }
@@ -49,7 +49,8 @@ export function OrdersListPage() {
   const authRole: UserRole | undefined = useSelector(
     (s: RootState) => s.auth.user?.role,
   );
-  const { data: profile } = useGetProfileQuery();
+  const { data: profileRes } = useGetUserProfileQuery();
+  const profile = profileRes?.data;
   const role: UserRole | null = authRole ?? profile?.role ?? null;
 
   const [status, setStatus] = useState<StatusFilter>("all");

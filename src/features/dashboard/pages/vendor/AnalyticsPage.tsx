@@ -3,7 +3,7 @@ import {
   useGetDashboardOverviewQuery,
   useGetMonthlyRevenueQuery,
 } from "@/features/dashboard";
-import { useGetProfileQuery } from "@/services/userApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { AnalyticsRevenuePoint } from "@/types/api";
 import { AnalyticsKPI } from "@/features/dashboard/components/analytics/AnalyticsKPI";
 import { RevenueChart } from "@/features/dashboard/components/analytics/RevenueChart";
@@ -13,7 +13,8 @@ function roleKey(role: string | undefined): "vendor" | "service" {
 }
 
 export function AnalyticsPage() {
-  const { data: profile } = useGetProfileQuery();
+  const { data: profileRes } = useGetUserProfileQuery();
+  const profile = profileRes?.data;
   const role = useMemo(() => roleKey(profile?.role), [profile?.role]);
 
   const [year, setYear] = useState<number>(new Date().getFullYear());

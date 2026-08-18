@@ -2,7 +2,7 @@ import { useSelector } from "react-redux";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import type { RootState } from "@/app/store";
-import { useGetProfileQuery } from "@/services/userApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import { useDashboardViewModel } from "@/features/dashboard/hooks/useDashboardViewModel";
 import { VendorDashboard } from "./VendorDashboard";
 import { ServiceDashboard } from "./ServiceDashboard";
@@ -14,7 +14,8 @@ export function DashboardOverview() {
   const authRole: UserRole | undefined = useSelector(
     (s: RootState) => s.auth.user?.role,
   );
-  const { data: profile } = useGetProfileQuery();
+  const { data: profileRes } = useGetUserProfileQuery();
+  const profile = profileRes?.data;
   const role: UserRole | null = authRole ?? profile?.role ?? null;
 
   const { data, meta, isLoading, isError, refetch } =

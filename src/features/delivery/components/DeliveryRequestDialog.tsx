@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useCreateDeliveryRequestMutation } from "@/features/delivery";
-import { useGetProfileQuery } from "@/services/userApi";
+import { useGetUserProfileQuery } from "@/services/profileApi";
 import { useUpdateProductOrderStatusMutation } from "@/features/orders";
 import type { ProductOrder } from "@/types/api";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,8 @@ type Props = {
 };
 
 export function RequestDeliveryButton({ order, onSent, disabled }: Props) {
-  const { data: profile } = useGetProfileQuery();
+  const { data: profileRes } = useGetUserProfileQuery();
+  const profile = profileRes?.data;
   const [open, setOpen] = useState(false);
   const [pickup, setPickup] = useState("");
   const [drop, setDrop] = useState("");

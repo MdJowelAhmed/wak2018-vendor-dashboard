@@ -132,6 +132,11 @@ const ControllerManagement = lazy(() =>
     default: m.ControllerManagement,
   })),
 );
+const ReturnAddressPage = lazy(() =>
+  import("@/features/shipping-addresses/pages/ReturnAddressPage").then((m) => ({
+    default: m.ReturnAddressPage,
+  })),
+);
 const ServiceOnboardingPage = lazy(() =>
   import("@/features/auth/pages/onboarding/service/ServiceOnboardingPage").then(
     (m) => ({ default: m.ServiceOnboardingPage }),
@@ -289,6 +294,8 @@ const router = createBrowserRouter([
                     path: "delivery-requests",
                     element: <DeliveryRequestsPage />,
                   },
+                  { path: "return-address", element: <ReturnAddressPage /> },
+                  { path: "add-return-address", element: <ReturnAddressPage /> },
                   { path: "earnings", element: <EarningsPage /> },
                   { path: "messages", element: <MessagesPage /> },
                   { path: "chat/:conversationId", element: <ChatPage /> },

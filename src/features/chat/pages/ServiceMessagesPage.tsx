@@ -384,7 +384,7 @@ export function MessagesPage() {
                                   {mine && (m.customOffer?.status === "pending" || !m.customOffer?.status) ? (
                                     <Button
                                       type="button"
-                                      className="w-full bg-[#895129] hover:bg-[#7b4723] text-white rounded-xl py-2.5 text-sm font-medium transition"
+                                      className="w-full bg-[#895129] hover:bg-[#7b4723] cursor-pointer text-white rounded-xl py-2.5 text-sm font-medium transition"
                                       disabled={isWithdrawing}
                                       onClick={() =>
                                         handleWithdrawOffer(m.customOffer?.offer || m._id)

@@ -372,6 +372,8 @@ export type CustomerListRow = {
   id: string;
   name: string;
   avatarUrl?: string;
+  email?: string;
+  phone?: string;
   country?: string;
   tags: CustomerTag[];
   totalSpend: number;

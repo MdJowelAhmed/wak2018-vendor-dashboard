@@ -18,9 +18,12 @@ import {
   useGetChatsQuery,
   useGetChatMessagesQuery,
   useSendMessageMutation,
+  useSendCustomOfferForServiceProviderMutation,
+  useWithdrawCustomOfferMutation,
 } from "@/features/chat/services/messageApi";
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { ChatMessage as APIMessage } from "@/types/api";
+import { type OfferFormValues } from "@/features/chat/components/SendOfferModal";
 
 type PendingAttachment = {
   id: string;
@@ -35,7 +38,7 @@ export function MessagesPage() {
   const sessionUser = profileRes?.data;
 
   const { data: chats = [], isLoading: isLoadingChats } =
-    useGetChatsQuery("service provider", {
+    useGetChatsQuery(undefined, {
       pollingInterval: 4000,
     });
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -55,8 +58,25 @@ export function MessagesPage() {
 
   useChatRealtime(activeId || undefined);
 
+  const isServiceProvider =
+    sessionUser?.role === "service" ||
+    sessionUser?.role === "service_provider";
+
   const [sendMessageMutation, { isLoading: isSending }] =
     useSendMessageMutation();
+  const [sendCustomOfferMutation, { isLoading: isSendingOffer }] =
+    useSendCustomOfferForServiceProviderMutation();
+  const [withdrawOfferMutation, { isLoading: isWithdrawing }] =
+    useWithdrawCustomOfferMutation();
+
+  async function handleWithdrawOffer(offerId: string) {
+    try {
+      await withdrawOfferMutation({ id: offerId, chatId: active?._id }).unwrap();
+      toast.success("Custom offer withdrawn successfully!");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to withdraw offer");
+    }
+  }
 
   const [draft, setDraft] = useState("");
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
@@ -103,9 +123,33 @@ export function MessagesPage() {
     setPendingFiles((prev) => prev.filter((p) => p.id !== id));
   }
 
-  function sendOfferFromModal() {
-    // Left empty for now, as offer messages are custom to the UI
-    toast.success("Offers feature coming soon to real API!");
+  async function sendOfferFromModal(values: OfferFormValues) {
+    if (!active) return;
+    const customerId =
+      active.anotherParticipant?._id ||
+      active.participants?.find((p: any) => p._id !== sessionUser?._id)?._id ||
+      active.participants?.[0]?._id;
+
+    if (!customerId) {
+      toast.error("Customer ID not found for this conversation");
+      return;
+    }
+
+    try {
+      await sendCustomOfferMutation({
+        customer: customerId,
+        service: values.service,
+        title: values.title,
+        description: values.description,
+        notes: values.notes,
+        price: values.price,
+        chat: active._id,
+      }).unwrap();
+      toast.success("Custom offer sent successfully!");
+      setOfferOpen(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to send custom offer");
+    }
   }
 
   async function send() {
@@ -190,6 +234,7 @@ export function MessagesPage() {
         onOpenChange={setOfferOpen}
         defaultTitle={offerDefaultTitle}
         onSend={sendOfferFromModal}
+        isLoading={isSendingOffer}
       />
 
       <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
@@ -262,22 +307,24 @@ export function MessagesPage() {
                       {getOtherParticipantName(active)}
                     </CardTitle>
                   </div>
-                  <div className="flex flex-row flex-wrap items-center gap-2.5 sm:gap-3 sm:shrink-0">
-                    <Button
-                      type="button"
-                      aria-label="Send offer"
-                      className="h-10 min-h-10 shrink-0 bg-[#895129] px-3.5 text-sm leading-none hover:bg-[#7b4723]"
-                      onClick={() => setOfferOpen(true)}
-                    >
-                      <Send className="size-4 shrink-0" />
-                      <span className="hidden sm:inline">Send Offer</span>
-                    </Button>
-                    <Badge
+                  <div className="flex flex-row flex-wrap items-center gap-2.5 sm:gap-3 sm:shrink-0 mb-1">
+                    {isServiceProvider ? (
+                      <Button
+                        type="button"
+                        aria-label="Send offer"
+                        className="h-10 min-h-10 shrink-0 bg-[#895129] px-3.5 text-sm leading-none hover:bg-[#7b4723]"
+                        onClick={() => setOfferOpen(true)}
+                      >
+                        <Send className="size-4 shrink-0" />
+                        <span className="hidden sm:inline">Send Offer</span>
+                      </Button>
+                    ) : null}
+                    {/* <Badge
                       variant="outline"
                       className="h-10 min-h-10 shrink-0 rounded-full border-emerald-200 bg-emerald-50 px-3 py-0 text-xs font-medium leading-none text-emerald-700"
                     >
                       Online
-                    </Badge>
+                    </Badge> */}
                   </div>
                 </div>
               </CardHeader>
@@ -309,73 +356,129 @@ export function MessagesPage() {
                               mine ? "justify-end" : "justify-start",
                             )}
                           >
-                            <div
-                              className={cn(
-                                "max-w-[78%] rounded-2xl px-4 py-2 text-sm shadow-sm",
-                                mine
-                                  ? "bg-[#895129] text-white"
-                                  : "bg-muted text-foreground",
-                              )}
-                            >
-                              {m.text ? (
-                                <div className="whitespace-pre-wrap">
-                                  {m.text}
+                              {m.type === "custom_offer" || m.customOffer ? (
+                                <div className="w-full max-w-[320px] rounded-2xl border border-amber-200/80 bg-[#FFF8F0] p-4 text-left shadow-sm space-y-3">
+                                  <div className="flex items-center gap-2 font-semibold text-gray-900">
+                                    <span className="text-lg">💰</span>
+                                    <span>Custom Offer</span>
+                                  </div>
+
+                                  {m.customOffer?.title ? (
+                                    <div className="font-bold text-gray-900 text-sm leading-snug">
+                                      {m.customOffer.title}
+                                    </div>
+                                  ) : null}
+
+                                  {m.customOffer?.description ? (
+                                    <div className="text-xs text-gray-600 leading-relaxed">
+                                      {m.customOffer.description}
+                                    </div>
+                                  ) : null}
+
+                                  {m.customOffer?.price !== undefined ? (
+                                    <div className="text-2xl font-bold text-[#E65100]">
+                                      ${m.customOffer.price}
+                                    </div>
+                                  ) : null}
+
+                                  {mine && (m.customOffer?.status === "pending" || !m.customOffer?.status) ? (
+                                    <Button
+                                      type="button"
+                                      className="w-full bg-[#895129] hover:bg-[#7b4723] cursor-pointer text-white rounded-xl py-2.5 text-sm font-medium transition"
+                                      disabled={isWithdrawing}
+                                      onClick={() =>
+                                        handleWithdrawOffer(m.customOffer?.offer || m._id)
+                                      }
+                                    >
+                                      {isWithdrawing ? "Withdrawing..." : "Withdraw Offer"}
+                                    </Button>
+                                  ) : m.customOffer?.status ? (
+                                    <div className="pt-1">
+                                      <Badge
+                                        variant="outline"
+                                        className={cn(
+                                          "capitalize px-3 py-1 text-xs font-semibold rounded-full",
+                                          m.customOffer.status === "accepted"
+                                            ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+                                            : m.customOffer.status === "withdrawn"
+                                            ? "border-amber-300 bg-amber-50 text-amber-800"
+                                            : "border-rose-300 bg-rose-50 text-rose-700"
+                                        )}
+                                      >
+                                        {m.customOffer.status}
+                                      </Badge>
+                                    </div>
+                                  ) : null}
                                 </div>
-                              ) : null}
-                              {m.attachment && m.type === "image" ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setPreviewImage(getImageUrl(m.attachment))
-                                  }
+                              ) : (
+                                <div
                                   className={cn(
-                                    "block text-left",
-                                    m.text ? "mt-2" : "",
-                                  )}
-                                >
-                                  <img
-                                    src={getImageUrl(m.attachment)}
-                                    alt={"attachment"}
-                                    className="h-auto w-[200px] max-w-full rounded-xl object-cover hover:opacity-90 transition-opacity cursor-pointer"
-                                  />
-                                </button>
-                              ) : null}
-                              {m.attachment && m.type === "file" ? (
-                                <a
-                                  href={getImageUrl(m.attachment)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className={cn(
-                                    "mt-2 inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-sm",
+                                    "max-w-[78%] rounded-2xl px-4 py-2 text-sm shadow-sm",
                                     mine
-                                      ? "bg-white/10 text-white hover:bg-white/15"
-                                      : "bg-background/60 hover:bg-background",
+                                      ? "bg-[#895129] text-white"
+                                      : "bg-muted text-foreground",
                                   )}
                                 >
-                                  <FileText
+                                  {m.text ? (
+                                    <div className="whitespace-pre-wrap">
+                                      {m.text}
+                                    </div>
+                                  ) : null}
+                                  {m.attachment && m.type === "image" ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setPreviewImage(getImageUrl(m.attachment))
+                                      }
+                                      className={cn(
+                                        "block text-left",
+                                        m.text ? "mt-2" : "",
+                                      )}
+                                    >
+                                      <img
+                                        src={getImageUrl(m.attachment)}
+                                        alt={"attachment"}
+                                        className="h-auto w-[200px] max-w-full rounded-xl object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                                      />
+                                    </button>
+                                  ) : null}
+                                  {m.attachment && m.type === "file" ? (
+                                    <a
+                                      href={getImageUrl(m.attachment)}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className={cn(
+                                        "mt-2 inline-flex items-center gap-2 rounded-xl border border-border/60 px-3 py-2 text-sm",
+                                        mine
+                                          ? "bg-white/10 text-white hover:bg-white/15"
+                                          : "bg-background/60 hover:bg-background",
+                                      )}
+                                    >
+                                      <FileText
+                                        className={cn(
+                                          "size-4",
+                                          mine
+                                            ? "text-white/90"
+                                            : "text-muted-foreground",
+                                        )}
+                                      />
+                                      <span className="truncate max-w-[220px]">
+                                        Document File
+                                      </span>
+                                    </a>
+                                  ) : null}
+                                  <div
                                     className={cn(
-                                      "size-4",
+                                      "mt-1 flex items-center justify-end gap-2 text-[11px]",
                                       mine
-                                        ? "text-white/90"
+                                        ? "text-white/80"
                                         : "text-muted-foreground",
                                     )}
-                                  />
-                                  <span className="truncate max-w-[220px]">
-                                    Document File
-                                  </span>
-                                </a>
-                              ) : null}
-                              <div
-                                className={cn(
-                                  "mt-1 flex items-center justify-end gap-2 text-[11px]",
-                                  mine
-                                    ? "text-white/80"
-                                    : "text-muted-foreground",
-                                )}
-                              >
-                                <span>{timeString}</span>
-                              </div>
-                            </div>
+                                  >
+                                    <span>{timeString}</span>
+                                  </div>
+                                </div>
+                              )}
                           </div>
                         );
                       })

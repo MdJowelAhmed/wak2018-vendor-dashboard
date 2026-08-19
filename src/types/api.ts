@@ -51,6 +51,7 @@ export type Service = {
   _id: string;
   creator: string;
   name: string;
+  title?: string;
   category: string;
   price: number;
   image: string;
@@ -447,13 +448,22 @@ export type Chat = {
   anotherParticipant?: Participant;
 };
 
+export type CustomOfferDetail = {
+  offer?: string;
+  title: string;
+  description: string;
+  price: number;
+  status: "pending" | "accepted" | "rejected" | "withdrawn" | string;
+};
+
 export type ChatMessage = {
   _id: string;
   chat: string;
   sender: Participant | string;
   text: string;
   attachment: string;
-  type: "text" | "image" | "file";
+  type: "text" | "image" | "file" | "custom_offer";
+  customOffer?: CustomOfferDetail;
   seenBy: string[];
   createdAt: string;
   updatedAt?: string;

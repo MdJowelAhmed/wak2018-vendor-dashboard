@@ -49,7 +49,9 @@ export function AnalyticsPage() {
         />
         <AnalyticsKPI
           title="Total Services"
-          value={overviewQ.data?.products?.total}
+          value={
+            overviewQ.data?.services?.total ?? overviewQ.data?.activeServices
+          }
           loading={overviewQ.isLoading}
         />
       </div>

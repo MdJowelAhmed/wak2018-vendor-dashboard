@@ -5,15 +5,25 @@ const tag = { type: "Customers" as const, id: "DETAIL" as const };
 
 export const customerApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getCustomers: build.query<CustomerListRow[], void>({
-      query: () => "/vendors/my-customers",
+    getCustomers: build.query<
+      CustomerListRow[],
+      { role?: "vendor" | "service" } | void
+    >({
+      query: (arg) => {
+        const role = (arg as { role?: "vendor" | "service" })?.role ?? "vendor";
+        return role === "service"
+          ? "/service-providers/my-customers"
+          : "/vendors/my-customers";
+      },
       transformResponse: (res: any) => {
         const data = res?.data || [];
         return data.map((c: any) => ({
           id: c._id,
           name: c.name,
           avatarUrl: c.profileImage,
-          country: c.country,
+          email: c.email,
+          phone: c.phone,
+          country: c.country || c.address,
           tags: c.tags || [],
           totalSpend: c.totalSpend || 0,
           totalOrders: c.ordersCount || 0,
@@ -22,8 +32,17 @@ export const customerApi = baseApi.injectEndpoints({
       },
       providesTags: [tag],
     }),
-    getCustomerDetails: build.query<CustomerDetails, string>({
-      query: (id) => `/vendors/my-customers/${id}`,
+    getCustomerDetails: build.query<
+      CustomerDetails,
+      { id: string; role?: "vendor" | "service" } | string
+    >({
+      query: (arg) => {
+        const id = typeof arg === "string" ? arg : arg.id;
+        const role = typeof arg === "string" ? "vendor" : arg.role ?? "vendor";
+        return role === "service"
+          ? `/service-providers/my-customers/${id}`
+          : `/vendors/my-customers/${id}`;
+      },
       transformResponse: (res: any) => {
         const c = res?.data?.customer || {};
         const s = res?.data?.summary || {};
@@ -34,7 +53,7 @@ export const customerApi = baseApi.injectEndpoints({
           avatarUrl: c.profileImage,
           email: c.email,
           phone: c.phone,
-          country: c.country,
+          country: c.country || c.address,
           tags: s.tags || [],
           lifetimeValue: {
             totalSpend: s.totalSpend || 0,
@@ -55,7 +74,10 @@ export const customerApi = baseApi.injectEndpoints({
           signedUpAt: undefined,
         } as CustomerDetails;
       },
-      providesTags: (_r, _e, id) => [tag, { type: "Customers" as const, id }],
+      providesTags: (_r, _e, arg) => {
+        const id = typeof arg === "string" ? arg : arg.id;
+        return [tag, { type: "Customers" as const, id }];
+      },
     }),
   }),
   overrideExisting: false,

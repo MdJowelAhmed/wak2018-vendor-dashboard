@@ -307,7 +307,7 @@ export function MessagesPage() {
                       {getOtherParticipantName(active)}
                     </CardTitle>
                   </div>
-                  <div className="flex flex-row flex-wrap items-center gap-2.5 sm:gap-3 sm:shrink-0">
+                  <div className="flex flex-row flex-wrap items-center gap-2.5 sm:gap-3 sm:shrink-0 mb-1">
                     {isServiceProvider ? (
                       <Button
                         type="button"
@@ -319,12 +319,12 @@ export function MessagesPage() {
                         <span className="hidden sm:inline">Send Offer</span>
                       </Button>
                     ) : null}
-                    <Badge
+                    {/* <Badge
                       variant="outline"
                       className="h-10 min-h-10 shrink-0 rounded-full border-emerald-200 bg-emerald-50 px-3 py-0 text-xs font-medium leading-none text-emerald-700"
                     >
                       Online
-                    </Badge>
+                    </Badge> */}
                   </div>
                 </div>
               </CardHeader>

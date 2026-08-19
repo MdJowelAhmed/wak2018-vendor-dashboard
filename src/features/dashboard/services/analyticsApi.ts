@@ -125,6 +125,16 @@ export const analyticsApi = baseApi.injectEndpoints({
       },
       providesTags: ["Delivery" as any],
     }),
+    getServiceRecentBookings: build.query<any[], void>({
+      query: () => "/service-providers/recent-bookings",
+      transformResponse: (res: any) => res?.data || [],
+      providesTags: ["Orders" as any],
+    }),
+    getServiceTopServices: build.query<any[], void>({
+      query: () => "/service-providers/top-services",
+      transformResponse: (res: any) => res?.data || [],
+      providesTags: [tag],
+    }),
   }),
   overrideExisting: false,
 });
@@ -138,4 +148,6 @@ export const {
   useGetRecentOrdersQuery,
   useGetActiveDeliveriesQuery,
   useGetMonthlyRevenueQuery,
+  useGetServiceRecentBookingsQuery,
+  useGetServiceTopServicesQuery,
 } = analyticsApi;

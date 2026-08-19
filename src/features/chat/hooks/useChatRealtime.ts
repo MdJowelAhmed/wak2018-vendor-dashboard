@@ -40,7 +40,7 @@ export function useChatRealtime(conversationId?: string) {
         );
       }
       dispatch(
-        messageApi.endpoints.getChats.initiate("", {
+        messageApi.endpoints.getChats.initiate(undefined, {
           subscribe: false,
           forceRefetch: true,
         }),

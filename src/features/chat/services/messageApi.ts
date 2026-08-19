@@ -21,8 +21,11 @@ type SingleResponse<T> = {
 
 export const messageApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
-    getChats: build.query<Chat[], string>({
-      query: (searchTerm = "") => `/chats/mine?searchTerm=${searchTerm}`,
+    getChats: build.query<Chat[], string | void>({
+      query: (searchTerm) =>
+        searchTerm && typeof searchTerm === "string" && searchTerm.trim()
+          ? `/chats/mine?searchTerm=${encodeURIComponent(searchTerm.trim())}`
+          : "/chats/mine",
       transformResponse: (response: PaginatedResponse<Chat[]>) => response.data,
       providesTags: (result) =>
         result

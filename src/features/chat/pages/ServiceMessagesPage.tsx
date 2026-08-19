@@ -35,7 +35,7 @@ export function MessagesPage() {
   const sessionUser = profileRes?.data;
 
   const { data: chats = [], isLoading: isLoadingChats } =
-    useGetChatsQuery("service provider", {
+    useGetChatsQuery(undefined, {
       pollingInterval: 4000,
     });
   const [activeId, setActiveId] = useState<string | null>(null);

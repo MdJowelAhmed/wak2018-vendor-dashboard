@@ -242,7 +242,9 @@ function augment(
 }
 
 export function useDashboardViewModel(role: UserRole | null) {
-  const overviewQ = useGetDashboardOverviewQuery();
+  const overviewQ = useGetDashboardOverviewQuery(
+    role === "service" ? { role: "service" } : { role: "vendor" },
+  );
   const analyticsQ = useGetAnalyticsQuery();
   const pOrdersQ = useGetRecentOrdersQuery();
   const sOrdersQ = useGetServiceOrdersQuery();

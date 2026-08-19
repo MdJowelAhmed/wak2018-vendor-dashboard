@@ -51,6 +51,7 @@ export type Service = {
   _id: string;
   creator: string;
   name: string;
+  title?: string;
   category: string;
   price: number;
   image: string;

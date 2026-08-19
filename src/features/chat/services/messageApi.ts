@@ -69,6 +69,52 @@ export const messageApi = baseApi.injectEndpoints({
         ];
       },
     }),
+
+    sendCustomOfferForServiceProvider: build.mutation<
+      ChatMessage,
+      {
+        customer: string;
+        service: string;
+        title: string;
+        description: string;
+        notes?: string;
+        price: number;
+        chat: string;
+      }
+    >({
+      query: (body) => ({
+        url: `/custom-offers`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: SingleResponse<ChatMessage>) =>
+        response.data,
+      invalidatesTags: (_r, _e, body) => [
+        { type: "Messages" as const, id: body.chat },
+        { type: "Conversations" as const, id: "LIST" },
+      ],
+    }),
+    withdrawCustomOffer: build.mutation<
+      ChatMessage,
+      { id: string; chatId?: string } | string
+    >({
+      query: (arg) => {
+        const id = typeof arg === "string" ? arg : arg.id;
+        return {
+          url: `/custom-offers/${id}/withdraw`,
+          method: "POST",
+        };
+      },
+      transformResponse: (response: SingleResponse<ChatMessage>) =>
+        response.data,
+      invalidatesTags: (_r, _e, arg) => {
+        const chatId = typeof arg === "string" ? undefined : arg.chatId;
+        return [
+          { type: "Messages" as const, id: chatId ?? "LIST" },
+          { type: "Conversations" as const, id: "LIST" },
+        ];
+      },
+    }),
   }),
   overrideExisting: true,
 });
@@ -78,4 +124,7 @@ export const {
   useGetChatMessagesQuery,
   useCreateChatMutation,
   useSendMessageMutation,
+
+  useWithdrawCustomOfferMutation,
+  useSendCustomOfferForServiceProviderMutation,
 } = messageApi;

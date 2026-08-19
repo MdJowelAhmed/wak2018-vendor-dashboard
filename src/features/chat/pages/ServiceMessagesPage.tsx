@@ -18,9 +18,11 @@ import {
   useGetChatsQuery,
   useGetChatMessagesQuery,
   useSendMessageMutation,
+  useSendCustomOfferForServiceProviderMutation,
 } from "@/features/chat/services/messageApi";
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { ChatMessage as APIMessage } from "@/types/api";
+import { type OfferFormValues } from "@/features/chat/components/SendOfferModal";
 
 type PendingAttachment = {
   id: string;
@@ -55,8 +57,14 @@ export function MessagesPage() {
 
   useChatRealtime(activeId || undefined);
 
+  const isServiceProvider =
+    sessionUser?.role === "service" ||
+    sessionUser?.role === "service_provider";
+
   const [sendMessageMutation, { isLoading: isSending }] =
     useSendMessageMutation();
+  const [sendCustomOfferMutation, { isLoading: isSendingOffer }] =
+    useSendCustomOfferForServiceProviderMutation();
 
   const [draft, setDraft] = useState("");
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
@@ -103,9 +111,33 @@ export function MessagesPage() {
     setPendingFiles((prev) => prev.filter((p) => p.id !== id));
   }
 
-  function sendOfferFromModal() {
-    // Left empty for now, as offer messages are custom to the UI
-    toast.success("Offers feature coming soon to real API!");
+  async function sendOfferFromModal(values: OfferFormValues) {
+    if (!active) return;
+    const customerId =
+      active.anotherParticipant?._id ||
+      active.participants?.find((p: any) => p._id !== sessionUser?._id)?._id ||
+      active.participants?.[0]?._id;
+
+    if (!customerId) {
+      toast.error("Customer ID not found for this conversation");
+      return;
+    }
+
+    try {
+      await sendCustomOfferMutation({
+        customer: customerId,
+        service: values.service,
+        title: values.title,
+        description: values.description,
+        notes: values.notes,
+        price: values.price,
+        chat: active._id,
+      }).unwrap();
+      toast.success("Custom offer sent successfully!");
+      setOfferOpen(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to send custom offer");
+    }
   }
 
   async function send() {
@@ -190,6 +222,7 @@ export function MessagesPage() {
         onOpenChange={setOfferOpen}
         defaultTitle={offerDefaultTitle}
         onSend={sendOfferFromModal}
+        isLoading={isSendingOffer}
       />
 
       <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
@@ -263,15 +296,17 @@ export function MessagesPage() {
                     </CardTitle>
                   </div>
                   <div className="flex flex-row flex-wrap items-center gap-2.5 sm:gap-3 sm:shrink-0">
-                    <Button
-                      type="button"
-                      aria-label="Send offer"
-                      className="h-10 min-h-10 shrink-0 bg-[#895129] px-3.5 text-sm leading-none hover:bg-[#7b4723]"
-                      onClick={() => setOfferOpen(true)}
-                    >
-                      <Send className="size-4 shrink-0" />
-                      <span className="hidden sm:inline">Send Offer</span>
-                    </Button>
+                    {isServiceProvider ? (
+                      <Button
+                        type="button"
+                        aria-label="Send offer"
+                        className="h-10 min-h-10 shrink-0 bg-[#895129] px-3.5 text-sm leading-none hover:bg-[#7b4723]"
+                        onClick={() => setOfferOpen(true)}
+                      >
+                        <Send className="size-4 shrink-0" />
+                        <span className="hidden sm:inline">Send Offer</span>
+                      </Button>
+                    ) : null}
                     <Badge
                       variant="outline"
                       className="h-10 min-h-10 shrink-0 rounded-full border-emerald-200 bg-emerald-50 px-3 py-0 text-xs font-medium leading-none text-emerald-700"

@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useGetMyServicesQuery } from "@/features/services/services/serviceApi";
 
 export type OfferFormValues = {
+  service: string;
   title: string;
   description: string;
+  notes?: string;
   price: number;
-  deliveryDays: number;
-  revisions: number | null;
 };
 
 type SendOfferModalProps = {
@@ -18,6 +19,7 @@ type SendOfferModalProps = {
   onOpenChange: (open: boolean) => void;
   defaultTitle: string;
   onSend: (values: OfferFormValues) => void;
+  isLoading?: boolean;
 };
 
 export function SendOfferModal({
@@ -25,51 +27,48 @@ export function SendOfferModal({
   onOpenChange,
   defaultTitle,
   onSend,
+  isLoading = false,
 }: SendOfferModalProps) {
+  const { data: servicesRes } = useGetMyServicesQuery();
+  const servicesList = servicesRes?.data || [];
+
+  const [serviceId, setServiceId] = useState("");
   const [title, setTitle] = useState(defaultTitle);
   const [description, setDescription] = useState("");
+  const [notes, setNotes] = useState("");
   const [price, setPrice] = useState("");
-  const [deliveryDays, setDeliveryDays] = useState("3");
-  const [includeRevisions, setIncludeRevisions] = useState(false);
-  const [revisions, setRevisions] = useState("1");
 
   useEffect(() => {
     if (open) {
       setTitle(defaultTitle);
       setDescription("");
+      setNotes("");
       setPrice("");
-      setDeliveryDays("3");
-      setIncludeRevisions(false);
-      setRevisions("1");
+      if (servicesList.length > 0) {
+        setServiceId(servicesList[0]._id);
+      }
     }
-  }, [open, defaultTitle]);
+  }, [open, defaultTitle, servicesList]);
 
   function submit() {
     const p = Number.parseFloat(price);
-    const d = Number.parseInt(deliveryDays, 10);
-    let r: number | null = null;
-    if (includeRevisions) {
-      const rev = Number.parseInt(revisions, 10);
-      if (Number.isNaN(rev) || rev < 0) return;
-      r = rev;
-    }
     if (
+      !serviceId ||
       !title.trim() ||
       !description.trim() ||
       Number.isNaN(p) ||
-      p <= 0 ||
-      Number.isNaN(d) ||
-      d <= 0
-    )
+      p <= 0
+    ) {
       return;
+    }
+
     onSend({
+      service: serviceId,
       title: title.trim(),
       description: description.trim(),
+      notes: notes.trim() || undefined,
       price: p,
-      deliveryDays: d,
-      revisions: includeRevisions ? r : null,
     });
-    onOpenChange(false);
   }
 
   const footer = (
@@ -79,6 +78,7 @@ export function SendOfferModal({
         variant="outline"
         className="w-full sm:w-auto"
         onClick={() => onOpenChange(false)}
+        disabled={isLoading}
       >
         Cancel
       </Button>
@@ -86,8 +86,9 @@ export function SendOfferModal({
         type="button"
         className="w-full bg-[#895129] hover:bg-[#7b4723] sm:w-auto"
         onClick={submit}
+        disabled={isLoading || !serviceId || !title.trim() || !price}
       >
-        Send Offer
+        {isLoading ? "Sending..." : "Send Offer"}
       </Button>
     </div>
   );
@@ -97,74 +98,83 @@ export function SendOfferModal({
       open={open}
       onOpenChange={onOpenChange}
       title="Send custom offer"
-      description="Fiverr-style offer your customer can accept in chat."
+      description="Create a custom service offer for your customer."
       footer={footer}
-      className="max-w-[min(92vw,26rem)]"
+      className="max-w-[min(92vw,28rem)]"
     >
       <div className="space-y-4">
+        {servicesList.length > 0 ? (
+          <div className="space-y-2">
+            <Label htmlFor="offer-service">Select Service</Label>
+            <select
+              id="offer-service"
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              className="w-full h-10 rounded-xl border border-border/60 bg-background px-3 text-sm"
+            >
+              {servicesList.map((s: any) => (
+                <option key={s._id} value={s._id}>
+                  {s.title || s.name || s._id}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="offer-service-id">Service ID</Label>
+            <Input
+              id="offer-service-id"
+              value={serviceId}
+              onChange={(e) => setServiceId(e.target.value)}
+              placeholder="e.g. 6a572db5e613e58b9a0c7d63"
+              className="rounded-xl border-border/60"
+            />
+          </div>
+        )}
+
         <div className="space-y-2">
-          <Label htmlFor="offer-title">Service title</Label>
+          <Label htmlFor="offer-title">Offer Title</Label>
           <Input
             id="offer-title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="e.g. Landing page redesign"
+            placeholder="e.g. Custom MERN Stack Web Development"
             className="rounded-xl border-border/60"
           />
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="offer-desc">Description</Label>
           <Textarea
             id="offer-desc"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What’s included, scope, and expectations…"
-            className="min-h-[100px] rounded-xl border-border/60"
+            placeholder="Develop a responsive business website with admin panel and payment integration..."
+            className="min-h-[90px] rounded-xl border-border/60"
           />
         </div>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="offer-price">Price (USD)</Label>
-            <Input
-              id="offer-price"
-              inputMode="decimal"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="120"
-              className="rounded-xl border-border/60"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="offer-days">Delivery (days)</Label>
-            <Input
-              id="offer-days"
-              inputMode="numeric"
-              value={deliveryDays}
-              onChange={(e) => setDeliveryDays(e.target.value)}
-              placeholder="7"
-              className="rounded-xl border-border/60"
-            />
-          </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="offer-notes">Notes (Optional)</Label>
+          <Input
+            id="offer-notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="e.g. this is note"
+            className="rounded-xl border-border/60"
+          />
         </div>
-        <div className="space-y-2 rounded-xl border border-border/60 bg-muted/20 p-3">
-          <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
-            <input
-              type="checkbox"
-              checked={includeRevisions}
-              onChange={(e) => setIncludeRevisions(e.target.checked)}
-              className="size-4 rounded border-border text-[#895129] focus:ring-[#895129]"
-            />
-            Include revisions
-          </label>
-          {includeRevisions ? (
-            <Input
-              inputMode="numeric"
-              value={revisions}
-              onChange={(e) => setRevisions(e.target.value)}
-              placeholder="Number of revisions"
-              className="rounded-xl border-border/60"
-            />
-          ) : null}
+
+        <div className="space-y-2">
+          <Label htmlFor="offer-price">Price (USD)</Label>
+          <Input
+            id="offer-price"
+            inputMode="decimal"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            placeholder="450"
+            className="rounded-xl border-border/60"
+          />
         </div>
       </div>
     </DashboardModal>

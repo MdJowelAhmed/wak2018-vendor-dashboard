@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FileText, Paperclip, Send, Video, X } from "lucide-react";
 import { toast } from "sonner";
+import { DashboardModal } from "@/components/DashboardModal";
 import { SendOfferModal } from "@/features/chat/components/SendOfferModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,20 +82,22 @@ export function MessagesPage() {
     }
   }
 
-  async function handleCreateZoomMeeting() {
+  const [draft, setDraft] = useState("");
+  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [zoomConfirmOpen, setZoomConfirmOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  async function confirmCreateZoomMeeting() {
     if (!active?._id) return;
     try {
       await createZoomMeetingMutation({ chatId: active._id }).unwrap();
       toast.success("Zoom meeting created and shared successfully");
+      setZoomConfirmOpen(false);
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to create Zoom meeting");
     }
   }
-
-  const [draft, setDraft] = useState("");
-  const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
-  const [offerOpen, setOfferOpen] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const attachRef = useRef<HTMLInputElement | null>(null);
 
   const active = useMemo(
@@ -250,6 +253,37 @@ export function MessagesPage() {
         isLoading={isSendingOffer}
       />
 
+      <DashboardModal
+        open={zoomConfirmOpen}
+        onOpenChange={setZoomConfirmOpen}
+        title="Create Zoom Meeting"
+        description="Are you sure you want to create a Zoom meeting for this conversation?"
+        footer={
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setZoomConfirmOpen(false)}
+              disabled={isCreatingZoom}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#2D8CFF] hover:bg-[#1E72E4] text-white"
+              onClick={confirmCreateZoomMeeting}
+              disabled={isCreatingZoom}
+            >
+              {isCreatingZoom ? "Creating..." : "Confirm & Create"}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          A new Zoom meeting link will be generated and automatically shared with the customer in this chat.
+        </p>
+      </DashboardModal>
+
       <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
         {/* LEFT: Conversations */}
         <Card className="min-h-[70svh] rounded-xl border-border/60 bg-[#FFFFFF] shadow-sm">
@@ -329,7 +363,7 @@ export function MessagesPage() {
                           variant="outline"
                           disabled={isCreatingZoom}
                           className="h-10 min-h-10 shrink-0 border-[#2D8CFF] text-[#2D8CFF] hover:bg-[#2D8CFF]/10 px-3.5 text-sm leading-none"
-                          onClick={handleCreateZoomMeeting}
+                          onClick={() => setZoomConfirmOpen(true)}
                         >
                           <Video className="size-4 shrink-0 mr-1.5" />
                           <span className="hidden sm:inline">

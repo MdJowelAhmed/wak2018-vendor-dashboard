@@ -120,12 +120,30 @@ export const orderApi = baseApi.injectEndpoints({
         { type: "Orders" as const, id },
       ],
     }),
-    deliverServiceOrder: build.mutation<any, string>({
-      query: (id) => ({
-        url: `/service-orders/${id}/deliver`,
-        method: "PATCH",
-      }),
-      invalidatesTags: (_r, _e, id) => [list, { type: "Orders" as const, id }],
+    deliverServiceOrder: build.mutation<
+      any,
+      {
+        id: string;
+        deliveryDescription: string;
+        images?: File[];
+        docs?: File[];
+      }
+    >({
+      query: ({ id, deliveryDescription, images = [], docs = [] }) => {
+        const body = new FormData();
+        body.append("deliveryDescription", deliveryDescription);
+        images.forEach((file) => body.append("image", file));
+        docs.forEach((file) => body.append("doc", file));
+        return {
+          url: `/service-orders/${id}/deliver`,
+          method: "PATCH",
+          body,
+        };
+      },
+      invalidatesTags: (_r, _e, { id }) => [
+        list,
+        { type: "Orders" as const, id },
+      ],
     }),
   }),
   overrideExisting: false,

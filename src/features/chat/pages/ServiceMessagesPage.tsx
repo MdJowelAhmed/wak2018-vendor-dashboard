@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { FileText, Paperclip, Send, X } from "lucide-react";
+import { FileText, Paperclip, Send, Video, X } from "lucide-react";
 import { toast } from "sonner";
+import { DashboardModal } from "@/components/DashboardModal";
 import { SendOfferModal } from "@/features/chat/components/SendOfferModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
   useSendMessageMutation,
   useSendCustomOfferForServiceProviderMutation,
   useWithdrawCustomOfferMutation,
+  useCreateZoomMeetingForOrderMutation,
 } from "@/features/chat/services/messageApi";
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { ChatMessage as APIMessage } from "@/types/api";
@@ -68,6 +70,8 @@ export function MessagesPage() {
     useSendCustomOfferForServiceProviderMutation();
   const [withdrawOfferMutation, { isLoading: isWithdrawing }] =
     useWithdrawCustomOfferMutation();
+  const [createZoomMeetingMutation, { isLoading: isCreatingZoom }] =
+    useCreateZoomMeetingForOrderMutation();
 
   async function handleWithdrawOffer(offerId: string) {
     try {
@@ -81,7 +85,19 @@ export function MessagesPage() {
   const [draft, setDraft] = useState("");
   const [pendingFiles, setPendingFiles] = useState<PendingAttachment[]>([]);
   const [offerOpen, setOfferOpen] = useState(false);
+  const [zoomConfirmOpen, setZoomConfirmOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  async function confirmCreateZoomMeeting() {
+    if (!active?._id) return;
+    try {
+      await createZoomMeetingMutation({ chatId: active._id }).unwrap();
+      toast.success("Zoom meeting created and shared successfully");
+      setZoomConfirmOpen(false);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to create Zoom meeting");
+    }
+  }
   const attachRef = useRef<HTMLInputElement | null>(null);
 
   const active = useMemo(
@@ -237,6 +253,37 @@ export function MessagesPage() {
         isLoading={isSendingOffer}
       />
 
+      <DashboardModal
+        open={zoomConfirmOpen}
+        onOpenChange={setZoomConfirmOpen}
+        title="Create Zoom Meeting"
+        description="Are you sure you want to create a Zoom meeting for this conversation?"
+        footer={
+          <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setZoomConfirmOpen(false)}
+              disabled={isCreatingZoom}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              className="bg-[#2D8CFF] hover:bg-[#1E72E4] text-white"
+              onClick={confirmCreateZoomMeeting}
+              disabled={isCreatingZoom}
+            >
+              {isCreatingZoom ? "Creating..." : "Confirm & Create"}
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          A new Zoom meeting link will be generated and automatically shared with the customer in this chat.
+        </p>
+      </DashboardModal>
+
       <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-[360px_1fr]">
         {/* LEFT: Conversations */}
         <Card className="min-h-[70svh] rounded-xl border-border/60 bg-[#FFFFFF] shadow-sm">
@@ -309,15 +356,30 @@ export function MessagesPage() {
                   </div>
                   <div className="flex flex-row flex-wrap items-center gap-2.5 sm:gap-3 sm:shrink-0 mb-1">
                     {isServiceProvider ? (
-                      <Button
-                        type="button"
-                        aria-label="Send offer"
-                        className="h-10 min-h-10 shrink-0 bg-[#895129] px-3.5 text-sm leading-none hover:bg-[#7b4723]"
-                        onClick={() => setOfferOpen(true)}
-                      >
-                        <Send className="size-4 shrink-0" />
-                        <span className="hidden sm:inline">Send Offer</span>
-                      </Button>
+                      <>
+                        <Button
+                          type="button"
+                          aria-label="Create Zoom Meeting"
+                          variant="outline"
+                          disabled={isCreatingZoom}
+                          className="h-10 min-h-10 shrink-0 border-[#2D8CFF] text-[#2D8CFF] hover:bg-[#2D8CFF]/10 px-3.5 text-sm leading-none"
+                          onClick={() => setZoomConfirmOpen(true)}
+                        >
+                          <Video className="size-4 shrink-0 mr-1.5" />
+                          <span className="hidden sm:inline">
+                            {isCreatingZoom ? "Creating..." : "Create Zoom Meeting"}
+                          </span>
+                        </Button>
+                        <Button
+                          type="button"
+                          aria-label="Send offer"
+                          className="h-10 min-h-10 shrink-0 bg-[#895129] px-3.5 text-sm leading-none hover:bg-[#7b4723]"
+                          onClick={() => setOfferOpen(true)}
+                        >
+                          <Send className="size-4 shrink-0" />
+                          <span className="hidden sm:inline">Send Offer</span>
+                        </Button>
+                      </>
                     ) : null}
                     {/* <Badge
                       variant="outline"
@@ -356,7 +418,45 @@ export function MessagesPage() {
                               mine ? "justify-end" : "justify-start",
                             )}
                           >
-                              {m.type === "custom_offer" || m.customOffer ? (
+                              {m.type === "zoom_meeting" || m.zoomMeeting ? (
+                                <div className="w-full max-w-[320px] rounded-2xl border border-[#2D8CFF]/30 bg-[#F0F7FF] p-4 text-left shadow-sm space-y-3">
+                                  <div className="flex items-center gap-2 font-semibold text-[#2D8CFF]">
+                                    <Video className="size-5 shrink-0" />
+                                    <span>Zoom Meeting</span>
+                                  </div>
+
+                                  {m.zoomMeeting?.topic || m.text ? (
+                                    <div className="font-bold text-gray-900 text-sm leading-snug">
+                                      {m.zoomMeeting?.topic || m.text}
+                                    </div>
+                                  ) : null}
+
+                                  {m.zoomMeeting?.meetingId ? (
+                                    <div className="text-xs text-gray-600">
+                                      Meeting ID:{" "}
+                                      <span className="font-mono font-medium text-gray-800">
+                                        {m.zoomMeeting.meetingId}
+                                      </span>
+                                    </div>
+                                  ) : null}
+
+                                  {m.zoomMeeting?.startUrl || m.zoomMeeting?.joinUrl ? (
+                                    <a
+                                      href={m.zoomMeeting.startUrl || m.zoomMeeting.joinUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#2D8CFF] hover:bg-[#1E72E4] px-4 py-2.5 text-sm font-medium text-white transition-colors shadow-sm"
+                                    >
+                                      <Video className="size-4 shrink-0" />
+                                      <span>Join Meeting</span>
+                                    </a>
+                                  ) : null}
+
+                                  <div className="text-end text-[11px] text-gray-500 pt-1">
+                                    {timeString}
+                                  </div>
+                                </div>
+                              ) : m.type === "custom_offer" || m.customOffer ? (
                                 <div className="w-full max-w-[320px] rounded-2xl border border-amber-200/80 bg-[#FFF8F0] p-4 text-left shadow-sm space-y-3">
                                   <div className="flex items-center gap-2 font-semibold text-gray-900">
                                     <span className="text-lg">💰</span>

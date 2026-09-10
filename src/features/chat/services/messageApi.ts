@@ -115,6 +115,23 @@ export const messageApi = baseApi.injectEndpoints({
         ];
       },
     }),
+
+    createZoomMeetingForOrder: build.mutation<
+      ChatMessage,
+      { chatId: string }
+    >({
+      query: (body) => ({
+        url: `/zoom`,
+        method: "POST",
+        body: body,
+      }),
+      transformResponse: (response: SingleResponse<ChatMessage>) =>
+        response.data,
+      invalidatesTags: (_r, _e, body) => [
+        { type: "Messages" as const, id: body.chatId },
+        { type: "Conversations" as const, id: "LIST" },
+      ],
+    }),
   }),
   overrideExisting: true,
 });
@@ -127,4 +144,5 @@ export const {
 
   useWithdrawCustomOfferMutation,
   useSendCustomOfferForServiceProviderMutation,
+  useCreateZoomMeetingForOrderMutation,
 } = messageApi;

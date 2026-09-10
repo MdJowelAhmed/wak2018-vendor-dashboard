@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageCircle } from "lucide-react";
+import { FileText, ImagePlus, MessageCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/utils/utils";
 import { toast } from "sonner";
 import {
@@ -18,6 +20,109 @@ import {
   useDeliverServiceOrderMutation,
 } from "@/features/orders/services/orderApi";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const MAX_DELIVERY_IMAGES = 3;
+const MAX_DELIVERY_DOCS = 3;
+
+const DOC_MIME_TYPES = new Set([
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.ms-excel",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/vnd.ms-powerpoint",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "text/plain",
+  "text/csv",
+  "application/zip",
+  "application/x-zip-compressed",
+]);
+
+const DOC_EXTENSIONS = new Set([
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".txt",
+  ".csv",
+  ".zip",
+]);
+
+const DOC_ACCEPT = [
+  ".pdf",
+  ".doc",
+  ".docx",
+  ".xls",
+  ".xlsx",
+  ".ppt",
+  ".pptx",
+  ".txt",
+  ".csv",
+  ".zip",
+  ...DOC_MIME_TYPES,
+].join(",");
+
+function isAllowedDoc(file: File) {
+  if (DOC_MIME_TYPES.has(file.type)) return true;
+  const dot = file.name.lastIndexOf(".");
+  if (dot < 0) return false;
+  return DOC_EXTENSIONS.has(file.name.slice(dot).toLowerCase());
+}
+
+function addCappedFiles(
+  current: File[],
+  incoming: File[],
+  max: number,
+  kind: string,
+) {
+  const remaining = max - current.length;
+  if (remaining <= 0) {
+    toast.error(`You can upload up to ${max} ${kind}`);
+    return current;
+  }
+  if (incoming.length > remaining) {
+    toast.error(`You can upload up to ${max} ${kind}`);
+  }
+  return [...current, ...incoming.slice(0, remaining)];
+}
+
+function ImageThumb({
+  file,
+  onRemove,
+  disabled,
+}: {
+  file: File;
+  onRemove: () => void;
+  disabled?: boolean;
+}) {
+  const [url, setUrl] = useState("");
+
+  useEffect(() => {
+    const next = URL.createObjectURL(file);
+    setUrl(next);
+    return () => URL.revokeObjectURL(next);
+  }, [file]);
+
+  if (!url) return null;
+
+  return (
+    <div className="relative size-16 overflow-hidden rounded-lg border border-border/60">
+      <img src={url} alt={file.name} className="h-full w-full object-cover" />
+      <button
+        type="button"
+        className="absolute right-0.5 top-0.5 rounded-md bg-black/60 p-0.5 text-white hover:bg-black/80"
+        onClick={onRemove}
+        aria-label={`Remove ${file.name}`}
+        disabled={disabled}
+      >
+        <X className="size-3" />
+      </button>
+    </div>
+  );
+}
 
 const fmtUsd = (n: number) =>
   new Intl.NumberFormat(undefined, {
@@ -98,6 +203,15 @@ export function BookingDetailsModal({
 
   const [deliverOrder, { isLoading: isDelivering }] =
     useDeliverServiceOrderMutation();
+  const [deliveryDescription, setDeliveryDescription] = useState("");
+  const [images, setImages] = useState<File[]>([]);
+  const [docs, setDocs] = useState<File[]>([]);
+
+  useEffect(() => {
+    setDeliveryDescription("");
+    setImages([]);
+    setDocs([]);
+  }, [bookingId, open]);
 
   function close() {
     onOpenChange(false);
@@ -108,13 +222,58 @@ export function BookingDetailsModal({
     void navigate("/service/messages");
   }
 
+  function onPickImages(list: FileList | null) {
+    if (!list?.length) return;
+    const valid = Array.from(list).filter((f) => f.type.startsWith("image/"));
+    if (!valid.length) {
+      toast.error("Please select valid image files");
+      return;
+    }
+    setImages((prev) =>
+      addCappedFiles(prev, valid, MAX_DELIVERY_IMAGES, "images"),
+    );
+  }
+
+  function onPickDocs(list: FileList | null) {
+    if (!list?.length) return;
+    const incoming = Array.from(list);
+    const valid = incoming.filter(isAllowedDoc);
+    if (valid.length !== incoming.length) {
+      toast.error(
+        "Documents must be PDF, Word, Excel, PowerPoint, text, CSV, or ZIP",
+      );
+    }
+    if (!valid.length) return;
+    setDocs((prev) =>
+      addCappedFiles(prev, valid, MAX_DELIVERY_DOCS, "documents"),
+    );
+  }
+
   async function handleDeliver() {
     if (!bookingId) return;
+    const description = deliveryDescription.trim();
+    if (!description) {
+      toast.error("Delivery description is required");
+      return;
+    }
     try {
-      await deliverOrder(bookingId).unwrap();
+      await deliverOrder({
+        id: bookingId,
+        deliveryDescription: description,
+        images,
+        docs,
+      }).unwrap();
       toast.success("Order marked as delivered!");
+      setDeliveryDescription("");
+      setImages([]);
+      setDocs([]);
     } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to deliver order");
+      const first = err?.data?.errorMessages?.[0];
+      toast.error(
+        first?.message
+          ? `${first.path ? `${first.path}: ` : ""}${first.message}`
+          : err?.data?.message || "Failed to deliver order",
+      );
     }
   }
 
@@ -340,39 +499,193 @@ export function BookingDetailsModal({
             {/* Actions */}
             <div className="space-y-3">
               <SectionTitle>Actions</SectionTitle>
-              <div className="flex flex-row flex-wrap items-center gap-2">
-                {b.orderStatus === "in_progress" ||
-                b.orderStatus === "pending" ? (
+              {b.orderStatus === "in_progress" ||
+              b.orderStatus === "pending" ? (
+                <div className="space-y-4 rounded-xl border border-border/60 bg-muted/15 p-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="deliveryDescription">
+                      Delivery description{" "}
+                      <span className="text-destructive">*</span>
+                    </Label>
+                    <Textarea
+                      id="deliveryDescription"
+                      value={deliveryDescription}
+                      onChange={(e) => setDeliveryDescription(e.target.value)}
+                      placeholder="Describe what was delivered…"
+                      rows={3}
+                      disabled={isDelivering}
+                    />
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label>Images</Label>
+                        <span className="text-muted-foreground text-xs">
+                          {images.length}/{MAX_DELIVERY_IMAGES}
+                        </span>
+                      </div>
+                      <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full cursor-pointer"
+                        disabled={
+                          isDelivering || images.length >= MAX_DELIVERY_IMAGES
+                        }
+                      >
+                        <label>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            className="hidden"
+                            disabled={
+                              isDelivering ||
+                              images.length >= MAX_DELIVERY_IMAGES
+                            }
+                            onChange={(e) => {
+                              onPickImages(e.currentTarget.files);
+                              e.currentTarget.value = "";
+                            }}
+                          />
+                          <ImagePlus className="mr-2 size-4" />
+                          Add images
+                        </label>
+                      </Button>
+                      {images.length ? (
+                        <div className="flex flex-wrap gap-2">
+                          {images.map((file, i) => (
+                            <ImageThumb
+                              key={`${file.name}-${file.size}-${i}`}
+                              file={file}
+                              disabled={isDelivering}
+                              onRemove={() =>
+                                setImages((prev) =>
+                                  prev.filter((_, idx) => idx !== i),
+                                )
+                              }
+                            />
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <Label>Documents</Label>
+                        <span className="text-muted-foreground text-xs">
+                          {docs.length}/{MAX_DELIVERY_DOCS}
+                        </span>
+                      </div>
+                      <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="w-full cursor-pointer"
+                        disabled={
+                          isDelivering || docs.length >= MAX_DELIVERY_DOCS
+                        }
+                      >
+                        <label>
+                          <input
+                            type="file"
+                            accept={DOC_ACCEPT}
+                            multiple
+                            className="hidden"
+                            disabled={
+                              isDelivering || docs.length >= MAX_DELIVERY_DOCS
+                            }
+                            onChange={(e) => {
+                              onPickDocs(e.currentTarget.files);
+                              e.currentTarget.value = "";
+                            }}
+                          />
+                          <FileText className="mr-2 size-4" />
+                          Add documents
+                        </label>
+                      </Button>
+                      {docs.length ? (
+                        <div className="flex flex-col gap-1.5">
+                          {docs.map((file, i) => (
+                            <div
+                              key={`${file.name}-${i}`}
+                              className="flex items-center gap-2 rounded-lg border border-border/60 bg-background px-2 py-1.5"
+                            >
+                              <FileText className="size-4 shrink-0 text-muted-foreground" />
+                              <span className="min-w-0 flex-1 truncate text-xs font-medium">
+                                {file.name}
+                              </span>
+                              <button
+                                type="button"
+                                className="rounded-md p-0.5 text-muted-foreground hover:text-foreground"
+                                onClick={() =>
+                                  setDocs((prev) =>
+                                    prev.filter((_, idx) => idx !== i),
+                                  )
+                                }
+                                aria-label={`Remove ${file.name}`}
+                                disabled={isDelivering}
+                              >
+                                <X className="size-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground text-xs">
+                          PDF, Word, Excel, PowerPoint, text, CSV, or ZIP
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-row flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      className="bg-[#895129] hover:bg-[#7b4723]"
+                      onClick={handleDeliver}
+                      disabled={isDelivering || !deliveryDescription.trim()}
+                    >
+                      {isDelivering ? "Delivering..." : "Deliver Order"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="shrink-0 border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10 ml-auto"
+                      onClick={openChat}
+                    >
+                      <MessageCircle className="mr-2 size-4" />
+                      Open chat
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-row flex-wrap items-center gap-2">
+                  {b.orderStatus === "completed" ? (
+                    <p className="text-muted-foreground text-sm">
+                      No further actions — booking is completed.
+                    </p>
+                  ) : null}
+                  {b.orderStatus === "cancelled" ? (
+                    <p className="text-muted-foreground text-sm">
+                      No actions available for this booking.
+                    </p>
+                  ) : null}
+
                   <Button
                     type="button"
-                    className="bg-[#895129] hover:bg-[#7b4723]"
-                    onClick={handleDeliver}
-                    disabled={isDelivering}
+                    variant="outline"
+                    className="shrink-0 border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10 ml-auto"
+                    onClick={openChat}
                   >
-                    {isDelivering ? "Delivering..." : "Deliver Order"}
+                    <MessageCircle className="mr-2 size-4" />
+                    Open chat
                   </Button>
-                ) : null}
-                {b.orderStatus === "completed" ? (
-                  <p className="text-muted-foreground text-sm">
-                    No further actions — booking is completed.
-                  </p>
-                ) : null}
-                {b.orderStatus === "cancelled" ? (
-                  <p className="text-muted-foreground text-sm">
-                    No actions available for this booking.
-                  </p>
-                ) : null}
-
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="shrink-0 border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10 ml-auto"
-                  onClick={openChat}
-                >
-                  <MessageCircle className="mr-2 size-4" />
-                  Open chat
-                </Button>
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

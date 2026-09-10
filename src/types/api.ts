@@ -458,14 +458,22 @@ export type CustomOfferDetail = {
   status: "pending" | "accepted" | "rejected" | "withdrawn" | string;
 };
 
+export type ZoomMeetingDetail = {
+  meetingId: string;
+  topic?: string;
+  startUrl?: string;
+  joinUrl?: string;
+};
+
 export type ChatMessage = {
   _id: string;
   chat: string;
   sender: Participant | string;
   text: string;
   attachment: string;
-  type: "text" | "image" | "file" | "custom_offer";
+  type: "text" | "image" | "file" | "custom_offer" | "zoom_meeting";
   customOffer?: CustomOfferDetail;
+  zoomMeeting?: ZoomMeetingDetail;
   seenBy: string[];
   createdAt: string;
   updatedAt?: string;

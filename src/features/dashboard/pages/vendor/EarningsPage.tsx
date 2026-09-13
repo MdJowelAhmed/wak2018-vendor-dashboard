@@ -1,9 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
 import {
   earningsBottomGridParentVariants,
-  earningsButtonMotionProps,
   earningsCardLiftHover,
   earningsInputFocusClass,
   earningsPageLoadTransition,
@@ -16,7 +14,6 @@ import {
   earningsWithdrawSectionVariants,
 } from "@/features/dashboard/motion/earnings-page-variants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -34,9 +31,12 @@ import {
   useGetWalletQuery,
   useGetTransactionsQuery,
   useGetWithdrawRequestsQuery,
-  useConnectStripeMutation,
-  useCreateWithdrawRequestMutation,
 } from "../../services/walletApi";
+import {
+  WithdrawFundsCard,
+  withdrawMethodLabel,
+} from "../../components/WithdrawFundsCard";
+import { PaymentMethodCard } from "../../components/PaymentMethodCard";
 
 function fmtMoney(n: number) {
   return new Intl.NumberFormat(undefined, {
@@ -65,65 +65,13 @@ function withdrawStatusBadgeClass(s: string) {
 
 export function EarningsPage() {
   const { data: wallet, isLoading } = useGetWalletQuery();
-  const [connectStripe, { isLoading: isConnecting }] = useConnectStripeMutation();
-  const [createWithdrawRequest, { isLoading: isWithdrawing }] = useCreateWithdrawRequestMutation();
 
   const totalEarnings = wallet?.totalEarnings ?? 0;
   const availableBalance = wallet?.availableBalance ?? 0;
   const pendingPayout = wallet?.pendingBalance ?? 0;
-  const connectedMethod = wallet?.stripeConnect?.payoutsEnabled
-    ? "Stripe (Payouts Enabled)"
-    : "Stripe (Action Required)";
 
-  const [amount, setAmount] = useState("");
   const [txnSearch, setTxnSearch] = useState("");
   const [withdrawSearch, setWithdrawSearch] = useState("");
-
-  const minWithdraw = 50;
-  const amountNumber = useMemo(() => Number(amount), [amount]);
-  const canWithdraw =
-    Number.isFinite(amountNumber) &&
-    amountNumber >= minWithdraw &&
-    amountNumber > 0 &&
-    amountNumber <= availableBalance;
-
-  async function withdraw() {
-    if (!amount.trim()) {
-      toast.error("Enter an amount");
-      return;
-    }
-    if (!Number.isFinite(amountNumber) || amountNumber <= 0) {
-      toast.error("Enter a valid amount");
-      return;
-    }
-    if (amountNumber < minWithdraw) {
-      toast.error(`Minimum withdraw: ${fmtMoney(minWithdraw)}`);
-      return;
-    }
-    if (amountNumber > availableBalance) {
-      toast.error("Cannot exceed available balance");
-      return;
-    }
-
-    try {
-      await createWithdrawRequest({ amount: amountNumber }).unwrap();
-      toast.success("Withdrawal request submitted");
-      setAmount("");
-    } catch {
-      toast.error("Failed to submit withdrawal request");
-    }
-  }
-
-  async function handleConnectStripe() {
-    try {
-      const res = await connectStripe().unwrap();
-      if (res.url) {
-        window.location.href = res.url;
-      }
-    } catch {
-      toast.error("Failed to connect with Stripe");
-    }
-  }
 
   const { data: rawTransactions, isLoading: isLoadingTxns } =
     useGetTransactionsQuery();
@@ -408,8 +356,8 @@ export function EarningsPage() {
                           {r.status}
                         </Badge>
                       </TableCell>
-                      <TableCell className="font-medium capitalize">
-                        {r.method}
+                      <TableCell className="font-medium">
+                        {withdrawMethodLabel(r.method)}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {fmtDateTime(r.createdAt)}
@@ -450,86 +398,14 @@ export function EarningsPage() {
           variants={earningsWithdrawSectionVariants}
           className="min-h-0"
         >
-          <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Withdraw Funds</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-gray-900">Amount</div>
-                <Input
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  inputMode="decimal"
-                  placeholder="Enter amount"
-                  className={cn(
-                    "bg-white rounded-xl border border-gray-200 shadow-sm",
-                    earningsInputFocusClass,
-                  )}
-                />
-                <div className="text-xs text-muted-foreground">
-                  Minimum withdraw: $50
-                </div>
-              </div>
-
-              <motion.div
-                className="inline-flex"
-                {...earningsButtonMotionProps}
-              >
-                <Button
-                  type="button"
-                  className="bg-[#895129] hover:bg-[#7b4723]"
-                  disabled={!canWithdraw || isWithdrawing}
-                  onClick={withdraw}
-                >
-                  {isWithdrawing ? "Processing..." : "Withdraw Funds"}
-                </Button>
-              </motion.div>
-
-              <div className="text-xs text-muted-foreground">
-                Available:{" "}
-                <span className="font-semibold tabular-nums">
-                  <AnimatedNumber
-                    value={availableBalance}
-                    format={(n) => fmtMoney(n)}
-                    duration={0.6}
-                  />
-                </span>
-              </div>
-            </CardContent>
-          </Card>
+          <WithdrawFundsCard
+            wallet={wallet}
+            availableBalance={availableBalance}
+          />
         </motion.div>
 
         <motion.div variants={earningsPaymentCardVariants} className="min-h-0">
-          <Card className="h-full rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Payment Method</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-                <div className="text-xs text-muted-foreground">
-                  Connected method
-                </div>
-                <div className="mt-1 text-sm font-semibold text-gray-900">
-                  {connectedMethod}
-                </div>
-              </div>
-
-              <motion.div
-                className="inline-flex"
-                {...earningsButtonMotionProps}
-              >
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  disabled={isConnecting}
-                  onClick={handleConnectStripe}
-                >
-                  {isConnecting ? "Connecting..." : "Change Method"}
-                </Button>
-              </motion.div>
-            </CardContent>
-          </Card>
+          <PaymentMethodCard wallet={wallet} />
         </motion.div>
       </motion.div>
     </motion.div>

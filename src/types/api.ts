@@ -509,6 +509,28 @@ export type StripeConnectDetails = {
   payoutsEnabled: boolean;
 };
 
+export type WithdrawMethod =
+  | "stripe"
+  | "paychangu_bank"
+  | "paychangu_mobile_money";
+
+export type PaychanguBankDetails = {
+  bankUuid: string;
+  bankAccountName: string;
+  bankAccountNumber: string;
+};
+
+export type PaychanguMobileMoneyDetails = {
+  mobile: string;
+  mobileMoneyOperatorRefId: string;
+};
+
+export type CreateWithdrawRequestPayload = {
+  amount: number;
+  method: WithdrawMethod;
+  payoutDetails?: PaychanguBankDetails | PaychanguMobileMoneyDetails;
+};
+
 export type Wallet = {
   _id: string;
   user: string;
@@ -518,7 +540,7 @@ export type Wallet = {
   holdBalance: number;
   totalEarnings: number;
   currency: string;
-  stripeConnect: StripeConnectDetails;
+  stripeConnect?: StripeConnectDetails;
   createdAt: string;
   updatedAt: string;
   __v?: number;

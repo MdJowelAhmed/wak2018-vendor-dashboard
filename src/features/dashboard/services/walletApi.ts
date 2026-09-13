@@ -1,5 +1,10 @@
 import { baseApi } from "@/services/baseApi";
-import type { Wallet, WalletTransaction, WithdrawRequest } from "@/types/api";
+import type {
+  CreateWithdrawRequestPayload,
+  Wallet,
+  WalletTransaction,
+  WithdrawRequest,
+} from "@/types/api";
 
 export const walletApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -27,7 +32,7 @@ export const walletApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response: { data: { url: string } }) => response.data,
     }),
-    createWithdrawRequest: build.mutation<void, { amount: number }>({
+    createWithdrawRequest: build.mutation<void, CreateWithdrawRequestPayload>({
       query: (body) => ({
         url: "/withdraw-requests/",
         method: "POST",

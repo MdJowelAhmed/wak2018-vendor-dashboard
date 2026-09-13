@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentType } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { CreditCard, Smartphone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +56,76 @@ function fmtMoney(n: number) {
   }).format(n);
 }
 
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, "");
+}
+
+function groupDigits(digits: string, size: number) {
+  if (!digits) return "";
+  return digits.replace(new RegExp(`(.{${size}})`, "g"), "$1 ").trim();
+}
+
+function sanitizeAmount(value: string) {
+  const next = value.replace(/[^\d.]/g, "");
+  const [whole, ...rest] = next.split(".");
+  if (!rest.length) return whole;
+  return `${whole}.${rest.join("").slice(0, 2)}`;
+}
+
+function NumberMaskField({
+  value,
+  onChange,
+  maxLength,
+  groupSize,
+  placeholder,
+  icon: Icon,
+  invalid,
+  hint,
+}: {
+  value: string;
+  onChange: (digits: string) => void;
+  maxLength: number;
+  groupSize: number;
+  placeholder: string;
+  icon: ComponentType<{ className?: string }>;
+  invalid?: boolean;
+  hint?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <div
+        className={cn(
+          "relative flex items-center gap-3 overflow-hidden rounded-xl border px-3 py-2.5 shadow-sm",
+          "bg-gradient-to-r from-[#895129]/8 via-white to-[#f7f1ea]",
+          invalid
+            ? "border-red-400 ring-2 ring-red-200"
+            : "border-[#895129]/25 focus-within:border-[#895129] focus-within:ring-2 focus-within:ring-[#895129]/20",
+        )}
+      >
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-[#895129] text-white shadow-sm">
+          <Icon className="size-4" />
+        </div>
+        <input
+          value={groupDigits(value, groupSize)}
+          onChange={(e) =>
+            onChange(digitsOnly(e.target.value).slice(0, maxLength))
+          }
+          inputMode="numeric"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder={placeholder}
+          className="h-8 w-full bg-transparent font-mono text-[15px] tracking-[0.18em] text-gray-900 outline-none placeholder:tracking-normal placeholder:text-muted-foreground"
+        />
+      </div>
+      {hint ? (
+        <p className={cn("text-xs", invalid ? "text-red-600" : "text-muted-foreground")}>
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function withdrawMethodLabel(method?: string) {
   if (method === "stripe") return "Stripe";
   if (method === "paychangu_bank") return "Paychangu Bank";
@@ -104,15 +175,15 @@ export function WithdrawFundsCard({
     amountNumber > 0 &&
     amountNumber <= availableBalance;
 
+  const accountNumberValid =
+    bankAccountNumber.length >= 10 && bankAccountNumber.length <= 19;
+  const mobileValid = mobile.length >= 9 && mobile.length <= 12;
+
   const payoutDetailsReady =
     method === "paychangu_bank"
-      ? Boolean(
-          bankUuid.trim() &&
-            bankAccountName.trim() &&
-            bankAccountNumber.trim(),
-        )
+      ? Boolean(bankUuid.trim() && bankAccountName.trim() && accountNumberValid)
       : method === "paychangu_mobile_money"
-        ? Boolean(mobile.trim() && operatorRefId.trim())
+        ? Boolean(operatorRefId.trim() && mobileValid)
         : true;
 
   const canWithdraw =
@@ -155,13 +226,25 @@ export function WithdrawFundsCard({
       toast.error("Please first connect your Stripe account, then withdraw.");
       return;
     }
-    if (method === "paychangu_bank" && !payoutDetailsReady) {
-      toast.error("Enter bank account details");
-      return;
+    if (method === "paychangu_bank") {
+      if (!bankUuid.trim() || !bankAccountName.trim()) {
+        toast.error("Enter bank account details");
+        return;
+      }
+      if (!accountNumberValid) {
+        toast.error("Account number must be 10–19 digits");
+        return;
+      }
     }
-    if (method === "paychangu_mobile_money" && !payoutDetailsReady) {
-      toast.error("Enter mobile money details");
-      return;
+    if (method === "paychangu_mobile_money") {
+      if (!operatorRefId.trim()) {
+        toast.error("Select a mobile money operator");
+        return;
+      }
+      if (!mobileValid) {
+        toast.error("Phone number must be 9–12 digits");
+        return;
+      }
     }
 
     try {
@@ -204,6 +287,30 @@ export function WithdrawFundsCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-900">Amount</Label>
+          <Input
+            value={amount}
+            onChange={(e) => setAmount(sanitizeAmount(e.target.value))}
+            inputMode="decimal"
+            placeholder="Enter amount"
+            className={cn(
+              "bg-white rounded-xl border border-gray-200 shadow-sm",
+              earningsInputFocusClass,
+            )}
+          />
+          <div className="text-xs text-muted-foreground">
+            Minimum withdraw: $50 · Available{" "}
+            <span className="font-semibold tabular-nums">
+              <AnimatedNumber
+                value={availableBalance}
+                format={(n) => fmtMoney(n)}
+                duration={0.6}
+              />
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-900">
             Withdraw method
           </Label>
@@ -217,7 +324,7 @@ export function WithdrawFundsCard({
                 earningsInputFocusClass,
               )}
             >
-              <SelectValue placeholder="Select a method first" />
+              <SelectValue placeholder="Select a method" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="stripe">Stripe</SelectItem>
@@ -294,14 +401,19 @@ export function WithdrawFundsCard({
               <Label className="text-sm font-medium text-gray-900">
                 Account number
               </Label>
-              <Input
+              <NumberMaskField
                 value={bankAccountNumber}
-                onChange={(e) => setBankAccountNumber(e.target.value)}
-                placeholder="4242424242424242"
-                className={cn(
-                  "bg-white rounded-xl border border-gray-200 shadow-sm",
-                  earningsInputFocusClass,
-                )}
+                onChange={setBankAccountNumber}
+                maxLength={19}
+                groupSize={4}
+                placeholder="0000 0000 0000 0000"
+                icon={CreditCard}
+                invalid={Boolean(bankAccountNumber) && !accountNumberValid}
+                hint={
+                  bankAccountNumber && !accountNumberValid
+                    ? "Enter 10–19 digits only"
+                    : "Numbers only · shown like a card number"
+                }
               />
             </div>
           </div>
@@ -336,38 +448,25 @@ export function WithdrawFundsCard({
             </div>
             <div className="space-y-2">
               <Label className="text-sm font-medium text-gray-900">
-                Mobile number
+                Phone number
               </Label>
-              <Input
+              <NumberMaskField
                 value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-                inputMode="tel"
-                placeholder="990000000"
-                className={cn(
-                  "bg-white rounded-xl border border-gray-200 shadow-sm",
-                  earningsInputFocusClass,
-                )}
+                onChange={setMobile}
+                maxLength={12}
+                groupSize={3}
+                placeholder="990 000 000"
+                icon={Smartphone}
+                invalid={Boolean(mobile) && !mobileValid}
+                hint={
+                  mobile && !mobileValid
+                    ? "Enter 9–12 digits only"
+                    : "Numbers only"
+                }
               />
             </div>
           </div>
         ) : null}
-
-        <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-900">Amount</Label>
-          <Input
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            inputMode="decimal"
-            placeholder="Enter amount"
-            className={cn(
-              "bg-white rounded-xl border border-gray-200 shadow-sm",
-              earningsInputFocusClass,
-            )}
-          />
-          <div className="text-xs text-muted-foreground">
-            Minimum withdraw: $50
-          </div>
-        </div>
 
         <motion.div className="inline-flex" {...earningsButtonMotionProps}>
           <Button
@@ -385,17 +484,6 @@ export function WithdrawFundsCard({
             Please first connect your Stripe account, then withdraw.
           </p>
         ) : null}
-
-        <div className="text-xs text-muted-foreground">
-          Available:{" "}
-          <span className="font-semibold tabular-nums">
-            <AnimatedNumber
-              value={availableBalance}
-              format={(n) => fmtMoney(n)}
-              duration={0.6}
-            />
-          </span>
-        </div>
       </CardContent>
     </Card>
   );

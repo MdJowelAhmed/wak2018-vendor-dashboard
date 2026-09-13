@@ -6,7 +6,6 @@ import {
   Phone,
   User,
   Globe,
-  Navigation,
   CheckCircle2,
   Trash2,
   Pencil,
@@ -32,6 +31,7 @@ import {
   useDeleteShippingAddressMutation,
 } from "../services/shippingAddressApi";
 import type { ShippingAddressPayload } from "../types/shippingAddressTypes";
+import { GoogleLocationPicker } from "../components/GoogleLocationPicker";
 
 export function ReturnAddressPage() {
   const { data: addressResponse, isLoading } =
@@ -111,11 +111,18 @@ export function ReturnAddressPage() {
       return;
     }
 
+    const latitude = Number(formData.latitude);
+    const longitude = Number(formData.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      toast.error("Please pin the return location on Google Maps");
+      return;
+    }
+
     const payload: ShippingAddressPayload = {
       ...formData,
       isDefault: true, // Ensure isDefault is ALWAYS true behind the scenes
-      latitude: formData.latitude ? Number(formData.latitude) : 0,
-      longitude: formData.longitude ? Number(formData.longitude) : 0,
+      latitude,
+      longitude,
     };
 
     try {
@@ -365,36 +372,23 @@ export function ReturnAddressPage() {
               </div>
             </div>
 
-            {/* Coordinates (Latitude / Longitude) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">
-              <div className="space-y-1.5">
-                <Label htmlFor="latitude" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                  <Navigation className="size-3.5 text-gray-500" /> Latitude
-                </Label>
-                <Input
-                  id="latitude"
-                  type="number"
-                  step="any"
-                  placeholder="e.g. 23.7465"
-                  value={formData.latitude ?? ""}
-                  onChange={(e) => handleChange("latitude", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="longitude" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                  <Navigation className="size-3.5 text-gray-500" /> Longitude
-                </Label>
-                <Input
-                  id="longitude"
-                  type="number"
-                  step="any"
-                  placeholder="e.g. 90.3760"
-                  value={formData.longitude ?? ""}
-                  onChange={(e) => handleChange("longitude", e.target.value)}
-                />
-              </div>
-            </div>
+            <GoogleLocationPicker
+              latitude={Number(formData.latitude)}
+              longitude={Number(formData.longitude)}
+              onChange={(loc) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  latitude: loc.latitude,
+                  longitude: loc.longitude,
+                  ...(loc.address ? { address: loc.address } : {}),
+                  ...(loc.city ? { city: loc.city } : {}),
+                  ...(loc.state ? { state: loc.state } : {}),
+                  ...(loc.country ? { country: loc.country } : {}),
+                  ...(loc.countryCode ? { countryCode: loc.countryCode } : {}),
+                  ...(loc.postalCode ? { postalCode: loc.postalCode } : {}),
+                }));
+              }}
+            />
 
             {/* Note: isDefault is NOT displayed in UI as per requirement, set to true behind the scenes */}
 

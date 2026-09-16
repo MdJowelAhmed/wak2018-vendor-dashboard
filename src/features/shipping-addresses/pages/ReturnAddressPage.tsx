@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   MapPin,
@@ -32,6 +32,15 @@ import {
 } from "../services/shippingAddressApi";
 import type { ShippingAddressPayload } from "../types/shippingAddressTypes";
 import { GoogleLocationPicker } from "../components/GoogleLocationPicker";
+import { SearchableSelect } from "../components/SearchableSelect";
+import {
+  countrySearchText,
+  findCity,
+  findCountry,
+  getAllCountries,
+  getCitiesOfCountry,
+  stateNameForCity,
+} from "../utils/countryCity";
 
 export function ReturnAddressPage() {
   const { data: addressResponse, isLoading } =
@@ -53,8 +62,8 @@ export function ReturnAddressPage() {
     address: "",
     city: "",
     state: "",
-    country: "Bangladesh",
-    countryCode: "+880",
+    country: "",
+    countryCode: "",
     postalCode: "",
     isDefault: true, // Always true behind the scenes
     latitude: 23.7465,
@@ -70,8 +79,12 @@ export function ReturnAddressPage() {
         address: existingAddress.address || "",
         city: existingAddress.city || "",
         state: existingAddress.state || "",
-        country: existingAddress.country || "Bangladesh",
-        countryCode: existingAddress.countryCode || "",
+        country: findCountry(existingAddress.country)?.name || existingAddress.country || "",
+        countryCode:
+          findCountry(existingAddress.country)?.isoCode ||
+          findCountry(existingAddress.countryCode)?.isoCode ||
+          existingAddress.countryCode ||
+          "",
         postalCode: existingAddress.postalCode || "",
         isDefault: true, // behind the scenes true
         latitude: existingAddress.latitude ?? 23.7465,
@@ -80,12 +93,69 @@ export function ReturnAddressPage() {
     }
   }, [existingAddress]);
 
+  const countries = useMemo(() => getAllCountries(), []);
+  const selectedCountry = useMemo(
+    () => findCountry(formData.country),
+    [formData.country],
+  );
+  const cities = useMemo(
+    () => getCitiesOfCountry(selectedCountry?.isoCode),
+    [selectedCountry?.isoCode],
+  );
+  const countryOptions = useMemo(
+    () =>
+      countries.map((c) => ({
+        value: c.isoCode,
+        label: `${c.flag} ${c.name}`,
+        keywords: countrySearchText(c),
+      })),
+    [countries],
+  );
+  const cityOptions = useMemo(() => {
+    const options = cities.map((c) => ({ value: c.name, label: c.name }));
+    if (
+      formData.city &&
+      !options.some(
+        (o) => o.value.toLowerCase() === formData.city.trim().toLowerCase(),
+      )
+    ) {
+      options.unshift({ value: formData.city, label: formData.city });
+    }
+    return options;
+  }, [cities, formData.city]);
+
   const handleChange = (field: keyof ShippingAddressPayload, value: any) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
+
+  function handleCountrySelect(isoCode: string) {
+    const country = findCountry(isoCode);
+    if (!country) return;
+    setFormData((prev) => ({
+      ...prev,
+      country: country.name,
+      countryCode: country.isoCode,
+      city: "",
+      state: "",
+      latitude: Number(country.latitude) || prev.latitude,
+      longitude: Number(country.longitude) || prev.longitude,
+    }));
+  }
+
+  function handleCitySelect(cityName: string) {
+    const city = findCity(selectedCountry?.isoCode, cityName);
+    const state = stateNameForCity(city);
+    setFormData((prev) => ({
+      ...prev,
+      city: cityName,
+      state: state || prev.state,
+      latitude: city?.latitude ? Number(city.latitude) : prev.latitude,
+      longitude: city?.longitude ? Number(city.longitude) : prev.longitude,
+    }));
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,6 +166,10 @@ export function ReturnAddressPage() {
     }
     if (!formData.phone.trim()) {
       toast.error("Phone number is required");
+      return;
+    }
+    if (!formData.country.trim()) {
+      toast.error("Country is required");
       return;
     }
     if (!formData.address.trim()) {
@@ -156,8 +230,8 @@ export function ReturnAddressPage() {
         address: "",
         city: "",
         state: "",
-        country: "Bangladesh",
-        countryCode: "+880",
+        country: "",
+        countryCode: "",
         postalCode: "",
         isDefault: true,
         latitude: 23.7465,
@@ -290,7 +364,71 @@ export function ReturnAddressPage() {
               </div>
             </div>
 
-            {/* Address Field */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="country" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <Globe className="size-3.5 text-gray-500" /> Country <span className="text-red-500">*</span>
+                </Label>
+                <SearchableSelect
+                  id="country"
+                  value={selectedCountry?.isoCode ?? ""}
+                  onChange={handleCountrySelect}
+                  options={countryOptions}
+                  placeholder="Select country"
+                  searchPlaceholder="Search country…"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="countryCode" className="text-xs font-semibold text-gray-700">
+                  Country Code
+                </Label>
+                <Input
+                  id="countryCode"
+                  value={formData.countryCode || ""}
+                  readOnly
+                  placeholder="e.g. BD"
+                  className="bg-gray-50"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="city" className="text-xs font-semibold text-gray-700">
+                  City <span className="text-red-500">*</span>
+                </Label>
+                <SearchableSelect
+                  id="city"
+                  value={formData.city}
+                  onChange={handleCitySelect}
+                  options={cityOptions}
+                  placeholder={
+                    selectedCountry ? "Select city" : "Select a country first"
+                  }
+                  searchPlaceholder="Search city…"
+                  disabled={!selectedCountry}
+                  emptyText={
+                    selectedCountry
+                      ? "No cities found. Try another search."
+                      : "Select a country first"
+                  }
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="state" className="text-xs font-semibold text-gray-700">
+                  State / Division
+                </Label>
+                <Input
+                  id="state"
+                  placeholder="Filled from city when available"
+                  value={formData.state}
+                  onChange={(e) => handleChange("state", e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="address" className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
                 <Building2 className="size-3.5 text-gray-500" /> Street Address / Detailed Address <span className="text-red-500">*</span>
@@ -304,89 +442,48 @@ export function ReturnAddressPage() {
               />
             </div>
 
-            {/* City, State, Country */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="city" className="text-xs font-semibold text-gray-700">
-                  City <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="city"
-                  placeholder="e.g. Dhaka"
-                  value={formData.city}
-                  onChange={(e) => handleChange("city", e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="state" className="text-xs font-semibold text-gray-700">
-                  State / Division
-                </Label>
-                <Input
-                  id="state"
-                  placeholder="e.g. Dhaka"
-                  value={formData.state}
-                  onChange={(e) => handleChange("state", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="country" className="text-xs font-semibold text-gray-700 flex items-center gap-1">
-                  <Globe className="size-3.5 text-gray-500" /> Country
-                </Label>
-                <Input
-                  id="country"
-                  placeholder="e.g. Bangladesh"
-                  value={formData.country}
-                  onChange={(e) => handleChange("country", e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Country Code & Postal Code */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="countryCode" className="text-xs font-semibold text-gray-700">
-                  Country Code
-                </Label>
-                <Input
-                  id="countryCode"
-                  placeholder="e.g. +880 or BD"
-                  value={formData.countryCode}
-                  onChange={(e) => handleChange("countryCode", e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="postalCode" className="text-xs font-semibold text-gray-700">
-                  Postal Code <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="postalCode"
-                  placeholder="e.g. 1209"
-                  value={formData.postalCode}
-                  onChange={(e) => handleChange("postalCode", e.target.value)}
-                  required
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="postalCode" className="text-xs font-semibold text-gray-700">
+                Postal Code <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="postalCode"
+                placeholder="e.g. 1209"
+                value={formData.postalCode}
+                onChange={(e) => handleChange("postalCode", e.target.value)}
+                required
+              />
             </div>
 
             <GoogleLocationPicker
               latitude={Number(formData.latitude)}
               longitude={Number(formData.longitude)}
+              countryIso={selectedCountry?.isoCode}
               onChange={(loc) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  latitude: loc.latitude,
-                  longitude: loc.longitude,
-                  ...(loc.address ? { address: loc.address } : {}),
-                  ...(loc.city ? { city: loc.city } : {}),
-                  ...(loc.state ? { state: loc.state } : {}),
-                  ...(loc.country ? { country: loc.country } : {}),
-                  ...(loc.countryCode ? { countryCode: loc.countryCode } : {}),
-                  ...(loc.postalCode ? { postalCode: loc.postalCode } : {}),
-                }));
+                setFormData((prev) => {
+                  const matchedCountry = loc.country
+                    ? findCountry(loc.country)
+                    : undefined;
+                  const matchedCity = findCity(
+                    matchedCountry?.isoCode ?? selectedCountry?.isoCode,
+                    loc.city,
+                  );
+                  return {
+                    ...prev,
+                    latitude: loc.latitude,
+                    longitude: loc.longitude,
+                    ...(loc.address ? { address: loc.address } : {}),
+                    ...(loc.postalCode ? { postalCode: loc.postalCode } : {}),
+                    ...(matchedCountry
+                      ? {
+                          country: matchedCountry.name,
+                          countryCode: matchedCountry.isoCode,
+                        }
+                      : {}),
+                    ...(matchedCity ? { city: matchedCity.name } : {}),
+                    ...(loc.state ? { state: loc.state } : {}),
+                  };
+                });
               }}
             />
 

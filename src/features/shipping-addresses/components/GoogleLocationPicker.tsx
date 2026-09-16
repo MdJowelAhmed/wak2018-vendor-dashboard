@@ -22,14 +22,6 @@ export type MapLocation = {
 const DEFAULT_LAT = 23.7465;
 const DEFAULT_LNG = 90.376;
 
-const COUNTRY_DIAL: Record<string, string> = {
-  BD: "+880",
-  MW: "+265",
-  IN: "+91",
-  US: "+1",
-  GB: "+44",
-};
-
 function component(
   components: any[] | undefined,
   type: string,
@@ -63,7 +55,7 @@ function locationFromPlace(place: any): MapLocation | null {
       "",
     state: component(parts, "administrative_area_level_1") || "",
     country: component(parts, "country") || "",
-    countryCode: COUNTRY_DIAL[countryShort] || countryShort || "",
+    countryCode: countryShort || "",
     postalCode: component(parts, "postal_code") || "",
   };
 }
@@ -71,10 +63,12 @@ function locationFromPlace(place: any): MapLocation | null {
 export function GoogleLocationPicker({
   latitude,
   longitude,
+  countryIso,
   onChange,
 }: {
   latitude?: number;
   longitude?: number;
+  countryIso?: string;
   onChange: (location: MapLocation) => void;
 }) {
   const mapEl = useRef<HTMLDivElement | null>(null);
@@ -82,6 +76,7 @@ export function GoogleLocationPicker({
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
   const geocoderRef = useRef<any>(null);
+  const autocompleteRef = useRef<any>(null);
   const applyingExternal = useRef(false);
 
   const [ready, setReady] = useState(false);
@@ -171,7 +166,11 @@ export function GoogleLocationPicker({
         if (searchEl.current) {
           const autocomplete = new g.places.Autocomplete(searchEl.current, {
             fields: ["geometry", "address_components", "formatted_address"],
+            ...(countryIso
+              ? { componentRestrictions: { country: countryIso.toLowerCase() } }
+              : {}),
           });
+          autocompleteRef.current = autocomplete;
           autocomplete.bindTo("bounds", map);
           autocomplete.addListener("place_changed", () => {
             const place = autocomplete.getPlace();
@@ -195,6 +194,13 @@ export function GoogleLocationPicker({
     // Initialize once; later coordinate changes are handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!autocompleteRef.current) return;
+    autocompleteRef.current.setComponentRestrictions(
+      countryIso ? { country: countryIso.toLowerCase() } : { country: [] },
+    );
+  }, [countryIso]);
 
   useEffect(() => {
     if (!markerRef.current || !mapRef.current) return;

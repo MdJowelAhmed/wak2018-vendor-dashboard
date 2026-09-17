@@ -162,7 +162,7 @@ export function OrdersListPage() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Delivery Type</TableHead>
+                    <TableHead>Delivery</TableHead>
                     <TableHead>Total</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead className="w-[1%] text-right">Action</TableHead>
@@ -180,7 +180,9 @@ export function OrdersListPage() {
                         <OrderStatusBadge status={o.status as any} />
                       </TableCell>
                       <TableCell className="capitalize">
-                        {o.deliveryType ?? "—"}
+                        {[o.deliveryType, "deliveryOption" in o ? o.deliveryOption : null]
+                          .filter(Boolean)
+                          .join(" · ") || "—"}
                       </TableCell>
                       <TableCell>
                         {formatCurrency(o.total)}

@@ -91,6 +91,25 @@ export const PRODUCT_ORDER_DELIVERY_TYPE = {
 export type PRODUCT_ORDER_DELIVERY_TYPE =
   (typeof PRODUCT_ORDER_DELIVERY_TYPE)[keyof typeof PRODUCT_ORDER_DELIVERY_TYPE];
 
+export const PRODUCT_ORDER_PAYMENT_STATUS = {
+  PENDING: "pending",
+  PAID: "paid",
+  UNPAID: "unpaid",
+  FAILED: "failed",
+  REFUNDED: "refunded",
+} as const;
+
+export type PRODUCT_ORDER_PAYMENT_STATUS =
+  (typeof PRODUCT_ORDER_PAYMENT_STATUS)[keyof typeof PRODUCT_ORDER_PAYMENT_STATUS];
+
+export const PRODUCT_ORDER_DELIVERY_OPTION = {
+  DELIVERY: "delivery",
+  PICKUP: "pickup",
+} as const;
+
+export type PRODUCT_ORDER_DELIVERY_OPTION =
+  (typeof PRODUCT_ORDER_DELIVERY_OPTION)[keyof typeof PRODUCT_ORDER_DELIVERY_OPTION];
+
 export type ProductOrderStatus =
   | PRODUCT_ORDER_STATUS
   | "ready"
@@ -155,6 +174,7 @@ export type ProductOrder = {
   shipment?: {
     carrier?: string;
     trackingId?: string;
+    trackingUrl?: string;
     trackingStatus?: string;
     labelUrl?: string;
     commercialInvoiceUrl?: string;
@@ -163,10 +183,10 @@ export type ProductOrder = {
   };
   vendor?: string;
   paymentMethod?: string;
-  paymentStatus?: string;
+  paymentStatus?: PRODUCT_ORDER_PAYMENT_STATUS | string;
   items?: ProductOrderItem[];
   deliveryType?: "local" | "international" | null;
-  deliveryOption?: string;
+  deliveryOption?: PRODUCT_ORDER_DELIVERY_OPTION | string;
   subTotal?: number;
   shippingFee?: number;
   discount?: number;
@@ -220,47 +240,107 @@ export type DeliveryDriverStatus =
   | "accepted"
   | "picked_up"
   | "in_transit"
-  | "delivered";
+  | "delivered"
+  | "assigned";
+
+export type DeliveryShipment = {
+  carrier?: string;
+  trackingId?: string;
+  trackingUrl?: string;
+  trackingStatus?: string;
+  labelUrl?: string;
+  commercialInvoiceUrl?: string;
+  requestedAt?: string;
+  lastSyncedAt?: string;
+};
+
+export type DeliveryLocalRider = {
+  _id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  profileImage?: string;
+  vehicleType?: string;
+  vehicleNumberPlate?: string;
+};
+
+export type DeliveryLocal = {
+  _id?: string;
+  deliveryNumber?: string;
+  pickup?: { address?: string };
+  dropoff?: { address?: string };
+  deliveryFee?: number;
+  status?: string;
+  paymentStatus?: string;
+  assignedRider?: DeliveryLocalRider;
+  acceptedAt?: string;
+  pickedUpAt?: string | null;
+  deliveredAt?: string | null;
+};
+
+export type DeliveryItem = {
+  quantity: number;
+  unitPrice: number;
+  unitTotal: number;
+  product?: {
+    _id?: string;
+    name?: string;
+    price?: number;
+    images?: string[];
+  };
+};
 
 export type Delivery = {
   id: string;
   orderId: string;
   vendorId: string;
   type?: "local" | "international";
+  deliveryOption?: string;
+  orderStatus?: string;
+  paymentStatus?: string;
+  localDeliveryStatus?: string;
   driverId?: string;
-  /** When provided by the API, shown in driver-facing UIs */
   driverName?: string;
   driverStatus: DeliveryDriverStatus;
   deliveryStatus: DeliveryDriverStatus;
   pickupLocation: string;
   dropLocation: string;
   etaMinutes?: number;
-  courier?: "DHL" | "FedEx" | "UPS";
+  courier?: string;
   trackingId?: string;
   trackingStatus?: string;
+  trackingUrl?: string;
+  labelUrl?: string;
+  commercialInvoiceUrl?: string;
   createdAt: string;
-  /** Approximate route distance in km */
   distanceKm?: number;
   driverPhone?: string;
   vehicleType?: string;
   vehicleNumber?: string;
-  /** Live driver position (when available) */
   currentLat?: number;
   currentLng?: number;
   currentAddress?: string;
   lastLocationUpdatedAt?: string;
-  /** ISO time per lifecycle step */
   timelineAt?: Partial<Record<DeliveryDriverStatus, string>>;
   deliveryFee?: number;
   deliveryPaid?: boolean;
   paymentMethod?: string;
   customerNote?: string;
   deliveryInstructions?: string;
-  /** Denormalized order summary for delivery UIs */
   orderLineItemName?: string;
   orderCustomerName?: string;
   orderCustomerPhone?: string;
   orderCustomerEmail?: string;
+  shippingAddress?: ProductOrder["shippingAddress"];
+  items?: DeliveryItem[];
+  shipment?: DeliveryShipment;
+  localDelivery?: DeliveryLocal;
+  customer?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
 };
 
 export type AnalyticsSummary = {

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -22,31 +22,28 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { DeliveryModal } from "@/features/orders/components/DeliveryModal";
 import { DeliveryStatusCard } from "@/features/orders/components/DeliveryStatusCard";
 import { StatusDropdown } from "@/features/orders/components/StatusDropdown";
+import { VendorOrderStatusControl } from "@/features/orders/components/VendorOrderStatusControl";
 import { MilestoneList } from "@/features/orders/components/MilestoneList";
 import {
   useGetProductOrderByIdQuery,
   useGetServiceOrderByIdQuery,
-  useUpdateProductOrderStatusMutation,
   useUpdateServiceOrderStatusMutation,
+  useRequestVendorLocalDeliveryMutation,
+  useRequestVendorInternationalShipmentMutation,
 } from "@/features/orders";
 import {
-  useCreateInternationalShipmentMutation,
   useGetDeliveryStatusQuery,
-  useRequestLocalDeliveryMutation,
+  useDeliveryRealtime,
 } from "@/features/delivery";
 import type {
   Order,
   ProductOrder,
   ProductOrderItem,
   ProductOrderItemProduct,
-  ProductOrderStatus,
   ServiceOrderStatus,
 } from "@/types/api";
-import { useGetUserProfileQuery } from "@/services/profileApi";
-import { useDeliveryRealtime } from "@/features/delivery";
 import {
   orderDetailsButtonMotionProps,
   orderDetailsCardVariants,
@@ -67,7 +64,8 @@ import {
 } from "@/utils/format-currency";
 
 type DeliveryMethod = "local" | "international";
-type CourierKey = "" | "dhl" | "fedex" | "ups";
+
+const SHIPPED_OR_LATER = new Set(["shipped", "out_for_delivery", "delivered"]);
 
 function fmtDateTime(iso?: string) {
   if (!iso) return "—";
@@ -252,22 +250,16 @@ export function OrderDetailsPage() {
     { skip: !id, pollingInterval: 4000 },
   );
 
-  const { data: profileRes } = useGetUserProfileQuery();
-  const profile = profileRes?.data;
-
-  const [updateP] = useUpdateProductOrderStatusMutation();
   const [updateS] = useUpdateServiceOrderStatusMutation();
 
-  const [deliveryOpen, setDeliveryOpen] = useState(false);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("local");
-  const [selectedCourier, setSelectedCourier] = useState<CourierKey>("");
   const [localRequested, setLocalRequested] = useState(false);
   const [intlRequested, setIntlRequested] = useState(false);
 
   const [requestLocal, { isLoading: localRequestLoading }] =
-    useRequestLocalDeliveryMutation();
-  const [createIntl, { isLoading: intlRequestLoading }] =
-    useCreateInternationalShipmentMutation();
+    useRequestVendorLocalDeliveryMutation();
+  const [requestIntl, { isLoading: intlRequestLoading }] =
+    useRequestVendorInternationalShipmentMutation();
 
   useDeliveryRealtime(id);
 
@@ -278,13 +270,6 @@ export function OrderDetailsPage() {
       setDeliveryMethod("local");
     }
   }, [productOrder?.deliveryType]);
-
-  const canArrangeDelivery = useMemo(() => {
-    if (!order) return false;
-    return (
-      order.type === "product" && order.status === "ready" && !deliveryQ.data
-    );
-  }, [order, deliveryQ.data]);
 
   if (orderQ.isLoading || !id) {
     return (
@@ -360,18 +345,6 @@ export function OrderDetailsPage() {
     paymentCurrency !== baseCurrency &&
     paidLocal != null;
 
-  const vendorId =
-    profile?.id ?? localStorage.getItem("vendor_id") ?? "demo-vendor";
-  const vendorPickup =
-    localStorage.getItem("vendor_pickup_address") ??
-    "Demo vendor pickup address";
-  const dropLocation =
-    shipping
-      ? [shipping.address, shipping.city, shipping.state, shipping.postalCode, shipping.country]
-          .filter(Boolean)
-          .join(", ")
-      : order.customer?.address ?? "";
-
   const isAlreadyRequested = Boolean(deliveryQ.data);
   const hasShippo = Boolean(productOrder?.shippoShipmentId);
   const localAlready =
@@ -381,8 +354,12 @@ export function OrderDetailsPage() {
       productOrder.localDeliveryStatus !== "not_requested");
   const intlAlready = intlRequested || isAlreadyRequested || hasShippo;
   const busy = localRequestLoading || intlRequestLoading;
+  const orderStatus = String(productOrder?.status || "").toLowerCase();
+  const cannotRequestAfterShipped = SHIPPED_OR_LATER.has(orderStatus);
   const showDeliveryActions =
-    order.type === "product" && !deliveryQ.data && !(hasShippo && productOrder?.deliveryType === "international");
+    order.type === "product" &&
+    productOrder?.deliveryOption !== "pickup" &&
+    !cannotRequestAfterShipped;
 
   const mapsUrl =
     shipping?.latitude != null && shipping?.longitude != null
@@ -391,28 +368,13 @@ export function OrderDetailsPage() {
 
   async function createLocalDelivery(orderId: string) {
     await requestLocal({
-      order_id: orderId,
-      type: "local",
-      pickup_location: vendorPickup,
-      drop_location: dropLocation,
-      vendor_id: vendorId,
+      id: orderId,
+      deliveryFee: productOrder?.shippingFee ?? 0,
     }).unwrap();
   }
 
-  async function createInternationalDelivery(
-    orderId: string,
-    courier: Exclude<CourierKey, "">,
-  ) {
-    await createIntl({
-      order_id: orderId,
-      type: "international",
-      courier,
-      weight: 1,
-      dimensions: "N/A",
-      pickup_location: vendorPickup,
-      drop_location: dropLocation,
-      vendor_id: vendorId,
-    }).unwrap();
+  async function createInternationalDelivery(orderId: string) {
+    await requestIntl({ id: orderId }).unwrap();
   }
 
   return (
@@ -463,29 +425,34 @@ export function OrderDetailsPage() {
             ) : null}
           </div>
         </div>
-        <StatusDropdown
-          kind={order.type}
-          value={order.status}
-          onChange={async (next) => {
-            try {
-              if (order.type === "product") {
-                await updateP({
-                  id: order.id,
-                  status: next as ProductOrderStatus,
-                }).unwrap();
-              } else {
+        {order.type === "product" ? (
+          <VendorOrderStatusControl
+            orderId={order.id}
+            status={order.status}
+            deliveryType={productOrder?.deliveryType}
+            deliveryOption={productOrder?.deliveryOption}
+            onUpdated={() => {
+              void orderQ.refetch();
+            }}
+          />
+        ) : (
+          <StatusDropdown
+            kind={order.type}
+            value={order.status}
+            onChange={async (next) => {
+              try {
                 await updateS({
                   id: order.id,
                   status: next as ServiceOrderStatus,
                 }).unwrap();
+                toast.success("Status updated");
+                void orderQ.refetch();
+              } catch {
+                toast.error("Update failed");
               }
-              toast.success("Status updated");
-              void orderQ.refetch();
-            } catch {
-              toast.error("Update failed");
-            }
-          }}
-        />
+            }}
+          />
+        )}
       </motion.div>
 
       {productOrder ? (
@@ -869,6 +836,22 @@ export function OrderDetailsPage() {
                         copy={productOrder.shipment.trackingId}
                       />
                     ) : null}
+                    {productOrder.shipment?.trackingUrl ? (
+                      <MetaRow
+                        label="Tracking URL"
+                        value={
+                          <a
+                            href={productOrder.shipment.trackingUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-[#895129] hover:underline"
+                          >
+                            Track shipment
+                            <ExternalLink className="size-3" />
+                          </a>
+                        }
+                      />
+                    ) : null}
                     <MetaRow
                       label="Tracking status"
                       value={
@@ -1022,7 +1005,8 @@ export function OrderDetailsPage() {
                       transition={{ duration: 0.28, ease: orderDetailsEase }}
                     >
                       <p className="text-muted-foreground text-xs">
-                        Fast delivery using nearby drivers.
+                        Fast delivery using nearby drivers. Delivery fee:{" "}
+                        {fmtMoney(deliveryFee)}
                       </p>
                       <div className="flex items-center gap-2">
                         <motion.div
@@ -1039,6 +1023,7 @@ export function OrderDetailsPage() {
                                 setLocalRequested(true);
                                 toast.success("Local delivery requested");
                                 void deliveryQ.refetch();
+                                void orderQ.refetch();
                               } catch {
                                 toast.error("Failed to request local delivery");
                               }
@@ -1063,19 +1048,6 @@ export function OrderDetailsPage() {
                       <p className="text-muted-foreground text-xs">
                         Create a courier shipment for this order.
                       </p>
-                      <select
-                        className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus-visible:border-[#895129]/45 focus-visible:ring-2 focus-visible:ring-[#895129]/20"
-                        value={selectedCourier}
-                        onChange={(e) =>
-                          setSelectedCourier(e.target.value as CourierKey)
-                        }
-                        disabled={busy || intlAlready}
-                      >
-                        <option value="">Select a courier</option>
-                        <option value="dhl">DHL</option>
-                        <option value="fedex">FedEx</option>
-                        <option value="ups">UPS</option>
-                      </select>
                       <div className="flex items-center gap-2">
                         <motion.div
                           className="inline-flex"
@@ -1086,18 +1058,12 @@ export function OrderDetailsPage() {
                             className="rounded-xl bg-[#895129] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#7b4723] disabled:cursor-not-allowed disabled:opacity-60"
                             disabled={busy || intlAlready}
                             onClick={async () => {
-                              if (!selectedCourier) {
-                                toast.error("Please select a courier");
-                                return;
-                              }
                               try {
-                                await createInternationalDelivery(
-                                  order.id,
-                                  selectedCourier as Exclude<CourierKey, "">,
-                                );
+                                await createInternationalDelivery(order.id);
                                 setIntlRequested(true);
                                 toast.success("Shipment request created");
                                 void deliveryQ.refetch();
+                                void orderQ.refetch();
                               } catch {
                                 toast.error("Failed to create shipment request");
                               }
@@ -1112,17 +1078,6 @@ export function OrderDetailsPage() {
                       </div>
                     </motion.div>
                   )}
-
-                  {canArrangeDelivery ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => setDeliveryOpen(true)}
-                    >
-                      Open delivery form
-                    </Button>
-                  ) : null}
                 </CardContent>
               </Card>
             </motion.div>
@@ -1130,16 +1085,6 @@ export function OrderDetailsPage() {
         </motion.div>
       </div>
 
-      <DeliveryModal
-        open={deliveryOpen}
-        onOpenChange={setDeliveryOpen}
-        order={order}
-        disabled={!canArrangeDelivery}
-        onDone={() => {
-          void deliveryQ.refetch();
-          void orderQ.refetch();
-        }}
-      />
     </motion.div>
   );
 }

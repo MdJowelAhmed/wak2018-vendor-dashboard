@@ -94,16 +94,42 @@ export const orderApi = baseApi.injectEndpoints({
     }),
     updateProductOrderStatus: build.mutation<
       ProductOrder,
-      { id: string; status: ProductOrderStatus }
+      {
+        id: string;
+        status?: ProductOrderStatus;
+        orderStatus?: ProductOrderStatus;
+        carrier?: string;
+        trackingId?: string;
+        trackingUrl?: string;
+      }
     >({
-      query: ({ id, status }) => ({
-        url: `/orders/products/${id}/status`,
-        method: "PATCH",
-        body: { status },
-      }),
+      query: ({ id, status, orderStatus, carrier, trackingId, trackingUrl }) => {
+        const body: Record<string, string> = {
+          orderStatus: orderStatus ?? status ?? "",
+        };
+        if (carrier?.trim()) body.carrier = carrier.trim();
+        if (trackingId?.trim()) body.trackingId = trackingId.trim();
+        if (trackingUrl?.trim()) body.trackingUrl = trackingUrl.trim();
+        return {
+          url: `/product-orders/${id}/vendor/status`,
+          method: "PATCH",
+          body,
+        };
+      },
+      transformResponse: (response: any) => {
+        const o = response?.data ?? response;
+        if (!o) return o;
+        return {
+          ...o,
+          id: o._id || o.id,
+          type: "product",
+          status: o.orderStatus || o.status,
+        } as ProductOrder;
+      },
       invalidatesTags: (_r, _e, { id }) => [
         list,
         { type: "Orders" as const, id },
+        { type: "Deliveries" as const, id: "LIST" },
       ],
     }),
     updateServiceOrderStatus: build.mutation<
@@ -118,6 +144,35 @@ export const orderApi = baseApi.injectEndpoints({
       invalidatesTags: (_r, _e, { id }) => [
         list,
         { type: "Orders" as const, id },
+      ],
+    }),
+    requestVendorLocalDelivery: build.mutation<
+      ProductOrder,
+      { id: string; deliveryFee: number }
+    >({
+      query: ({ id, deliveryFee }) => ({
+        url: `/product-orders/${id}/vendor/request-local-delivery`,
+        method: "POST",
+        body: { deliveryFee },
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        list,
+        { type: "Orders" as const, id },
+        { type: "Deliveries" as const, id: "LIST" },
+      ],
+    }),
+    requestVendorInternationalShipment: build.mutation<
+      ProductOrder,
+      { id: string }
+    >({
+      query: ({ id }) => ({
+        url: `/product-orders/${id}/vendor/request-international-shipment`,
+        method: "POST",
+      }),
+      invalidatesTags: (_r, _e, { id }) => [
+        list,
+        { type: "Orders" as const, id },
+        { type: "Deliveries" as const, id: "LIST" },
       ],
     }),
     deliverServiceOrder: build.mutation<
@@ -157,5 +212,7 @@ export const {
   useGetOrderByIdQuery,
   useUpdateProductOrderStatusMutation,
   useUpdateServiceOrderStatusMutation,
+  useRequestVendorLocalDeliveryMutation,
+  useRequestVendorInternationalShipmentMutation,
   useDeliverServiceOrderMutation,
 } = orderApi;

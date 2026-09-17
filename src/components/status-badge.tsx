@@ -74,6 +74,22 @@ const statusStyles: Record<string, { label: string; className: string }> = {
     label: "In Transit",
     className: "border-transparent bg-[#895129] text-white",
   },
+  paid: {
+    label: "Paid",
+    className: "border-transparent bg-emerald-600 text-white",
+  },
+  unpaid: {
+    label: "Unpaid",
+    className: "border-transparent bg-amber-500 text-white",
+  },
+  failed: {
+    label: "Failed",
+    className: "border-transparent bg-rose-600 text-white",
+  },
+  not_requested: {
+    label: "Not Requested",
+    className: "border-transparent bg-slate-500 text-white",
+  },
 };
 
 type StatusBadgeProps = {

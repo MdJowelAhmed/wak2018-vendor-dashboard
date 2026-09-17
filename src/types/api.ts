@@ -103,6 +103,29 @@ export type ServiceOrderStatus =
   | "in_progress"
   | "completed";
 
+export type OrderStatusLog = {
+  status: string;
+  timestamp: string;
+  note?: string;
+};
+
+export type ProductOrderItemProduct = {
+  _id: string;
+  name: string;
+  price?: number;
+  discountPrice?: number;
+  images?: string[];
+  slug?: string;
+};
+
+export type ProductOrderItem = {
+  _id?: string;
+  quantity: number;
+  unitPrice: number;
+  unitTotal: number;
+  product: string | ProductOrderItemProduct;
+};
+
 export type ProductOrder = {
   id: string;
   orderId: string;
@@ -130,30 +153,44 @@ export type ProductOrder = {
     longitude?: number;
   };
   shipment?: {
-    trackingStatus: string;
+    carrier?: string;
+    trackingId?: string;
+    trackingStatus?: string;
+    labelUrl?: string;
+    commercialInvoiceUrl?: string;
+    requestedAt?: string;
+    lastSyncedAt?: string;
   };
   vendor?: string;
   paymentMethod?: string;
   paymentStatus?: string;
-  items?: {
-    product: string;
-    quantity: number;
-    unitPrice: number;
-    unitTotal: number;
-    _id?: string;
-  }[];
+  items?: ProductOrderItem[];
   deliveryType?: "local" | "international" | null;
+  deliveryOption?: string;
   subTotal?: number;
   shippingFee?: number;
   discount?: number;
   totalQuantity?: number;
   grandTotal?: number;
+  grandTotalUSD?: number;
+  grandTotalLocal?: number;
+  baseCurrency?: string;
+  paymentCurrency?: string;
+  exchangeRate?: number;
   total: number;
   quantity: number;
   status: ProductOrderStatus;
   createdAt: string;
   updatedAt?: string;
   stripeSessionId?: string;
+  shippoRateId?: string;
+  shippoShipmentId?: string;
+  stockReservationStatus?: string;
+  stockReservedAt?: string;
+  localDelivery?: unknown;
+  localDeliveryStatus?: string;
+  payoutSettled?: boolean;
+  statusLog?: OrderStatusLog[];
 };
 
 export type ServiceOrder = {

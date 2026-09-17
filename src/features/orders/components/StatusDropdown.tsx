@@ -61,8 +61,8 @@ export function getProductStatusFlow(deliveryOption?: string | null) {
 }
 
 function nextProductStatus(current: string, deliveryOption?: string | null) {
-  const flow = getProductStatusFlow(deliveryOption);
-  const idx = flow.indexOf(current as (typeof flow)[number]);
+  const flow = getProductStatusFlow(deliveryOption) as readonly string[];
+  const idx = flow.indexOf(current);
   if (idx >= 0) return flow[idx + 1] ?? null;
 
   if (["ready", "delivery_requested", "shipment_created"].includes(current)) {

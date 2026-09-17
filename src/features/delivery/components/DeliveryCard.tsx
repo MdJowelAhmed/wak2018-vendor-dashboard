@@ -62,7 +62,6 @@ export function DeliveryItemsPreview({ delivery }: { delivery: Delivery }) {
 export function DeliveryCard({
   delivery,
   isDriver,
-  onViewDetails,
   onAccept,
   onReject,
   onStep,
@@ -116,7 +115,7 @@ export function DeliveryCard({
                 Order
               </Link>
             </Button>
-            <Button
+            {/* <Button
               type="button"
               variant="outline"
               size="sm"
@@ -124,7 +123,7 @@ export function DeliveryCard({
               onClick={() => onViewDetails(delivery)}
             >
               Details
-            </Button>
+            </Button> */}
           </div>
         </CardHeader>
 

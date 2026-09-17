@@ -522,7 +522,7 @@ export type DashboardActiveDelivery = {
   id: string;
   orderId: string;
   driverName: string;
-  status: "requested" | "accepted" | "in_transit" | "picked_up" | "delivered";
+  status: DeliveryDriverStatus;
 };
 
 export type RevenueChartPoint = {

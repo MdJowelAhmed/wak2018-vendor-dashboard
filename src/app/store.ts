@@ -11,6 +11,7 @@ import "@/features/chat";
 import "@/features/admin";
 import "@/features/customers";
 import "@/features/settings";
+import "@/features/currency/exchangeRateApi";
 
 const appReducer = combineReducers({
   [baseApi.reducerPath]: baseApi.reducer,

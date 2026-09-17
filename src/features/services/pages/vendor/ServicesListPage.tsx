@@ -16,8 +16,10 @@ import {
 import type { RootState } from "@/app/store";
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { UserRole } from "@/features/auth/types/authTypes";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 export function ServicesListPage() {
+  useCurrency();
   const { data: res, isLoading, isError } = useGetMyServicesQuery();
   const authRole: UserRole | undefined = useSelector(
     (s: RootState) => s.auth.user?.role,
@@ -94,10 +96,7 @@ export function ServicesListPage() {
                       {s.deliveryTime} Days
                     </TableCell>
                     <TableCell className="text-right">
-                      {new Intl.NumberFormat(undefined, {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(s.price)}
+                      {formatCurrency(s.price)}
                     </TableCell>
                   </TableRow>
                 ))}

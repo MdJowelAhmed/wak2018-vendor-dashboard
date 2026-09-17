@@ -49,12 +49,7 @@ export function EarningsPage() {
   return <ServiceProviderEarningsPage />;
 }
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function fmtDateTime(iso: string) {
   const d = new Date(iso);
@@ -75,6 +70,7 @@ function withdrawStatusBadgeClass(s: string) {
 }
 
 function ServiceProviderEarningsPage() {
+  useCurrency();
   const { data: wallet } = useGetWalletQuery();
 
   const totalEarnings = wallet?.totalEarnings ?? 0;

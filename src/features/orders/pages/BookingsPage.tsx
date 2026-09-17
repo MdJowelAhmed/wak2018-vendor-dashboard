@@ -21,12 +21,7 @@ import { cn } from "@/utils/utils";
 import { useGetServiceOrdersQuery } from "@/features/orders/services/orderApi";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const fmtUsd = (n: number) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
+import { formatCurrency as fmtUsd, useCurrency } from "@/utils/format-currency";
 
 function fmtDate(ymd: string) {
   if (!ymd) return "—";
@@ -56,6 +51,7 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 export function BookingsPage() {
+  useCurrency();
   const { data: apiOrders = [], isLoading } = useGetServiceOrdersQuery();
   const [detailsId, setDetailsId] = useState<string | null>(null);
 

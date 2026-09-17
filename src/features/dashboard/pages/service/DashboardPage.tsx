@@ -11,7 +11,7 @@ import {
   type StatCard,
 } from "@/features/dashboard/components/overview/StatsCards";
 import { ServiceRevenueChart } from "@/features/dashboard/components/analytics/ServiceRevenueChart";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 import type { AnalyticsRevenuePoint } from "@/types/api";
 import {
   Card,
@@ -63,6 +63,7 @@ function ServiceOrderStatusBadge({ status }: { status: string }) {
 }
 
 export function DashboardPage() {
+  useCurrency();
   const [year, setYear] = useState<number>(new Date().getFullYear());
 
   const overviewQ = useGetDashboardOverviewQuery({ role: "service" });
@@ -86,6 +87,7 @@ export function DashboardPage() {
       value: overviewQ.isLoading
         ? "..."
         : formatCurrency(overviewQ.data?.totalRevenue ?? 0),
+      amount: overviewQ.data?.totalRevenue ?? 0,
       sub: "all time",
       icon: Banknote,
     },

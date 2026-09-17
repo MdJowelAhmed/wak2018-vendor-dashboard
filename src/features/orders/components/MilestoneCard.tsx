@@ -12,6 +12,7 @@ import {
   useUpdateMilestoneStatusMutation,
 } from "@/features/orders";
 import { cn } from "@/utils/utils";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 const flow: MilestoneStatus[] = ["pending", "active", "submitted", "approved"];
 
@@ -28,6 +29,7 @@ export function MilestoneCard({
   milestone: Milestone;
   canEdit: boolean;
 }) {
+  useCurrency();
   const [editing, setEditing] = useState(false);
   const [title, setTitle] = useState(milestone.title);
   const [description, setDescription] = useState(milestone.description);
@@ -94,10 +96,7 @@ export function MilestoneCard({
           </CardTitle>
           <p className="text-muted-foreground text-xs capitalize">
             {milestone.status} ·{" "}
-            {new Intl.NumberFormat(undefined, {
-              style: "currency",
-              currency: "USD",
-            }).format(milestone.amount)}
+            {formatCurrency(milestone.amount)}
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">

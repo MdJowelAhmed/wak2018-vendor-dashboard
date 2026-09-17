@@ -49,12 +49,7 @@ const PAYCHANGU_OPERATORS = [
   },
 ] as const;
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, convertToUsd, convertFromUsd, useCurrency } from "@/utils/format-currency";
 
 function digitsOnly(value: string) {
   return value.replace(/\D/g, "");
@@ -155,6 +150,7 @@ export function WithdrawFundsCard({
   wallet?: Wallet;
   availableBalance: number;
 }) {
+  const { currency } = useCurrency();
   const [createWithdrawRequest, { isLoading: isWithdrawing }] =
     useCreateWithdrawRequestMutation();
   const [connectStripe, { isLoading: isConnecting }] = useConnectStripeMutation();
@@ -169,11 +165,14 @@ export function WithdrawFundsCard({
 
   const amountNumber = useMemo(() => Number(amount), [amount]);
   const stripeReady = isStripeConnected(wallet);
+  const availableInSelected = convertFromUsd(availableBalance);
+  const minInSelected = convertFromUsd(MIN_WITHDRAW);
+  const usdAmount = convertToUsd(amountNumber);
   const amountValid =
     Number.isFinite(amountNumber) &&
-    amountNumber >= MIN_WITHDRAW &&
+    amountNumber >= minInSelected &&
     amountNumber > 0 &&
-    amountNumber <= availableBalance;
+    amountNumber <= availableInSelected;
 
   const accountNumberValid =
     bankAccountNumber.length >= 10 && bankAccountNumber.length <= 19;
@@ -214,11 +213,11 @@ export function WithdrawFundsCard({
       toast.error("Enter a valid amount");
       return;
     }
-    if (amountNumber < MIN_WITHDRAW) {
+    if (amountNumber < minInSelected) {
       toast.error(`Minimum withdraw: ${fmtMoney(MIN_WITHDRAW)}`);
       return;
     }
-    if (amountNumber > availableBalance) {
+    if (amountNumber > availableInSelected) {
       toast.error("Cannot exceed available balance");
       return;
     }
@@ -250,12 +249,12 @@ export function WithdrawFundsCard({
     try {
       if (method === "stripe") {
         await createWithdrawRequest({
-          amount: amountNumber,
+          amount: usdAmount,
           method: "stripe",
         }).unwrap();
       } else if (method === "paychangu_bank") {
         await createWithdrawRequest({
-          amount: amountNumber,
+          amount: usdAmount,
           method: "paychangu_bank",
           payoutDetails: {
             bankUuid: bankUuid.trim(),
@@ -265,7 +264,7 @@ export function WithdrawFundsCard({
         }).unwrap();
       } else {
         await createWithdrawRequest({
-          amount: amountNumber,
+          amount: usdAmount,
           method: "paychangu_mobile_money",
           payoutDetails: {
             mobile: mobile.trim(),
@@ -287,7 +286,9 @@ export function WithdrawFundsCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-2">
-          <Label className="text-sm font-medium text-gray-900">Amount</Label>
+          <Label className="text-sm font-medium text-gray-900">
+            Amount ({currency})
+          </Label>
           <Input
             value={amount}
             onChange={(e) => setAmount(sanitizeAmount(e.target.value))}
@@ -299,7 +300,7 @@ export function WithdrawFundsCard({
             )}
           />
           <div className="text-xs text-muted-foreground">
-            Minimum withdraw: $50 · Available{" "}
+            Minimum withdraw: {fmtMoney(MIN_WITHDRAW)} · Available{" "}
             <span className="font-semibold tabular-nums">
               <AnimatedNumber
                 value={availableBalance}

@@ -27,8 +27,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 export function ServicesPage() {
+  useCurrency();
   const navigate = useNavigate();
   const { data: servicesData, isLoading } = useGetMyServicesQuery();
   const [deleteService] = useDeleteServiceMutation();
@@ -37,7 +39,7 @@ export function ServicesPage() {
 
   const services = servicesData?.data || [];
 
-  const fmtPrice = (price: number) => `$${price} (Fixed)`;
+  const fmtPrice = (price: number) => `${formatCurrency(price)} (Fixed)`;
 
   async function remove() {
     if (!serviceToDelete) return;

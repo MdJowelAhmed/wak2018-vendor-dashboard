@@ -10,7 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import type { RevenueChartPoint } from "@/types/api";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 import { cn } from "@/utils/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,7 @@ export function RevenueStatsModal({
   monthly: RevenueChartPoint[];
   mode?: "product" | "service" | "both";
 }) {
+  useCurrency();
   const [period, setPeriod] = useState<"yearly">("yearly");
 
   const points = useMemo(() => {

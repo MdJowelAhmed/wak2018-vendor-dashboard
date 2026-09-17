@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 import {
   Table,
   TableBody,
@@ -37,6 +38,7 @@ function ProductThumb({ urls }: { urls: string[] }) {
 }
 
 export function ProductsListPage() {
+  useCurrency();
   const { data, isLoading, isError, refetch } = useGetProductsQuery();
   const [remove, { isLoading: isDeleting }] = useDeleteProductMutation();
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
@@ -115,10 +117,7 @@ export function ProductsListPage() {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      {new Intl.NumberFormat(undefined, {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(p.price)}
+                      {formatCurrency(p.price)}
                     </TableCell>
                     <TableCell>{p.stock}</TableCell>
                     <TableCell>

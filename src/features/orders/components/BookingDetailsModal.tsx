@@ -20,6 +20,7 @@ import {
   useDeliverServiceOrderMutation,
 } from "@/features/orders/services/orderApi";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency as fmtUsd, useCurrency } from "@/utils/format-currency";
 
 const MAX_DELIVERY_IMAGES = 3;
 const MAX_DELIVERY_DOCS = 3;
@@ -124,13 +125,6 @@ function ImageThumb({
   );
 }
 
-const fmtUsd = (n: number) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
-
 function fmtDate(ymd: string) {
   if (!ymd) return "—";
   const d = new Date(ymd);
@@ -195,6 +189,7 @@ export function BookingDetailsModal({
   onOpenChange,
   bookingId,
 }: BookingDetailsModalProps) {
+  useCurrency();
   const navigate = useNavigate();
 
   const { data: b, isLoading } = useGetServiceOrderByIdQuery(bookingId ?? "", {

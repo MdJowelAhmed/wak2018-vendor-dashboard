@@ -19,12 +19,7 @@ import { DeliveryTimeline } from "./DeliveryTimeline";
 import { LiveTrackingMap } from "./LiveTrackingMap";
 import { useUpdateDeliveryStatusMutation } from "@/features/delivery";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function fmtEta(minutes?: number) {
   if (minutes == null || !Number.isFinite(minutes)) return "—";
@@ -59,6 +54,7 @@ export function DeliveryDetailsModal({
   onOpenChange: (v: boolean) => void;
   delivery: Delivery | null;
 }) {
+  useCurrency();
   const navigate = useNavigate();
   const [updateStatus, { isLoading: markingDone }] =
     useUpdateDeliveryStatusMutation();

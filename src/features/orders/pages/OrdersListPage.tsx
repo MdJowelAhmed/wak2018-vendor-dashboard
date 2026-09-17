@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { OrderStatusBadge } from "@/components/status-badge";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 type StatusFilter = "all" | `${PRODUCT_ORDER_STATUS}`;
 type DeliveryTypeFilter = "all" | `${PRODUCT_ORDER_DELIVERY_TYPE}`;
@@ -47,6 +48,7 @@ function formatDate(iso: string) {
 }
 
 export function OrdersListPage() {
+  useCurrency();
   const authRole: UserRole | undefined = useSelector(
     (s: RootState) => s.auth.user?.role,
   );
@@ -181,10 +183,7 @@ export function OrdersListPage() {
                         {o.deliveryType ?? "—"}
                       </TableCell>
                       <TableCell>
-                        {new Intl.NumberFormat(undefined, {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(o.total)}
+                        {formatCurrency(o.total)}
                       </TableCell>
                       <TableCell className="text-muted-foreground text-sm">
                         {formatDate(o.createdAt)}

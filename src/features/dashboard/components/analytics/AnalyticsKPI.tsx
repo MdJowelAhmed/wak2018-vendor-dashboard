@@ -6,12 +6,7 @@ import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { cn } from "@/utils/utils";
 import { fadeUp, hoverLift } from "@/components/ui/motion";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function fmtPct(n: number) {
   const v = Math.abs(n);
@@ -34,6 +29,7 @@ export function AnalyticsKPI({
   format?: "number" | "currency" | "percent";
   suffix?: string;
 }) {
+  useCurrency();
   const up = (changePct ?? 0) >= 0;
   const TrendIcon = up ? TrendingUp : TrendingDown;
 

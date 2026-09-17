@@ -41,17 +41,13 @@ import {
 } from "@/features/orders/motion/order-details-variants";
 import { cn } from "@/utils/utils";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 type DeliveryMethod = "local" | "international";
 type CourierKey = "" | "dhl" | "fedex" | "ups";
 
 export function OrderDetailsPage() {
+  useCurrency();
   const { id } = useParams();
   const navigate = useNavigate();
 

@@ -13,6 +13,7 @@ import {
   staggerTileVariants,
   staggerTilesParentVariants,
 } from "@/features/customers/motion/customer-details-variants";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 function fmtDate(iso?: string) {
   if (!iso) return "—";
@@ -26,6 +27,7 @@ function fmtDate(iso?: string) {
 }
 
 export function CustomerDetailsPage() {
+  useCurrency();
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -148,7 +150,7 @@ export function CustomerDetailsPage() {
                   >
                     <div className="text-muted-foreground text-xs">Total Spend</div>
                     <div className="text-lg font-semibold tabular-nums">
-                      ${customer.lifetimeValue.totalSpend}
+                      {formatCurrency(customer.lifetimeValue.totalSpend)}
                     </div>
                   </motion.div>
                 </motion.div>

@@ -7,11 +7,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/utils/utils";
 import { ProductGallery } from "./ProductGallery";
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
+import { formatCurrency as fmt, useCurrency } from "@/utils/format-currency";
 
 export function ProductDetailsView({
   product,
@@ -20,6 +16,7 @@ export function ProductDetailsView({
   product: Product;
   className?: string;
 }) {
+  useCurrency();
   const images = product.imageUrls ?? [];
   const [mainIndex, setMainIndex] = useState(product.mainImageIndex ?? 0);
   const [qty, setQty] = useState(1);

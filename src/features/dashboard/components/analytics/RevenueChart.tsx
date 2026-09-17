@@ -26,6 +26,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AnalyticsRevenuePoint } from "@/types/api";
 import { cn } from "@/utils/utils";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 export function RevenueChart({
   points,
@@ -40,6 +41,7 @@ export function RevenueChart({
   onChangeYear: (y: number) => void;
   className?: string;
 }) {
+  useCurrency();
   const data = useMemo(() => points ?? [], [points]);
   const has = data.length > 0;
 
@@ -125,13 +127,7 @@ export function RevenueChart({
                   formatter={(v: any, name: any) => {
                     const n = String(name ?? "");
                     if (n === "Revenue") {
-                      return [
-                        new Intl.NumberFormat(undefined, {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(Number(v ?? 0)),
-                        n,
-                      ];
+                      return [formatCurrency(Number(v ?? 0)), n];
                     }
                     return [v, n];
                   }}
@@ -170,10 +166,7 @@ export function RevenueChart({
           <div className="text-muted-foreground mt-3 text-xs">
             {hovered.label} ·{" "}
             <span className="text-foreground font-medium">
-              {new Intl.NumberFormat(undefined, {
-                style: "currency",
-                currency: "USD",
-              }).format(hovered.revenue)}
+              {formatCurrency(hovered.revenue)}
             </span>{" "}
             revenue ·{" "}
             <span className="text-foreground font-medium">

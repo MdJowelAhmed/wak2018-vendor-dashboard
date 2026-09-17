@@ -42,6 +42,7 @@ import { logout } from "@/features/auth/authSlice";
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import { connectSocket } from "@/utils/socket";
 import { NotificationDropdown } from "@/features/notifications/components/NotificationDropdown";
+import { CurrencySelect } from "@/features/currency/CurrencySelect";
 import { cn, getImageUrl } from "@/utils/utils";
 
 type MenuItem = { to: string; label: string; icon: typeof Home };
@@ -337,6 +338,7 @@ export function VendorLayout() {
               </div>
 
               <div className="ml-auto flex items-center gap-2">
+                <CurrencySelect />
                 <NotificationDropdown
                   role="vendor"
                   viewAllUrl="/vendor/notifications"

@@ -28,6 +28,7 @@ import {
   serviceTopCardVariants,
 } from "@/features/services/motion/service-details-variants";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency as fmtUsd, useCurrency } from "@/utils/format-currency";
 
 const bookings = [
   {
@@ -46,13 +47,6 @@ const bookings = [
   },
 ] as const;
 
-const fmtUsd = (n: number) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
-
 function bookingStatusBadgeClass(status: string) {
   const s = status.toLowerCase();
   if (s === "completed")
@@ -66,6 +60,7 @@ const tableRowClass =
   "border-b transition-colors duration-200 hover:bg-muted/40 data-[state=selected]:bg-muted [&:last-child]:border-0";
 
 export function ServiceDetails() {
+  useCurrency();
   const { id } = useParams();
   const { data: service, isLoading, isError } = useGetServiceByIdQuery(id ?? "", {
     skip: !id,

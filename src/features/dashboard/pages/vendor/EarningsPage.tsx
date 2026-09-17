@@ -38,12 +38,7 @@ import {
 } from "../../components/WithdrawFundsCard";
 import { PaymentMethodCard } from "../../components/PaymentMethodCard";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function fmtDateTime(iso: string) {
   const d = new Date(iso);
@@ -64,6 +59,7 @@ function withdrawStatusBadgeClass(s: string) {
 }
 
 export function EarningsPage() {
+  useCurrency();
   const { data: wallet, isLoading } = useGetWalletQuery();
 
   const totalEarnings = wallet?.totalEarnings ?? 0;

@@ -44,6 +44,7 @@ export type ProductFormValues = {
   highlights: HighlightRow[];
   brand: string;
   weight: string;
+  localDeliveryFee: string;
   dimensions: { length: string; width: string; height: string };
 };
 
@@ -63,6 +64,7 @@ const DEFAULT_VALUES: ProductFormValues = {
   highlights: [],
   brand: "",
   weight: "0",
+  localDeliveryFee: "0",
   dimensions: { length: "0", width: "0", height: "0" },
 };
 
@@ -107,6 +109,15 @@ export function ProductForm({
     }
     if (!String(v.price).trim()) e.push("Price is required.");
     if (!Number.isFinite(Number(v.price))) e.push("Price must be a number.");
+    if (
+      String(v.localDeliveryFee).trim() &&
+      !Number.isFinite(Number(v.localDeliveryFee))
+    ) {
+      e.push("Local delivery fee must be a number.");
+    }
+    if (Number(v.localDeliveryFee) < 0) {
+      e.push("Local delivery fee cannot be negative.");
+    }
     if (totalImages < 1) e.push("At least 1 image is required.");
     return e;
   }
@@ -130,6 +141,7 @@ export function ProductForm({
     fd.set("status", v.active ? "active" : "inactive");
     if (v.brand) fd.set("brand", v.brand.trim());
     fd.set("weight", String(Number(v.weight)));
+    fd.set("localDeliveryFee", String(Number(v.localDeliveryFee || 0)));
     fd.set(
       "dimensions",
       JSON.stringify({
@@ -343,6 +355,26 @@ export function ProductForm({
                     onChange={(e) =>
                       setV((s) => ({ ...s, stock: e.target.value }))
                     }
+                    className="rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#895129]"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label className="text-gray-700" htmlFor="localDeliveryFee">
+                    Local delivery fee
+                  </Label>
+                  <Input
+                    id="localDeliveryFee"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    value={v.localDeliveryFee}
+                    onChange={(e) =>
+                      setV((s) => ({
+                        ...s,
+                        localDeliveryFee: e.target.value,
+                      }))
+                    }
+                    placeholder="0.00"
                     className="rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#895129]"
                   />
                 </div>

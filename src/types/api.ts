@@ -35,6 +35,7 @@ export type Product = {
   productCountries?: string[];
   weight?: number;
   dimensions?: { length: number; width: number; height: number };
+  localDeliveryFee?: number;
   status?: "active" | "inactive";
   discountPrice?: number;
 };

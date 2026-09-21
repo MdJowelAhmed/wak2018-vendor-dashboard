@@ -65,8 +65,6 @@ import {
 
 type DeliveryMethod = "local" | "international";
 
-const SHIPPED_OR_LATER = new Set(["shipped", "out_for_delivery", "delivered"]);
-
 function fmtDateTime(iso?: string) {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -253,8 +251,6 @@ export function OrderDetailsPage() {
   const [updateS] = useUpdateServiceOrderStatusMutation();
 
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("local");
-  const [localRequested, setLocalRequested] = useState(false);
-  const [intlRequested, setIntlRequested] = useState(false);
 
   const [requestLocal, { isLoading: localRequestLoading }] =
     useRequestVendorLocalDeliveryMutation();
@@ -345,21 +341,12 @@ export function OrderDetailsPage() {
     paymentCurrency !== baseCurrency &&
     paidLocal != null;
 
-  const isAlreadyRequested = Boolean(deliveryQ.data);
-  const hasShippo = Boolean(productOrder?.shippoShipmentId);
-  const localAlready =
-    localRequested ||
-    isAlreadyRequested ||
-    (productOrder?.localDeliveryStatus &&
-      productOrder.localDeliveryStatus !== "not_requested");
-  const intlAlready = intlRequested || isAlreadyRequested || hasShippo;
   const busy = localRequestLoading || intlRequestLoading;
   const orderStatus = String(productOrder?.status || "").toLowerCase();
-  const cannotRequestAfterShipped = SHIPPED_OR_LATER.has(orderStatus);
   const showDeliveryActions =
     order.type === "product" &&
     productOrder?.deliveryOption !== "pickup" &&
-    !cannotRequestAfterShipped;
+    orderStatus === "confirmed";
 
   const mapsUrl =
     shipping?.latitude != null && shipping?.longitude != null
@@ -1016,11 +1003,10 @@ export function OrderDetailsPage() {
                           <button
                             type="button"
                             className="rounded-xl bg-[#895129] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#7b4723] disabled:cursor-not-allowed disabled:opacity-60"
-                            disabled={busy || Boolean(localAlready)}
+                            disabled={busy}
                             onClick={async () => {
                               try {
                                 await createLocalDelivery(order.id);
-                                setLocalRequested(true);
                                 toast.success("Local delivery requested");
                                 void deliveryQ.refetch();
                                 void orderQ.refetch();
@@ -1032,9 +1018,6 @@ export function OrderDetailsPage() {
                             Request local delivery
                           </button>
                         </motion.div>
-                        {localAlready ? (
-                          <Badge variant="outline">Requested</Badge>
-                        ) : null}
                       </div>
                     </motion.div>
                   ) : (
@@ -1056,11 +1039,10 @@ export function OrderDetailsPage() {
                           <button
                             type="button"
                             className="rounded-xl bg-[#895129] px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-[#7b4723] disabled:cursor-not-allowed disabled:opacity-60"
-                            disabled={busy || intlAlready}
+                            disabled={busy}
                             onClick={async () => {
                               try {
                                 await createInternationalDelivery(order.id);
-                                setIntlRequested(true);
                                 toast.success("Shipment request created");
                                 void deliveryQ.refetch();
                                 void orderQ.refetch();
@@ -1072,9 +1054,6 @@ export function OrderDetailsPage() {
                             Create shipment
                           </button>
                         </motion.div>
-                        {intlAlready ? (
-                          <Badge variant="outline">Requested</Badge>
-                        ) : null}
                       </div>
                     </motion.div>
                   )}

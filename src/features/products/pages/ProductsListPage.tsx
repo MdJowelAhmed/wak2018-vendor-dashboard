@@ -97,6 +97,7 @@ export function ProductsListPage() {
                   <TableHead>Image</TableHead>
                   <TableHead>Name</TableHead>
                   <TableHead>Price</TableHead>
+                  <TableHead>Local delivery fee</TableHead>
                   <TableHead>Stock</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="w-[1%] text-right">Actions</TableHead>
@@ -118,6 +119,9 @@ export function ProductsListPage() {
                     </TableCell>
                     <TableCell>
                       {formatCurrency(p.price)}
+                    </TableCell>
+                    <TableCell>
+                      {formatCurrency(p.localDeliveryFee ?? 0)}
                     </TableCell>
                     <TableCell>{p.stock}</TableCell>
                     <TableCell>
@@ -153,7 +157,7 @@ export function ProductsListPage() {
                 {!data?.length && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="text-muted-foreground py-6 text-center"
                     >
                       No products yet. Create your first one.

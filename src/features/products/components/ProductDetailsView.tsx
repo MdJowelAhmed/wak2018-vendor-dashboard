@@ -81,6 +81,12 @@ export function ProductDetailsView({
               <p className="text-muted-foreground text-sm">
                 {product.description}
               </p>
+              {product.localDeliveryFee != null &&
+              Number(product.localDeliveryFee) > 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  Local delivery fee: {fmt(product.localDeliveryFee)}
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-wrap items-center gap-3">

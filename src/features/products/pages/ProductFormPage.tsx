@@ -87,6 +87,8 @@ export function ProductFormPage({ mode }: Props) {
           brand: data.brand ?? "",
           weight: String(data.weight ?? 0),
           localDeliveryFee: String(data.localDeliveryFee ?? 0),
+          colors: data.colors ?? [],
+          sizes: data.sizes ?? [],
           dimensions: {
             length: String(data.dimensions?.length ?? 0),
             width: String(data.dimensions?.width ?? 0),

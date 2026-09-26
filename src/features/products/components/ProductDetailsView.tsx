@@ -120,6 +120,23 @@ export function ProductDetailsView({
               </div>
             </div>
 
+            {product.colors?.length || product.sizes?.length ? (
+              <div className="border-border/60 space-y-3 rounded-xl border p-4">
+                {product.colors?.length ? (
+                  <div>
+                    <h3 className="text-sm font-semibold">Colors</h3>
+                    <p className="mt-1 text-sm">{product.colors.join(", ")}</p>
+                  </div>
+                ) : null}
+                {product.sizes?.length ? (
+                  <div>
+                    <h3 className="text-sm font-semibold">Sizes</h3>
+                    <p className="mt-1 text-sm">{product.sizes.join(", ")}</p>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+
             {product.highlights?.length ? (
               <div className="border-border/60 rounded-xl border p-4">
                 <h3 className="text-sm font-semibold">Top Highlights</h3>

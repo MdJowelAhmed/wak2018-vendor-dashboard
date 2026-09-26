@@ -26,6 +26,7 @@ import {
 } from "@/components/CountryMultiSelect";
 import { ImageUploader, type ImageUploaderValue } from "./ImageUploader";
 import { HighlightsInput, type HighlightRow } from "./HighlightsInput";
+import { TagListInput } from "./TagListInput";
 import { useGetProductCategoriesQuery } from "../services/categoryApi";
 
 export type ProductFormValues = {
@@ -45,6 +46,8 @@ export type ProductFormValues = {
   brand: string;
   weight: string;
   localDeliveryFee: string;
+  colors: string[];
+  sizes: string[];
   dimensions: { length: string; width: string; height: string };
 };
 
@@ -65,6 +68,8 @@ const DEFAULT_VALUES: ProductFormValues = {
   brand: "",
   weight: "0",
   localDeliveryFee: "0",
+  colors: [],
+  sizes: [],
   dimensions: { length: "0", width: "0", height: "0" },
 };
 
@@ -142,6 +147,14 @@ export function ProductForm({
     if (v.brand) fd.set("brand", v.brand.trim());
     fd.set("weight", String(Number(v.weight)));
     fd.set("localDeliveryFee", String(Number(v.localDeliveryFee || 0)));
+    fd.set(
+      "colors",
+      JSON.stringify((v.colors ?? []).map((c) => c.trim()).filter(Boolean)),
+    );
+    fd.set(
+      "sizes",
+      JSON.stringify((v.sizes ?? []).map((s) => s.trim()).filter(Boolean)),
+    );
     fd.set(
       "dimensions",
       JSON.stringify({
@@ -534,6 +547,31 @@ export function ProductForm({
               <HighlightsInput
                 value={v.highlights}
                 onChange={(h) => setV((s) => ({ ...s, highlights: h }))}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle>Colors & sizes</CardTitle>
+              <CardDescription>
+                Add each color or size, then click Add.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <TagListInput
+                id="colors"
+                label="Colors"
+                value={v.colors}
+                onChange={(colors) => setV((s) => ({ ...s, colors }))}
+                placeholder="e.g. Red"
+              />
+              <TagListInput
+                id="sizes"
+                label="Sizes"
+                value={v.sizes}
+                onChange={(sizes) => setV((s) => ({ ...s, sizes }))}
+                placeholder="e.g. XL"
               />
             </CardContent>
           </Card>

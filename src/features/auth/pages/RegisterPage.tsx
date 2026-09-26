@@ -27,7 +27,7 @@ export function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [countryCode, setCountryCode] = useState("");
+  const [country, setCountry] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState<UserRole>("vendor");
@@ -59,7 +59,7 @@ export function RegisterPage() {
     if (!phone.trim()) {
       e2.phone = "Phone is required";
     }
-    if (isVendor && !countryCode.trim()) {
+    if (isVendor && !country.trim()) {
       e2.countryCode = "Country is required";
     }
     if (!password) {
@@ -86,7 +86,7 @@ export function RegisterPage() {
         phone: phone.trim(),
         password,
         role: isVendor ? "vendor" : "service_provider",
-        ...(isVendor ? { countryCode } : {}),
+        ...(isVendor ? { country } : {}),
       }).unwrap();
       toast.success("Account created! Please verify your email.");
       void navigate("/auth/verify-otp", {
@@ -167,9 +167,9 @@ export function RegisterPage() {
           </Label>
           <SearchableSelect
             id="country"
-            value={countryCode}
+            value={country}
             onChange={(code) => {
-              setCountryCode(code);
+              setCountry(code);
               setErrors((prev) => {
                 if (!prev.countryCode) return prev;
                 const next = { ...prev };
@@ -191,12 +191,12 @@ export function RegisterPage() {
             className={cn(
               "h-12 rounded-xl border border-gray-200 bg-white/80 text-zinc-900 shadow-sm",
               authInputFocusClass,
-              errors.countryCode && "border-destructive",
+              errors.country && "border-destructive",
             )}
           />
-          {errors.countryCode ? (
+          {errors.country ? (
             <p className="text-destructive text-xs" role="alert">
-              {errors.countryCode}
+              {errors.country}
             </p>
           ) : null}
         </motion.div>

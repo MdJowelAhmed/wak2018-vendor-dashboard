@@ -25,6 +25,7 @@ export function SearchableSelect({
   searchPlaceholder = "Search…",
   disabled,
   emptyText = "No results",
+  className,
 }: {
   id?: string;
   value: string;
@@ -34,6 +35,7 @@ export function SearchableSelect({
   searchPlaceholder?: string;
   disabled?: boolean;
   emptyText?: string;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -66,6 +68,7 @@ export function SearchableSelect({
           className={cn(
             "h-9 w-full justify-between font-normal",
             !selected && "text-muted-foreground",
+            className,
           )}
         >
           <span className="truncate">{selected?.label ?? placeholder}</span>

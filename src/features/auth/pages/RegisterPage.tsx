@@ -1,16 +1,25 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useRegisterMutation } from "@/services/authApi";
+import { useGetCountriesQuery } from "@/services/profileApi";
 import { AuthCard } from "../components/AuthCard";
 import { AuthHeader } from "../components/AuthHeader";
 import { InputField } from "../components/InputField";
 import { PasswordInput } from "../components/PasswordInput";
 import { RoleSelector } from "../components/RoleSelector";
 import { SubmitButton } from "../components/SubmitButton";
+import { SearchableSelect } from "@/features/shipping-addresses/components/SearchableSelect";
 import type { UserRole } from "@/features/auth/types/authTypes";
 import { isValidEmail, PASSWORD_MIN } from "@/utils/auth-validation";
 import { fetchErrorMessage } from "@/utils/fetch-error";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/utils/utils";
+import {
+  authInputFocusClass,
+  authInputShakeTransition,
+} from "@/features/auth/motion/auth-motion-variants";
 
 export function RegisterPage() {
   const navigate = useNavigate();
@@ -18,10 +27,24 @@ export function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [countryCode, setCountryCode] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState<UserRole>("vendor");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const isVendor = role === "vendor";
+  const { data: countriesRes, isLoading: countriesLoading } =
+    useGetCountriesQuery(undefined, { skip: !isVendor });
+
+  const countryOptions = useMemo(
+    () =>
+      (countriesRes?.data ?? []).map((c) => ({
+        value: c.countryCode,
+        label: c.name,
+        keywords: c.countryCode,
+      })),
+    [countriesRes?.data],
+  );
 
   function validate() {
     const e2: Record<string, string> = {};
@@ -35,6 +58,9 @@ export function RegisterPage() {
     }
     if (!phone.trim()) {
       e2.phone = "Phone is required";
+    }
+    if (isVendor && !countryCode.trim()) {
+      e2.countryCode = "Country is required";
     }
     if (!password) {
       e2.password = "Password is required";
@@ -59,7 +85,8 @@ export function RegisterPage() {
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
         password,
-        role: role === "service" ? "service_provider" : "vendor",
+        role: isVendor ? "vendor" : "service_provider",
+        ...(isVendor ? { countryCode } : {}),
       }).unwrap();
       toast.success("Account created! Please verify your email.");
       void navigate("/auth/verify-otp", {
@@ -83,10 +110,22 @@ export function RegisterPage() {
         title="Create account"
         subtitle="Choose a role and complete your profile"
       />
-      <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
+      <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-1">
         <div>
           <p className="mb-2 text-sm font-medium text-zinc-800">I am a</p>
-          <RoleSelector value={role} onChange={setRole} disabled={isLoading} />
+          <RoleSelector
+            value={role}
+            onChange={(next) => {
+              setRole(next);
+              setErrors((prev) => {
+                if (!prev.countryCode) return prev;
+                const nextErrors = { ...prev };
+                delete nextErrors.countryCode;
+                return nextErrors;
+              });
+            }}
+            disabled={isLoading}
+          />
         </div>
         <InputField
           id="name"
@@ -117,6 +156,51 @@ export function RegisterPage() {
           onChange={(e) => setPhone(e.target.value)}
           error={errors.phone}
         />
+        {isVendor ? (
+        <motion.div
+          className="flex w-full flex-col gap-1.5"
+          animate={errors.countryCode ? { x: [0, -5, 5, -5, 5, 0] } : { x: 0 }}
+          transition={authInputShakeTransition}
+        >
+          <Label className="text-sm font-medium text-zinc-800" htmlFor="country">
+            Country
+          </Label>
+          <SearchableSelect
+            id="country"
+            value={countryCode}
+            onChange={(code) => {
+              setCountryCode(code);
+              setErrors((prev) => {
+                if (!prev.countryCode) return prev;
+                const next = { ...prev };
+                delete next.countryCode;
+                return next;
+              });
+            }}
+            options={countryOptions}
+            placeholder={
+              countriesLoading ? "Loading countries…" : "Select a country"
+            }
+            searchPlaceholder="Search country…"
+            disabled={isLoading || countriesLoading}
+            emptyText={
+              countriesLoading
+                ? "Loading countries…"
+                : "No countries found. Try another search."
+            }
+            className={cn(
+              "h-12 rounded-xl border border-gray-200 bg-white/80 text-zinc-900 shadow-sm",
+              authInputFocusClass,
+              errors.countryCode && "border-destructive",
+            )}
+          />
+          {errors.countryCode ? (
+            <p className="text-destructive text-xs" role="alert">
+              {errors.countryCode}
+            </p>
+          ) : null}
+        </motion.div>
+        ) : null}
         <PasswordInput
           id="password"
           name="password"

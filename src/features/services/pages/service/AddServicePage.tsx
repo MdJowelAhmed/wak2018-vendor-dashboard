@@ -28,7 +28,6 @@ import {
 } from "@/features/services";
 import {
   CountryMultiSelect,
-  isCountrySelectionValid,
   type ServiceCountrySelection,
 } from "@/components/CountryMultiSelect";
 import { readServiceLocationFromLocalStorage } from "@/utils/service-provider-profile-storage";
@@ -112,7 +111,6 @@ export function AddServicePage() {
   const canSubmit = useMemo(() => {
     if (!v.title.trim()) return false;
     if (!v.category.trim()) return false;
-    if (!isCountrySelectionValid(v.countrySelection)) return false;
     if (!v.description.trim()) return false;
     if (
       !v.price.trim() ||
@@ -131,8 +129,6 @@ export function AddServicePage() {
       {};
     if (!v.title.trim()) e.title = "Service title is required.";
     if (!v.category.trim()) e.category = "Category is required.";
-    if (!isCountrySelectionValid(v.countrySelection))
-      e.countries = "Select at least one country or all countries.";
     if (!v.description.trim()) e.description = "Description is required.";
     if (!v.price.trim()) e.price = "Base price is required.";
     else if (!Number.isFinite(Number(v.price)) || Number(v.price) <= 0)

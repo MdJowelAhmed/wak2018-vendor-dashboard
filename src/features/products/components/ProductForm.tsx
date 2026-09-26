@@ -20,10 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/utils/utils";
-import {
-  isCountrySelectionValid,
-  type ServiceCountrySelection,
-} from "@/components/CountryMultiSelect";
+import { type ServiceCountrySelection } from "@/components/CountryMultiSelect";
 import { ImageUploader, type ImageUploaderValue } from "./ImageUploader";
 import { HighlightsInput, type HighlightRow } from "./HighlightsInput";
 import { TagListInput } from "./TagListInput";
@@ -109,9 +106,6 @@ export function ProductForm({
   function validate(): string[] {
     const e: string[] = [];
     if (!v.name.trim()) e.push("Product name is required.");
-    if (!isCountrySelectionValid(v.countrySelection)) {
-      e.push("Select at least one country or all countries.");
-    }
     if (!String(v.price).trim()) e.push("Price is required.");
     if (!Number.isFinite(Number(v.price))) e.push("Price must be a number.");
     if (

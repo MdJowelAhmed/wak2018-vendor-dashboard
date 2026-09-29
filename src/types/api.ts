@@ -41,6 +41,13 @@ export type Product = {
   sizes?: string[];
   status?: "active" | "inactive";
   discountPrice?: number;
+  sku?: string;
+  lowStockThreshold?: number;
+  ratingAverage?: number;
+  ratingCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  slug?: string;
 };
 
 export type ProductVariant = {

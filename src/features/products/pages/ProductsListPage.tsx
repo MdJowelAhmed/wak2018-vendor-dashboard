@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   useDeleteProductMutation,
@@ -135,8 +135,18 @@ export function ProductsListPage() {
                       <div className="inline-flex items-center gap-1">
                         <Button variant="ghost" size="icon" asChild>
                           <Link
+                            to={`/vendor/products/${p.id}`}
+                            aria-label="View product details"
+                            title="View details"
+                          >
+                            <Eye className="size-4" />
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" size="icon" asChild>
+                          <Link
                             to={`/vendor/products/edit/${p.id}`}
                             aria-label="Edit product"
+                            title="Edit product"
                           >
                             <Pencil className="size-4" />
                           </Link>
@@ -147,6 +157,7 @@ export function ProductsListPage() {
                           disabled={isDeleting && deletingId === p.id}
                           onClick={() => setProductToDelete(p.id)}
                           aria-label="Delete product"
+                          title="Delete product"
                         >
                           <Trash2 className="size-4" />
                         </Button>

@@ -46,6 +46,12 @@ export const productApi = baseApi.injectEndpoints({
           topHighlights: p.topHighlights || [],
           _id: p._id,
           sku: p.sku,
+          lowStockThreshold: p.lowStockThreshold,
+          ratingAverage: p.ratingAverage ?? 0,
+          ratingCount: p.ratingCount ?? 0,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+          slug: p.slug,
         })) as Product[];
       },
       providesTags: (r) =>
@@ -97,6 +103,12 @@ export const productApi = baseApi.injectEndpoints({
           topHighlights: p.topHighlights || [],
           _id: p._id,
           sku: p.sku,
+          lowStockThreshold: p.lowStockThreshold,
+          ratingAverage: p.ratingAverage ?? 0,
+          ratingCount: p.ratingCount ?? 0,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+          slug: p.slug,
         } as Product;
       },
       providesTags: (_r, _e, id) => [{ type: "Products", id }],

@@ -253,7 +253,7 @@ export function ProductForm({
     const paths = v.existingImageUrls.map((u) =>
       u.replace(
         import.meta.env.VITE_API_BASE_URL?.replace(/\/api\/v\d+$/, "") ??
-          "http://localhost:4060",
+        "http://localhost:4060",
         "",
       ),
     );
@@ -562,40 +562,7 @@ export function ProductForm({
             </CardContent>
           </Card>
 
-          <Card className="rounded-xl border-border/60 shadow-sm">
-            <CardHeader>
-              <CardTitle>Description</CardTitle>
-              <CardDescription>
-                Write a rich formatted overview, bullet points, and key details.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="description">Product Description</Label>
-                <RichTextEditor
-                  id="description"
-                  value={v.description}
-                  onChange={(description) =>
-                    setV((s) => ({ ...s, description }))
-                  }
-                  placeholder="Write a rich description for your product, features, bullet points…"
-                  minHeight="140px"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="details">Product Details</Label>
-                <RichTextEditor
-                  id="details"
-                  value={v.productDetails}
-                  onChange={(productDetails) =>
-                    setV((s) => ({ ...s, productDetails }))
-                  }
-                  placeholder="Additional specifications, materials, warranty, care instructions…"
-                  minHeight="120px"
-                />
-              </div>
-            </CardContent>
-          </Card>
+        
         </div>
 
         <div className="space-y-6">
@@ -639,15 +606,52 @@ export function ProductForm({
         </div>
       </div>
 
-      {/* Product Variants Section */}
-      <Card className="rounded-2xl border border-gray-200 bg-white py-0 shadow-sm">
-        <CardContent className="p-6">
-          <ProductVariantsInput
-            variants={v.variants}
-            onChange={(variants) => setV((s) => ({ ...s, variants }))}
-          />
-        </CardContent>
-      </Card>
+        {/* Product Variants Section */}
+          <Card className="rounded-2xl border border-gray-200 bg-white py-0 shadow-sm">
+            <CardContent className="p-6">
+              <ProductVariantsInput
+                variants={v.variants}
+                onChange={(variants) => setV((s) => ({ ...s, variants }))}
+              />
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border-border/60 shadow-sm">
+            <CardHeader>
+              <CardTitle>Description</CardTitle>
+              <CardDescription>
+                Write a rich formatted overview, bullet points, and key details.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-2">
+                <Label htmlFor="description">Product Description</Label>
+                <RichTextEditor
+                  id="description"
+                  value={v.description}
+                  onChange={(description) =>
+                    setV((s) => ({ ...s, description }))
+                  }
+                  placeholder="Write a rich description for your product, features, bullet points…"
+                  minHeight="140px"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="details">Product Details</Label>
+                <RichTextEditor
+                  id="details"
+                  value={v.productDetails}
+                  onChange={(productDetails) =>
+                    setV((s) => ({ ...s, productDetails }))
+                  }
+                  placeholder="Additional specifications, materials, warranty, care instructions…"
+                  minHeight="120px"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+
     </div>
   );
 }

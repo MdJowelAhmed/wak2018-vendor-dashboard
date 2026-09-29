@@ -78,9 +78,12 @@ export function ProductDetailsView({
                   </>
                 ) : null}
               </div>
-              <p className="text-muted-foreground text-sm">
-                {product.description}
-              </p>
+              {product.description ? (
+                <FormattedContent
+                  content={product.description}
+                  className="text-muted-foreground text-sm"
+                />
+              ) : null}
               {product.localDeliveryFee != null &&
               Number(product.localDeliveryFee) > 0 ? (
                 <p className="text-muted-foreground text-sm">
@@ -209,9 +212,10 @@ export function ProductDetailsView({
           </CardHeader>
           <CardContent>
             {product.productDetails ? (
-              <p className="whitespace-pre-wrap text-sm text-foreground">
-                {product.productDetails}
-              </p>
+              <FormattedContent
+                content={product.productDetails}
+                className="text-foreground text-sm"
+              />
             ) : (
               <p className="text-muted-foreground text-sm">
                 No product details provided.
@@ -221,5 +225,36 @@ export function ProductDetailsView({
         </Card>
       </div>
     </div>
+  );
+}
+
+function FormattedContent({
+  content,
+  className,
+}: {
+  content?: string;
+  className?: string;
+}) {
+  if (!content) return null;
+  const isHtml = /<[a-z][\s\S]*>/i.test(content);
+  if (isHtml) {
+    return (
+      <div
+        className={cn(
+          "prose prose-sm max-w-none text-muted-foreground leading-relaxed",
+          "[&_p]:mb-1.5 [&_p:last-child]:mb-0",
+          "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-1.5",
+          "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-1.5",
+          "[&_h2]:text-base [&_h2]:font-bold [&_h2]:text-foreground [&_h2]:mt-2 [&_h2]:mb-1",
+          "[&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-foreground [&_h3]:mt-2 [&_h3]:mb-1",
+          "[&_blockquote]:border-l-2 [&_blockquote]:border-[#895129]/40 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:my-1.5",
+          className,
+        )}
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
+  }
+  return (
+    <p className={cn("whitespace-pre-wrap text-sm", className)}>{content}</p>
   );
 }

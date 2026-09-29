@@ -28,6 +28,7 @@ import {
   ProductVariantsInput,
   type VariantFormItem,
 } from "./ProductVariantsInput";
+import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { useGetProductCategoriesQuery } from "../services/categoryApi";
 
 export type ProductFormValues = {
@@ -565,35 +566,32 @@ export function ProductForm({
             <CardHeader>
               <CardTitle>Description</CardTitle>
               <CardDescription>
-                Write a short overview and optional bullet points.
+                Write a rich formatted overview, bullet points, and key details.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
+                <Label htmlFor="description">Product Description</Label>
+                <RichTextEditor
                   id="description"
-                  rows={4}
                   value={v.description}
-                  onChange={(e) =>
-                    setV((s) => ({ ...s, description: e.target.value }))
+                  onChange={(description) =>
+                    setV((s) => ({ ...s, description }))
                   }
-                  placeholder="Short description for your product…"
+                  placeholder="Write a rich description for your product, features, bullet points…"
+                  minHeight="140px"
                 />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="details">Product Details</Label>
-                <Textarea
+                <RichTextEditor
                   id="details"
-                  rows={4}
                   value={v.productDetails}
-                  onChange={(e) =>
-                    setV((s) => ({
-                      ...s,
-                      productDetails: e.target.value,
-                    }))
+                  onChange={(productDetails) =>
+                    setV((s) => ({ ...s, productDetails }))
                   }
-                  placeholder="The iPhone 16 Pro Max comes with..."
+                  placeholder="Additional specifications, materials, warranty, care instructions…"
+                  minHeight="120px"
                 />
               </div>
             </CardContent>

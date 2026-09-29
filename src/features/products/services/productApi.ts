@@ -24,6 +24,16 @@ export const productApi = baseApi.injectEndpoints({
           weight: p.weight,
           dimensions: p.dimensions,
           localDeliveryFee: p.localDeliveryFee ?? 0,
+          variants: Array.isArray(p.variants)
+            ? p.variants.map((v: any) => ({
+                _id: v._id,
+                id: v._id || v.id,
+                color: v.color || "",
+                stock: typeof v.stock === "number" ? v.stock : Number(v.stock) || 0,
+                sizes: Array.isArray(v.sizes) ? v.sizes : [],
+                image: v.image ? getImageUrl(v.image) : undefined,
+              }))
+            : [],
           colors: Array.isArray(p.colors) ? p.colors : [],
           sizes: Array.isArray(p.sizes) ? p.sizes : [],
           active: p.status === "active",
@@ -65,6 +75,16 @@ export const productApi = baseApi.injectEndpoints({
           weight: p.weight,
           dimensions: p.dimensions,
           localDeliveryFee: p.localDeliveryFee ?? 0,
+          variants: Array.isArray(p.variants)
+            ? p.variants.map((v: any) => ({
+                _id: v._id,
+                id: v._id || v.id,
+                color: v.color || "",
+                stock: typeof v.stock === "number" ? v.stock : Number(v.stock) || 0,
+                sizes: Array.isArray(v.sizes) ? v.sizes : [],
+                image: v.image ? getImageUrl(v.image) : undefined,
+              }))
+            : [],
           colors: Array.isArray(p.colors) ? p.colors : [],
           sizes: Array.isArray(p.sizes) ? p.sizes : [],
           active: p.status === "active",

@@ -120,7 +120,55 @@ export function ProductDetailsView({
               </div>
             </div>
 
-            {product.colors?.length || product.sizes?.length ? (
+            {product.variants?.length ? (
+              <div className="border-border/60 space-y-3 rounded-xl border p-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-gray-900">
+                    Product Variants
+                  </h3>
+                  <span className="text-xs text-muted-foreground font-medium">
+                    {product.variants.length} variant{product.variants.length > 1 ? "s" : ""}
+                  </span>
+                </div>
+                <div className="space-y-2.5">
+                  {product.variants.map((vr, idx) => (
+                    <div
+                      key={vr._id || vr.id || idx}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-gray-100 bg-gray-50/60 p-2.5"
+                    >
+                      <div className="flex items-center gap-3">
+                        {vr.image ? (
+                          <img
+                            src={vr.image}
+                            alt={vr.color || `Variant ${idx + 1}`}
+                            className="size-11 rounded-lg object-cover border border-gray-200"
+                          />
+                        ) : (
+                          <div className="flex size-11 items-center justify-center rounded-lg border border-gray-200 bg-gray-100 text-xs font-semibold text-gray-500">
+                            #{idx + 1}
+                          </div>
+                        )}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-semibold text-gray-900">
+                              {vr.color || `Variant #${idx + 1}`}
+                            </span>
+                            <span className="rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+                              {vr.stock} in stock
+                            </span>
+                          </div>
+                          {vr.sizes?.length ? (
+                            <p className="text-[11px] text-muted-foreground mt-0.5">
+                              Sizes: {vr.sizes.join(", ")}
+                            </p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : product.colors?.length || product.sizes?.length ? (
               <div className="border-border/60 space-y-3 rounded-xl border p-4">
                 {product.colors?.length ? (
                   <div>

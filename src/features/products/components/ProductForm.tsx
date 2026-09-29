@@ -24,6 +24,10 @@ import { type ServiceCountrySelection } from "@/components/CountryMultiSelect";
 import { ImageUploader, type ImageUploaderValue } from "./ImageUploader";
 import { HighlightsInput, type HighlightRow } from "./HighlightsInput";
 import { TagListInput } from "./TagListInput";
+import {
+  ProductVariantsInput,
+  type VariantFormItem,
+} from "./ProductVariantsInput";
 import { useGetProductCategoriesQuery } from "../services/categoryApi";
 
 export type ProductFormValues = {
@@ -43,8 +47,9 @@ export type ProductFormValues = {
   brand: string;
   weight: string;
   localDeliveryFee: string;
-  colors: string[];
-  sizes: string[];
+  variants: VariantFormItem[];
+  colors?: string[];
+  sizes?: string[];
   dimensions: { length: string; width: string; height: string };
 };
 
@@ -65,6 +70,7 @@ const DEFAULT_VALUES: ProductFormValues = {
   brand: "",
   weight: "0",
   localDeliveryFee: "0",
+  variants: [],
   colors: [],
   sizes: [],
   dimensions: { length: "0", width: "0", height: "0" },
@@ -103,6 +109,16 @@ export function ProductForm({
 
   const totalImages = v.existingImageUrls.length + v.newFiles.length;
 
+  const hasVariants = (v.variants ?? []).length > 0;
+  const totalVariantStock = useMemo(
+    () =>
+      (v.variants ?? []).reduce(
+        (sum, item) => sum + (Math.max(0, Math.floor(Number(item.stock))) || 0),
+        0,
+      ),
+    [v.variants],
+  );
+
   function validate(): string[] {
     const e: string[] = [];
     if (!v.name.trim()) e.push("Product name is required.");
@@ -117,12 +133,32 @@ export function ProductForm({
     if (Number(v.localDeliveryFee) < 0) {
       e.push("Local delivery fee cannot be negative.");
     }
-    if (totalImages < 1) e.push("At least 1 image is required.");
+    if (totalImages < 1) e.push("At least 1 main product image is required.");
+
+    if (!hasVariants) {
+      if (!String(v.stock).trim()) {
+        e.push("Stock is required when no variants are provided.");
+      } else if (!Number.isFinite(Number(v.stock)) || Number(v.stock) < 0) {
+        e.push("Stock must be a non-negative number.");
+      }
+    } else {
+      v.variants.forEach((vr, idx) => {
+        const numStock = Number(vr.stock);
+        if (vr.stock === "" || !Number.isFinite(numStock) || numStock < 0) {
+          e.push(
+            `Variant #${idx + 1} (${vr.color.trim() || "Unnamed"}) stock must be a non-negative number.`,
+          );
+        }
+      });
+    }
+
     return e;
   }
 
   function toFormData() {
     const fd = new FormData();
+
+    // 1. Basic Product Info
     fd.set("name", v.name.trim());
     fd.set("category", v.category.trim());
     fd.set("allCountries", String(Boolean(v.countrySelection.allCountries)));
@@ -136,19 +172,10 @@ export function ProductForm({
     fd.set("discountPrice", v.discount ? String(Number(v.discount)) : "0");
     fd.set("description", v.description);
     fd.set("productDetails", v.productDetails);
-    fd.set("stock", String(Math.max(0, Math.floor(Number(v.stock || 0)))));
     fd.set("status", v.active ? "active" : "inactive");
     if (v.brand) fd.set("brand", v.brand.trim());
     fd.set("weight", String(Number(v.weight)));
     fd.set("localDeliveryFee", String(Number(v.localDeliveryFee || 0)));
-    fd.set(
-      "colors",
-      JSON.stringify((v.colors ?? []).map((c) => c.trim()).filter(Boolean)),
-    );
-    fd.set(
-      "sizes",
-      JSON.stringify((v.sizes ?? []).map((s) => s.trim()).filter(Boolean)),
-    );
     fd.set(
       "dimensions",
       JSON.stringify({
@@ -169,6 +196,58 @@ export function ProductForm({
           .map((h) => ({ name: h.title, value: h.value })),
       ),
     );
+
+    // 2. Variants (JSON Stringified) & Variant Images
+    // Old fields colors[] and sizes[] are NO LONGER SUPPORTED. Do NOT send them.
+    if (hasVariants) {
+      const variantsArray = v.variants.map((vr) => {
+        const item: {
+          color?: string;
+          stock: number;
+          sizes: string[];
+          image?: string;
+        } = {
+          stock: Math.max(0, Math.floor(Number(vr.stock) || 0)),
+          sizes: (vr.sizes ?? []).map((s) => s.trim()).filter(Boolean),
+        };
+
+        if (vr.color?.trim()) {
+          item.color = vr.color.trim();
+        }
+
+        // For existing variants where you are NOT changing the image, just keep the existing image URL in the variant's image property.
+        // For new variants or variants where you are replacing the image, omit "image" property because it's a new upload.
+        if (vr.image && !vr.newFile) {
+          item.image = vr.image;
+        }
+
+        return item;
+      });
+
+      fd.append("variants", JSON.stringify(variantsArray));
+
+      // 3. Variant Images & Indexes
+      const variantImageIndexes: number[] = [];
+      v.variants.forEach((vr, index) => {
+        if (vr.newFile) {
+          fd.append("variantImages", vr.newFile);
+          variantImageIndexes.push(index);
+        }
+      });
+
+      if (variantImageIndexes.length > 0) {
+        fd.append("variantImageIndexes", JSON.stringify(variantImageIndexes));
+      }
+
+      // Global stock: optional when variants exist (backend auto-calculates sum of variants)
+      fd.set("stock", String(totalVariantStock));
+    } else {
+      // If product does NOT have variants, MUST provide global stock
+      fd.append("variants", JSON.stringify([]));
+      fd.set("stock", String(Math.max(0, Math.floor(Number(v.stock || 0)))));
+    }
+
+    // 4. Main Product Images
     for (const f of v.newFiles) fd.append("image", f);
     const paths = v.existingImageUrls.map((u) =>
       u.replace(
@@ -352,18 +431,32 @@ export function ProductForm({
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                   <Label className="text-gray-700" htmlFor="stock">
-                    Stock
+                    Stock{" "}
+                    {hasVariants && (
+                      <span className="text-xs font-normal text-muted-foreground">
+                        (Auto: {totalVariantStock})
+                      </span>
+                    )}
                   </Label>
                   <Input
                     id="stock"
                     type="number"
                     min={0}
-                    value={v.stock}
+                    value={hasVariants ? totalVariantStock : v.stock}
+                    disabled={hasVariants}
                     onChange={(e) =>
                       setV((s) => ({ ...s, stock: e.target.value }))
                     }
-                    className="rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#895129]"
+                    className={cn(
+                      "rounded-lg border border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-[#895129]",
+                      hasVariants && "bg-gray-100 text-gray-500 cursor-not-allowed",
+                    )}
                   />
+                  {hasVariants ? (
+                    <p className="text-[11px] text-muted-foreground">
+                      Calculated from sum of all {v.variants.length} variant(s).
+                    </p>
+                  ) : null}
                 </div>
                 <div className="grid gap-2">
                   <Label className="text-gray-700" htmlFor="localDeliveryFee">
@@ -545,32 +638,18 @@ export function ProductForm({
             </CardContent>
           </Card>
 
-          <Card className="rounded-xl border-border/60 shadow-sm">
-            <CardHeader>
-              <CardTitle>Colors & sizes</CardTitle>
-              <CardDescription>
-                Add each color or size, then click Add.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <TagListInput
-                id="colors"
-                label="Colors"
-                value={v.colors}
-                onChange={(colors) => setV((s) => ({ ...s, colors }))}
-                placeholder="e.g. Red"
-              />
-              <TagListInput
-                id="sizes"
-                label="Sizes"
-                value={v.sizes}
-                onChange={(sizes) => setV((s) => ({ ...s, sizes }))}
-                placeholder="e.g. XL"
-              />
-            </CardContent>
-          </Card>
         </div>
       </div>
+
+      {/* Product Variants Section */}
+      <Card className="rounded-2xl border border-gray-200 bg-white py-0 shadow-sm">
+        <CardContent className="p-6">
+          <ProductVariantsInput
+            variants={v.variants}
+            onChange={(variants) => setV((s) => ({ ...s, variants }))}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

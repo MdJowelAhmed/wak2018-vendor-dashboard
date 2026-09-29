@@ -36,10 +36,20 @@ export type Product = {
   weight?: number;
   dimensions?: { length: number; width: number; height: number };
   localDeliveryFee?: number;
+  variants?: ProductVariant[];
   colors?: string[];
   sizes?: string[];
   status?: "active" | "inactive";
   discountPrice?: number;
+};
+
+export type ProductVariant = {
+  _id?: string;
+  id?: string;
+  color?: string;
+  stock: number;
+  sizes: string[];
+  image?: string;
 };
 
 export type ServicePackage = {

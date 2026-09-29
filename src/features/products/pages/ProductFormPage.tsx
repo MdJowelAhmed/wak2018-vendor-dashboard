@@ -86,9 +86,26 @@ export function ProductFormPage({ mode }: Props) {
           highlights: data.highlights ?? [],
           brand: data.brand ?? "",
           weight: String(data.weight ?? 0),
-          localDeliveryFee: String(data.localDeliveryFee ?? 0),
-          colors: data.colors ?? [],
-          sizes: data.sizes ?? [],
+          variants:
+            data.variants && data.variants.length > 0
+              ? data.variants.map((vr, i) => ({
+                  id: vr._id || vr.id || `var-${i}-${Date.now()}`,
+                  _id: vr._id,
+                  color: vr.color ?? "",
+                  stock: String(vr.stock ?? 0),
+                  sizes: vr.sizes ?? [],
+                  image: vr.image,
+                }))
+              : data.colors && data.colors.length > 0
+                ? data.colors.map((c, i) => ({
+                    id: `legacy-${i}-${Date.now()}`,
+                    color: c,
+                    stock: String(
+                      Math.floor((data.stock ?? 0) / data.colors!.length),
+                    ),
+                    sizes: data.sizes ?? [],
+                  }))
+                : [],
           dimensions: {
             length: String(data.dimensions?.length ?? 0),
             width: String(data.dimensions?.width ?? 0),

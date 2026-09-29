@@ -153,7 +153,7 @@ export function ProductVariantsInput({
           </Button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {variants.map((variant, idx) => {
             const displayImage = variant.previewUrl || variant.image;
             return (
@@ -198,8 +198,8 @@ function VariantCard({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-gray-300">
-      <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-all hover:border-gray-300 flex flex-col justify-between">
+      <div className="flex items-center justify-between border-b border-gray-100 pb-3 mb-3.5">
         <div className="flex items-center gap-2">
           <span className="flex size-6 items-center justify-center rounded-full bg-[#895129]/10 text-xs font-semibold text-[#895129]">
             {index + 1}
@@ -226,9 +226,9 @@ function VariantCard({
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-[140px_1fr]">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[115px_1fr]">
         {/* Variant Image */}
-        <div className="flex flex-col items-center justify-start gap-2">
+        <div className="flex flex-col items-center justify-start gap-1.5">
           <input
             ref={fileInputRef}
             type="file"
@@ -244,7 +244,7 @@ function VariantCard({
             }}
           />
 
-          <div className="relative group flex size-32 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
+          <div className="relative group flex size-28 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
             {displayImage ? (
               <>
                 <img
@@ -257,21 +257,21 @@ function VariantCard({
                     type="button"
                     variant="secondary"
                     size="icon"
-                    className="size-8 rounded-full bg-white/90 text-gray-800 hover:bg-white shadow"
+                    className="size-7 rounded-full bg-white/90 text-gray-800 hover:bg-white shadow"
                     onClick={() => fileInputRef.current?.click()}
                     title="Change image"
                   >
-                    <Upload className="size-3.5" />
+                    <Upload className="size-3" />
                   </Button>
                   <Button
                     type="button"
                     variant="destructive"
                     size="icon"
-                    className="size-8 rounded-full bg-red-600 text-white hover:bg-red-700 shadow"
+                    className="size-7 rounded-full bg-red-600 text-white hover:bg-red-700 shadow"
                     onClick={onRemoveImage}
                     title="Remove image"
                   >
-                    <X className="size-3.5" />
+                    <X className="size-3" />
                   </Button>
                 </div>
               </>
@@ -281,25 +281,25 @@ function VariantCard({
                 onClick={() => fileInputRef.current?.click()}
                 className="flex size-full flex-col items-center justify-center p-2 text-center text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <Upload className="size-6 mb-1 text-gray-400" />
-                <span className="text-[11px] font-medium leading-tight">
+                <Upload className="size-5 mb-1 text-gray-400" />
+                <span className="text-[10px] font-medium leading-tight">
                   Upload Photo
                 </span>
-                <span className="text-[10px] text-gray-400 mt-0.5">
+                <span className="text-[9px] text-gray-400 mt-0.5">
                   Variant image
                 </span>
               </button>
             )}
           </div>
           {displayImage && (
-            <p className="text-[11px] text-gray-500 truncate max-w-[130px]">
+            <p className="text-[10px] text-gray-500 truncate max-w-[110px]">
               {variant.newFile ? variant.newFile.name : "Saved image"}
             </p>
           )}
         </div>
 
         {/* Variant Fields */}
-        <div className="space-y-4">
+        <div className="space-y-3 min-w-0">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-gray-700">

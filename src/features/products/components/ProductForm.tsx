@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,7 +22,6 @@ import { cn } from "@/utils/utils";
 import { type ServiceCountrySelection } from "@/components/CountryMultiSelect";
 import { ImageUploader, type ImageUploaderValue } from "./ImageUploader";
 import { HighlightsInput, type HighlightRow } from "./HighlightsInput";
-import { TagListInput } from "./TagListInput";
 import {
   ProductVariantsInput,
   type VariantFormItem,

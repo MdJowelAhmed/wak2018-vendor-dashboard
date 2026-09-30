@@ -15,9 +15,7 @@ import {
   useDeleteServiceMutation,
   useUpdateServiceMutation,
 } from "@/features/services";
-import { toast } from "sonner";
 import { CustomSpinner } from "@/components/common/CustomSpinner";
-import { getImageUrl } from "@/utils/utils";
 import {
   Dialog,
   DialogContent,
@@ -26,18 +24,29 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { toast } from "sonner";
 import { useState } from "react";
+import { Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { formatCurrency, useCurrency } from "@/utils/format-currency";
+import { cn, getImageUrl } from "@/utils/utils";
 
 export function ServicesPage() {
   useCurrency();
   const navigate = useNavigate();
-  const { data: servicesData, isLoading } = useGetMyServicesQuery();
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const { data: servicesData, isLoading, isFetching } = useGetMyServicesQuery({
+    page,
+    limit: 10,
+    searchTerm: searchTerm.trim() || undefined,
+  });
   const [deleteService] = useDeleteServiceMutation();
   const [updateService] = useUpdateServiceMutation();
   const [serviceToDelete, setServiceToDelete] = useState<string | null>(null);
 
   const services = servicesData?.data || [];
+  const pagination = servicesData?.pagination;
 
   const fmtPrice = (price: number) => `${formatCurrency(price)} (Fixed)`;
 
@@ -70,16 +79,31 @@ export function ServicesPage() {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">My Services</h1>
           <p className="text-muted-foreground text-sm">
             Manage your service listings and pricing.
           </p>
         </div>
-        <Button asChild className="bg-[#895129] hover:bg-[#7b4723]">
-          <Link to="/service/add-service">Add New Service</Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-64">
+            <Search className="text-muted-foreground absolute left-3 top-1/2 size-4 -translate-y-1/2" />
+            <Input
+              type="text"
+              placeholder="Search services…"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(1);
+              }}
+              className="pl-9 h-9"
+            />
+          </div>
+          <Button asChild className="bg-[#895129] hover:bg-[#7b4723]">
+            <Link to="/service/add-service">Add New Service</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="rounded-xl border border-border/60 bg-card shadow-sm overflow-hidden">
@@ -188,6 +212,53 @@ export function ServicesPage() {
           </TableBody>
         </Table>
       </div>
+
+      {pagination && pagination.totalPage > 1 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <p className="text-muted-foreground text-sm">
+            Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+            {Math.min(pagination.page * pagination.limit, pagination.total)} of{" "}
+            {pagination.total} services
+          </p>
+          <div className="flex items-center gap-1.5">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page <= 1 || isFetching}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Previous
+            </Button>
+            {Array.from({ length: pagination.totalPage }, (_, i) => i + 1).map(
+              (p) => (
+                <Button
+                  key={p}
+                  variant={p === page ? "default" : "outline"}
+                  size="sm"
+                  className={cn(
+                    "size-8 p-0 text-xs",
+                    p === page
+                      ? "bg-[#895129] hover:bg-[#7b4723] text-white"
+                      : ""
+                  )}
+                  disabled={isFetching}
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </Button>
+              )
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page >= pagination.totalPage || isFetching}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog
         open={!!serviceToDelete}

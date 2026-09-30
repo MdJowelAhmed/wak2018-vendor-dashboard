@@ -42,6 +42,12 @@ export type GetMyServicesResponse = {
   data: Service[];
 };
 
+export type GetMyServicesArgs = {
+  searchTerm?: string;
+  page?: number;
+  limit?: number;
+};
+
 export const serviceApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getCategories: build.query<any, void>({
@@ -49,12 +55,18 @@ export const serviceApi = baseApi.injectEndpoints({
     }),
     getMyServices: build.query<
       GetMyServicesResponse,
-      { searchTerm?: string } | void
+      GetMyServicesArgs | void
     >({
-      query: (arg) => ({
-        url: "/services/mine",
-        params: arg ? { searchTerm: arg.searchTerm } : undefined,
-      }),
+      query: (arg) => {
+        const params: Record<string, any> = {};
+        if (arg?.searchTerm) params.searchTerm = arg.searchTerm;
+        if (arg?.page) params.page = arg.page;
+        if (arg?.limit) params.limit = arg.limit;
+        return {
+          url: "/services/mine",
+          params: Object.keys(params).length ? params : undefined,
+        };
+      },
       providesTags: (r) =>
         r?.data
           ? [

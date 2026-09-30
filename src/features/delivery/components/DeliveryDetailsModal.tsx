@@ -193,6 +193,11 @@ export function DeliveryDetailsModal({
                         <div className="truncate font-medium">{item.product?.name ?? "Item"}</div>
                         <div className="text-muted-foreground text-xs">
                           Qty {item.quantity} × {fmtMoney(item.unitPrice)}
+                          {item.color || item.size ? (
+                            <span className="ml-1 text-[#895129]">
+                              ({[item.color && `Color: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(", ")})
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                       <div className="text-sm font-semibold tabular-nums">

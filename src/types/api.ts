@@ -162,7 +162,22 @@ export type ProductOrderItem = {
   quantity: number;
   unitPrice: number;
   unitTotal: number;
+  color?: string;
+  size?: string;
   product: string | ProductOrderItemProduct;
+};
+
+export type ProductOrderAddress = {
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  countryCode: string;
+  postalCode: string;
+  latitude?: number;
+  longitude?: number;
 };
 
 export type ProductOrder = {
@@ -179,18 +194,8 @@ export type ProductOrder = {
     email?: string;
     address?: string;
   };
-  shippingAddress?: {
-    fullName: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    country: string;
-    countryCode: string;
-    postalCode: string;
-    latitude?: number;
-    longitude?: number;
-  };
+  shippingAddress?: ProductOrderAddress;
+  pickupAddress?: ProductOrderAddress;
   shipment?: {
     carrier?: string;
     trackingId?: string;
@@ -302,6 +307,8 @@ export type DeliveryItem = {
   quantity: number;
   unitPrice: number;
   unitTotal: number;
+  color?: string;
+  size?: string;
   product?: {
     _id?: string;
     name?: string;

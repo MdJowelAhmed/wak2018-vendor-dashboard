@@ -289,6 +289,7 @@ export function OrderDetailsPage() {
 
   const customer = order.customer ?? { name: order.customerName };
   const shipping = productOrder?.shippingAddress;
+  const pickup = productOrder?.pickupAddress;
   const displayId = productOrder?.orderId || `#${order.id}`;
   const backHref = isVendor ? "/vendor/orders" : "/service/bookings";
 
@@ -303,6 +304,8 @@ export function OrderDetailsPage() {
         image: product?.images?.[0],
         listPrice: product?.price,
         discountPrice: product?.discountPrice,
+        color: it.color,
+        size: it.size,
       };
     }) ?? [
       {
@@ -316,6 +319,8 @@ export function OrderDetailsPage() {
         image: undefined as string | undefined,
         listPrice: undefined as number | undefined,
         discountPrice: undefined as number | undefined,
+        color: undefined as string | undefined,
+        size: undefined as string | undefined,
       },
     ];
 
@@ -351,6 +356,11 @@ export function OrderDetailsPage() {
   const mapsUrl =
     shipping?.latitude != null && shipping?.longitude != null
       ? `https://maps.google.com/?q=${shipping.latitude},${shipping.longitude}`
+      : null;
+
+  const pickupMapsUrl =
+    pickup?.latitude != null && pickup?.longitude != null
+      ? `https://maps.google.com/?q=${pickup.latitude},${pickup.longitude}`
       : null;
 
   async function createLocalDelivery(orderId: string) {
@@ -520,6 +530,20 @@ export function OrderDetailsPage() {
                         <div className="text-muted-foreground mt-0.5 text-sm">
                           Qty {it.quantity} × {fmtMoney(it.price)}
                         </div>
+                        {it.color || it.size ? (
+                          <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                            {it.color ? (
+                              <Badge variant="outline" className="font-normal text-muted-foreground bg-gray-50/50">
+                                Color: <span className="ml-1 font-medium text-foreground">{it.color}</span>
+                              </Badge>
+                            ) : null}
+                            {it.size ? (
+                              <Badge variant="outline" className="font-normal text-muted-foreground bg-gray-50/50">
+                                Size: <span className="ml-1 font-medium text-foreground">{it.size}</span>
+                              </Badge>
+                            ) : null}
+                          </div>
+                        ) : null}
                         {it.listPrice != null &&
                         it.discountPrice != null &&
                         it.discountPrice < it.listPrice ? (
@@ -773,6 +797,59 @@ export function OrderDetailsPage() {
                     {mapsUrl ? (
                       <a
                         href={mapsUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-[#895129] hover:underline"
+                      >
+                        Open in Maps
+                        <ExternalLink className="size-3" />
+                      </a>
+                    ) : null}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ) : null}
+
+          {pickup ? (
+            <motion.div variants={orderDetailsCardVariants}>
+              <Card className="rounded-2xl border-gray-100 shadow-sm">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <MapPin className="size-4 text-[#895129]" />
+                    Pickup address
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 text-sm">
+                  <div>
+                    <div className="font-medium">{pickup.fullName}</div>
+                    {pickup.phone ? (
+                      <a
+                        href={`tel:${pickup.phone.replace(/\s/g, "")}`}
+                        className="text-muted-foreground hover:text-[#895129] mt-0.5 block"
+                      >
+                        {pickup.phone}
+                      </a>
+                    ) : null}
+                  </div>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {[
+                      pickup.address,
+                      pickup.city,
+                      pickup.state,
+                      pickup.postalCode,
+                      pickup.country,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {pickup.countryCode ? (
+                      <Badge variant="outline">{pickup.countryCode}</Badge>
+                    ) : null}
+                    {pickupMapsUrl ? (
+                      <a
+                        href={pickupMapsUrl}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs font-medium text-[#895129] hover:underline"

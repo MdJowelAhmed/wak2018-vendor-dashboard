@@ -44,6 +44,11 @@ export function DeliveryItemsPreview({ delivery }: { delivery: Delivery }) {
               </div>
               <div className="text-muted-foreground text-xs">
                 Qty {item.quantity} × {formatCurrency(item.unitPrice)}
+                {item.color || item.size ? (
+                  <span className="ml-1 text-gray-500">
+                    ({[item.color && `Color: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(", ")})
+                  </span>
+                ) : null}
               </div>
             </div>
             <div className="text-sm font-semibold tabular-nums">

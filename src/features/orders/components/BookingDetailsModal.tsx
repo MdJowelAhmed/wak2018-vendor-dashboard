@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { FileText, ImagePlus, MessageCircle, X } from "lucide-react";
+import { AlertTriangle, FileText, ImagePlus, MessageCircle, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -316,6 +316,21 @@ export function BookingDetailsModal({
     },
   ];
 
+  const rejectionLog = [...(b.statusLog || [])]
+    .reverse()
+    .find(
+      (log: any) =>
+        log.note?.toLowerCase().includes("rejected") ||
+        log.note?.toLowerCase().includes("reason:")
+    );
+
+  const rejectionReason =
+    (b as any).rejectionReason ||
+    (b as any).rejectReason ||
+    (rejectionLog?.note?.includes("reason:")
+      ? rejectionLog.note.split(/reason:\s*/i)[1]?.trim()
+      : rejectionLog?.note);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -378,6 +393,47 @@ export function BookingDetailsModal({
                 ))}
               </div>
             </div>
+
+            {/* Customer Rejection Alert Banner */}
+            {rejectionLog && (
+              <div className="rounded-xl border border-rose-300 bg-rose-50/80 p-4 text-rose-950 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 rounded-full bg-rose-100 p-2 text-rose-600 shrink-0">
+                    <AlertTriangle className="size-5" />
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-sm font-bold text-rose-900">
+                          Delivery Rejected by Customer
+                        </h4>
+                        <Badge variant="outline" className="border-rose-300 bg-white text-rose-800 text-[11px] font-semibold">
+                          Revision Required
+                        </Badge>
+                      </div>
+                      {rejectionLog.timestamp ? (
+                        <span className="text-xs text-rose-700">
+                          {fmtDate(rejectionLog.timestamp)}
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div className="rounded-lg border border-rose-200 bg-white p-3.5 shadow-2xs">
+                      <span className="block text-xs font-semibold uppercase tracking-wider text-rose-600">
+                        Customer Rejection Reason / Feedback:
+                      </span>
+                      <p className="mt-1 text-sm font-semibold text-rose-950 break-words leading-relaxed">
+                        &ldquo;{rejectionReason}&rdquo;
+                      </p>
+                    </div>
+
+                    <p className="text-xs leading-relaxed text-rose-800">
+                      The customer was not satisfied with the previous delivery and requested revisions. Please address their feedback and submit a revised delivery below.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
               {/* Service */}
@@ -463,7 +519,7 @@ export function BookingDetailsModal({
               </div>
 
               {/* Delivery */}
-              <div className="space-y-3 lg:col-span-2">
+              {/* <div className="space-y-3 lg:col-span-2">
                 <SectionTitle>Delivery</SectionTitle>
                 <Separator />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -477,17 +533,94 @@ export function BookingDetailsModal({
                       value={fmtDate(b.completedAt)}
                     />
                   )}
+                  {rejectionLog && (
+                    <div className="space-y-1">
+                      <div className="text-muted-foreground text-xs">Delivery Status</div>
+                      <div className="text-xs font-semibold text-rose-600 flex items-center gap-1">
+                        <AlertTriangle className="size-3.5 shrink-0" />
+                        <span>Rejected (Revision requested)</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 {b.deliveryDescription && (
-                  <div className="mt-4 rounded-lg bg-muted/30 p-4 border border-border/50 text-sm">
-                    <span className="font-semibold text-xs text-muted-foreground block mb-2">
-                      Delivery Note
+                  <div className="mt-4 rounded-lg bg-muted/30 p-4 border border-border/50 text-sm space-y-2">
+                    <span className="font-semibold text-xs text-muted-foreground block">
+                      Previous Delivery Note
                     </span>
-                    {b.deliveryDescription}
+                    <p className="text-foreground leading-relaxed">{b.deliveryDescription}</p>
+                    {rejectionLog && (
+                      <div className="mt-2 pt-2 border-t border-rose-200/80 text-rose-700 text-xs flex items-start gap-1.5">
+                        <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
+                        <span className="font-medium">
+                          Customer Feedback: &ldquo;{rejectionReason}&rdquo;
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </div> */}
             </div>
+
+            {/* Status Timeline */}
+            {b.statusLog?.length ? (
+              <div className="space-y-3">
+                <SectionTitle>Status timeline</SectionTitle>
+                <Separator />
+                <ol className="space-y-3">
+                  {b.statusLog.map((log: any, idx: number) => {
+                    const isRejection = log.note?.toLowerCase().includes("rejected");
+                    const last = idx === b.statusLog.length - 1;
+                    return (
+                      <li key={`${log.status}-${log.timestamp}-${idx}`} className="flex gap-3 text-xs">
+                        <div className="flex flex-col items-center">
+                          <span
+                            className={cn(
+                              "mt-1 size-2.5 rounded-full shrink-0",
+                              isRejection
+                                ? "bg-rose-500 ring-4 ring-rose-100"
+                                : last
+                                  ? "bg-[#895129]"
+                                  : "bg-gray-300"
+                            )}
+                          />
+                          {idx < b.statusLog.length - 1 ? (
+                            <span className="mt-1 w-px flex-1 bg-gray-200" />
+                          ) : null}
+                        </div>
+                        <div className="min-w-0 flex-1 pb-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span
+                              className={cn(
+                                "font-semibold capitalize",
+                                isRejection ? "text-rose-700" : "text-foreground"
+                              )}
+                            >
+                              {isRejection ? "Delivery Rejected by Customer" : log.status.replace(/_/g, " ")}
+                            </span>
+                            <span className="text-muted-foreground text-[11px]">
+                              {fmtDate(log.timestamp)}
+                            </span>
+                          </div>
+                          {log.note ? (
+                            <p
+                              className={cn(
+                                "mt-0.5 text-xs leading-relaxed",
+                                isRejection
+                                  ? "text-rose-800 font-medium bg-rose-50 border border-rose-200 rounded-md p-2 mt-1"
+                                  : "text-muted-foreground"
+                              )}
+                            >
+                              {log.note}
+                            </p>
+                          ) : null}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
+              </div>
+            ) : null}
 
             <Separator />
 
@@ -499,14 +632,18 @@ export function BookingDetailsModal({
                 <div className="space-y-4 rounded-xl border border-border/60 bg-muted/15 p-4">
                   <div className="grid gap-2">
                     <Label htmlFor="deliveryDescription">
-                      Delivery description{" "}
+                      {rejectionLog ? "Revised delivery description" : "Delivery description"}{" "}
                       <span className="text-destructive">*</span>
                     </Label>
                     <Textarea
                       id="deliveryDescription"
                       value={deliveryDescription}
                       onChange={(e) => setDeliveryDescription(e.target.value)}
-                      placeholder="Describe what was delivered…"
+                      placeholder={
+                        rejectionLog
+                          ? "Describe the improvements and revisions made according to customer feedback…"
+                          : "Describe what was delivered…"
+                      }
                       rows={3}
                       disabled={isDelivering}
                     />
@@ -644,7 +781,11 @@ export function BookingDetailsModal({
                       onClick={handleDeliver}
                       disabled={isDelivering || !deliveryDescription.trim()}
                     >
-                      {isDelivering ? "Delivering..." : "Deliver Order"}
+                      {isDelivering
+                        ? "Delivering..."
+                        : rejectionLog
+                          ? "Submit Revised Delivery"
+                          : "Deliver Order"}
                     </Button>
                     <Button
                       type="button"

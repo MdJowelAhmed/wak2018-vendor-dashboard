@@ -34,7 +34,23 @@ function fmtDate(ymd: string) {
   });
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({
+  status,
+  hasRejection,
+}: {
+  status: string;
+  hasRejection?: boolean;
+}) {
+  if (hasRejection && status === "in_progress") {
+    return (
+      <Badge
+        variant="outline"
+        className="border-rose-300 bg-rose-50 text-rose-700 capitalize font-medium"
+      >
+        Revision Required
+      </Badge>
+    );
+  }
   const cls =
     status === "completed"
       ? "border-emerald-200 bg-emerald-50 text-emerald-700"
@@ -102,37 +118,45 @@ export function BookingsPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  apiOrders.map((b) => (
-                    <TableRow key={b._id} className="hover:bg-muted/30">
-                      <TableCell className="font-medium text-xs text-muted-foreground">
-                        {b.orderId}
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        {b.service?.name || "—"}
-                      </TableCell>
-                      <TableCell>{b.customer?.name || "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {fmtDate(b.createdAt)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {fmtUsd(b.price || 0)}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={b.orderStatus} />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          className="border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10"
-                          onClick={() => setDetailsId(b._id)}
-                        >
-                          View Details
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  apiOrders.map((b) => {
+                    const hasRejection = b.statusLog?.some((l: any) =>
+                      l.note?.toLowerCase().includes("rejected")
+                    );
+                    return (
+                      <TableRow key={b._id} className="hover:bg-muted/30">
+                        <TableCell className="font-medium text-xs text-muted-foreground">
+                          {b.orderId}
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {b.service?.name || "—"}
+                        </TableCell>
+                        <TableCell>{b.customer?.name || "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {fmtDate(b.createdAt)}
+                        </TableCell>
+                        <TableCell className="text-right font-medium tabular-nums">
+                          {fmtUsd(b.price || 0)}
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge
+                            status={b.orderStatus}
+                            hasRejection={hasRejection}
+                          />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="border-[#895129]/40 text-[#895129] hover:bg-[#895129]/10"
+                            onClick={() => setDetailsId(b._id)}
+                          >
+                            View Details
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

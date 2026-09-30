@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
+  AlertTriangle,
   ArrowLeft,
   Check,
   Copy,
@@ -363,6 +364,21 @@ export function OrderDetailsPage() {
       ? `https://maps.google.com/?q=${pickup.latitude},${pickup.longitude}`
       : null;
 
+  const statusLog = productOrder?.statusLog || (order as any)?.statusLog;
+  const rejectionLog = [...(statusLog || [])]
+    .reverse()
+    .find(
+      (log: any) =>
+        log.note?.toLowerCase().includes("rejected") ||
+        log.note?.toLowerCase().includes("reason:")
+    );
+  const rejectionReason =
+    (order as any)?.rejectionReason ||
+    (order as any)?.rejectReason ||
+    (rejectionLog?.note?.includes("reason:")
+      ? rejectionLog.note.split(/reason:\s*/i)[1]?.trim()
+      : rejectionLog?.note);
+
   async function createLocalDelivery(orderId: string) {
     await requestLocal({
       id: orderId,
@@ -451,6 +467,46 @@ export function OrderDetailsPage() {
           />
         )}
       </motion.div>
+
+      {rejectionLog && (
+        <div className="rounded-2xl border border-rose-300 bg-rose-50/80 p-4 text-rose-950 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-full bg-rose-100 p-2 text-rose-600 shrink-0">
+              <AlertTriangle className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-bold text-rose-900">
+                    Delivery Rejected by Customer
+                  </h4>
+                  <Badge variant="outline" className="border-rose-300 bg-white text-rose-800 text-[11px] font-semibold">
+                    Revision Required
+                  </Badge>
+                </div>
+                {rejectionLog.timestamp ? (
+                  <span className="text-xs text-rose-700">
+                    {fmtDateTime(rejectionLog.timestamp)}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="rounded-xl border border-rose-200 bg-white p-3.5 shadow-2xs">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-rose-600">
+                  Customer Rejection Reason / Feedback:
+                </span>
+                <p className="mt-1 text-sm font-semibold text-rose-950 break-words leading-relaxed">
+                  &ldquo;{rejectionReason}&rdquo;
+                </p>
+              </div>
+
+              <p className="text-xs leading-relaxed text-rose-800">
+                The customer requested revisions on the delivered service. Please review their feedback and deliver the revised service.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {productOrder ? (
         <motion.div
@@ -651,7 +707,7 @@ export function OrderDetailsPage() {
             </Card>
           </motion.div>
 
-          {productOrder?.statusLog?.length ? (
+          {statusLog?.length ? (
             <motion.div
               variants={orderDetailsCardVariants}
               initial="hidden"
@@ -663,30 +719,50 @@ export function OrderDetailsPage() {
                 </CardHeader>
                 <CardContent>
                   <ol className="space-y-4">
-                    {productOrder.statusLog.map((log, idx) => {
-                      const last = idx === productOrder.statusLog!.length - 1;
+                    {statusLog.map((log: any, idx: number) => {
+                      const isRejection = log.note?.toLowerCase().includes("rejected");
+                      const last = idx === statusLog.length - 1;
                       return (
-                        <li key={`${log.status}-${log.timestamp}`} className="flex gap-3">
+                        <li key={`${log.status}-${log.timestamp}-${idx}`} className="flex gap-3">
                           <div className="flex flex-col items-center">
                             <span
                               className={cn(
                                 "mt-1 size-2.5 rounded-full",
-                                last ? "bg-[#895129]" : "bg-gray-300",
+                                isRejection
+                                  ? "bg-rose-500 ring-4 ring-rose-100"
+                                  : last
+                                    ? "bg-[#895129]"
+                                    : "bg-gray-300",
                               )}
                             />
-                            {idx < productOrder.statusLog!.length - 1 ? (
+                            {idx < statusLog.length - 1 ? (
                               <span className="mt-1 w-px flex-1 bg-gray-200" />
                             ) : null}
                           </div>
                           <div className="min-w-0 pb-1">
                             <div className="flex flex-wrap items-center gap-2">
-                              <OrderStatusBadge status={log.status} />
+                              {isRejection ? (
+                                <Badge variant="outline" className="border-rose-300 bg-rose-50 text-rose-800 text-xs font-semibold">
+                                  Delivery Rejected
+                                </Badge>
+                              ) : (
+                                <OrderStatusBadge status={log.status} />
+                              )}
                               <span className="text-muted-foreground text-xs">
                                 {fmtDateTime(log.timestamp)}
                               </span>
                             </div>
                             {log.note ? (
-                              <p className="text-muted-foreground mt-1 text-sm">{log.note}</p>
+                              <p
+                                className={cn(
+                                  "mt-1 text-sm leading-relaxed",
+                                  isRejection
+                                    ? "text-rose-900 bg-rose-50 border border-rose-200 p-2.5 rounded-lg font-medium"
+                                    : "text-muted-foreground"
+                                )}
+                              >
+                                {log.note}
+                              </p>
                             ) : null}
                           </div>
                         </li>

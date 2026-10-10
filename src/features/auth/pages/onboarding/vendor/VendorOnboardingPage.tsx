@@ -1,19 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, ChevronsUpDown, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -34,8 +28,6 @@ type VendorData = {
   phone: string;
   email: string;
   address: string;
-  category: string[];
-  shopType: string;
   productCount: string;
   description: string;
   deliveryType: DeliveryType;
@@ -47,25 +39,10 @@ const defaultData: VendorData = {
   phone: "",
   email: "",
   address: "",
-  category: [],
-  shopType: "",
   productCount: "",
   description: "",
   deliveryType: "",
 };
-
-const vendorCategoryOptions = [
-  "Grocery",
-  "Restaurant",
-  "Fashion",
-  "Electronics",
-  "Beauty",
-  "Home & Kitchen",
-  "Kids",
-  "Health",
-  "Books",
-  "Sports",
-];
 
 function readStored(): Partial<VendorData> | null {
   if (typeof localStorage === "undefined") return null;
@@ -186,86 +163,6 @@ function LightTextarea(props: React.ComponentProps<typeof Textarea>) {
         props.className,
       )}
     />
-  );
-}
-
-function MultiSelect({
-  value,
-  onChange,
-  options,
-  placeholder,
-}: {
-  value: string[];
-  onChange: (v: string[]) => void;
-  options: string[];
-  placeholder: string;
-}) {
-  const selectedSet = useMemo(() => new Set(value), [value]);
-  return (
-    <div className="grid gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            className={cn(
-              "h-11 w-full justify-between rounded-xl border-gray-200 bg-white text-gray-900 hover:bg-gray-50",
-              "transition-all duration-200",
-            )}
-          >
-            <span
-              className={cn(
-                "truncate text-left",
-                value.length ? "text-gray-900" : "text-gray-400",
-              )}
-            >
-              {value.length ? `${value.length} selected` : placeholder}
-            </span>
-            <ChevronsUpDown className="size-4 text-gray-400" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="min-w-[18rem] border-gray-200 bg-white text-gray-900">
-          {options.map((o) => {
-            const checked = selectedSet.has(o);
-            return (
-              <DropdownMenuCheckboxItem
-                key={o}
-                checked={checked}
-                onCheckedChange={(next) => {
-                  if (next) onChange([...value, o]);
-                  else onChange(value.filter((x) => x !== o));
-                }}
-                className="focus:bg-gray-100"
-              >
-                {o}
-              </DropdownMenuCheckboxItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {value.length ? (
-        <div className="flex flex-wrap gap-2">
-          {value.map((v) => (
-            <Badge
-              key={v}
-              variant="secondary"
-              className="gap-1 border border-gray-200 bg-gray-50 text-gray-700"
-            >
-              {v}
-              <button
-                type="button"
-                className="rounded-sm p-0.5 text-gray-400 hover:text-gray-700"
-                onClick={() => onChange(value.filter((x) => x !== v))}
-                aria-label={`Remove ${v}`}
-              >
-                <X className="size-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      ) : null}
-    </div>
   );
 }
 
@@ -407,49 +304,22 @@ function Step2VendorBusiness({
         ) : null}
       </Field>
 
-      <Field label="Category">
-        <MultiSelect
-          value={data.category}
-          onChange={(v) => setData({ category: v })}
-          options={vendorCategoryOptions}
-          placeholder="Select categories"
+      <Field
+        label="Product count"
+        hint="Approximate number of products you’ll list"
+      >
+        <LightInput
+          inputMode="numeric"
+          value={data.productCount}
+          onChange={(e) =>
+            setData({ productCount: e.target.value.replace(/[^\d]/g, "") })
+          }
+          placeholder="e.g. 50"
         />
-        {errors.category ? (
-          <p className="text-xs text-red-600">{errors.category}</p>
+        {errors.productCount ? (
+          <p className="text-xs text-red-600">{errors.productCount}</p>
         ) : null}
       </Field>
-
-      <div className="grid gap-5 md:grid-cols-2">
-        <Field
-          label="Shop type"
-          hint="Example: Retail, Online-only, Restaurant, Grocery"
-        >
-          <LightInput
-            value={data.shopType}
-            onChange={(e) => setData({ shopType: e.target.value })}
-            placeholder="e.g. Retail"
-          />
-          {errors.shopType ? (
-            <p className="text-xs text-red-600">{errors.shopType}</p>
-          ) : null}
-        </Field>
-        <Field
-          label="Product count"
-          hint="Approximate number of products you’ll list"
-        >
-          <LightInput
-            inputMode="numeric"
-            value={data.productCount}
-            onChange={(e) =>
-              setData({ productCount: e.target.value.replace(/[^\d]/g, "") })
-            }
-            placeholder="e.g. 50"
-          />
-          {errors.productCount ? (
-            <p className="text-xs text-red-600">{errors.productCount}</p>
-          ) : null}
-        </Field>
-      </div>
 
       <Field label="Delivery type">
         <Select
@@ -597,8 +467,6 @@ export function VendorOnboardingPage() {
       if (!data.email.trim()) e.email = "Email is required";
       else if (!isEmail(data.email.trim())) e.email = "Enter a valid email";
       if (!data.address.trim()) e.address = "Address is required";
-      if (!data.category.length) e.category = "Select at least one category";
-      if (!data.shopType.trim()) e.shopType = "Shop type is required";
       if (!data.productCount.trim())
         e.productCount = "Product count is required";
       if (!data.description.trim()) e.description = "Description is required";
@@ -625,7 +493,6 @@ export function VendorOnboardingPage() {
           data.deliveryType === "own" ? "own_delivery" : "platform_delivery";
         formData.append("deliveryType", mappedDeliveryType);
         formData.append("productCount", data.productCount);
-        // Note: category and shopType are unsupported by the backend currently so we omit them.
 
         if (logo) {
           formData.append("logo", logo);

@@ -12,6 +12,15 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateVendorProfileMutation } from "@/services/profileApi";
+import { Badge } from "@/components/ui/badge";
+import {
+  KycDocumentsFields,
+  appendKycDocuments,
+  emptyKycFiles,
+  kycValidationError,
+  vendorVerificationLabel,
+  type KycFiles,
+} from "@/features/settings/components/KycDocumentsFields";
 import {
   CountryMultiSelect,
   type ServiceCountrySelection,
@@ -88,6 +97,8 @@ export function ProfileSettings({ profile }: { profile: any }) {
   const [description, setDescription] = useState(initial.description);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [kyc, setKyc] = useState<KycFiles>(emptyKycFiles);
+  const verification = vendorVerificationLabel(profile);
 
   useEffect(() => {
     setEmail(initial.email);
@@ -125,6 +136,11 @@ export function ProfileSettings({ profile }: { profile: any }) {
       toast.error("Please use a valid email.");
       return;
     }
+    const kycError = kycValidationError(kyc);
+    if (kycError) {
+      toast.error(kycError);
+      return;
+    }
     try {
       const formData = new FormData();
       formData.append("ownerName", ownerName.trim());
@@ -148,10 +164,16 @@ export function ProfileSettings({ profile }: { profile: any }) {
       if (coverImageFile) {
         formData.append("coverImage", coverImageFile);
       }
+      appendKycDocuments(formData, kyc);
 
       await update(formData).unwrap();
       writeVendorServiceLocationToLocalStorage(serviceLocation);
-      toast.success("Profile updated");
+      setKyc(emptyKycFiles);
+      toast.success(
+        kyc.identityFile || kyc.businessFile
+          ? "Profile updated. Verification documents submitted for review."
+          : "Profile updated",
+      );
     } catch {
       toast.error("Could not update profile");
     }
@@ -333,6 +355,26 @@ export function ProfileSettings({ profile }: { profile: any }) {
               {isLoading ? "Saving…" : "Save Changes"}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="rounded-xl border-border/60 shadow-sm">
+        <CardHeader>
+          <div className="flex flex-wrap items-center gap-2">
+            <CardTitle>KYC verification</CardTitle>
+            {verification ? (
+              <Badge className={verification.className}>{verification.label}</Badge>
+            ) : (
+              <Badge variant="secondary">Not submitted</Badge>
+            )}
+          </div>
+          <CardDescription>
+            Submit one identity document and an optional business license.
+            Saving your profile sends these files for admin review.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <KycDocumentsFields value={kyc} onChange={setKyc} />
         </CardContent>
       </Card>
     </div>

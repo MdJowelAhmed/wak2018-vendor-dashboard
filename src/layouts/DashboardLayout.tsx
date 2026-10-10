@@ -44,6 +44,7 @@ import { connectSocket } from "@/utils/socket";
 import { NotificationDropdown } from "@/features/notifications/components/NotificationDropdown";
 import { CurrencySelect } from "@/features/currency/CurrencySelect";
 import { cn, getImageUrl } from "@/utils/utils";
+import { vendorVerificationLabel } from "@/features/settings/components/KycDocumentsFields";
 
 type MenuItem = { to: string; label: string; icon: typeof Home };
 
@@ -74,6 +75,7 @@ export function VendorLayout() {
   }, []);
 
   const settingsActive = location.pathname.startsWith("/vendor/settings");
+  const verification = vendorVerificationLabel(data);
 
   useEffect(() => {
     if (settingsActive) setOpenSettings(true);
@@ -335,6 +337,11 @@ export function VendorLayout() {
                   <span className="size-2 rounded-full bg-blue-500 animate-pulse" />
                   Vendor Dashboard
                 </Badge>
+                {verification ? (
+                  <Badge className={verification.className}>
+                    {verification.label}
+                  </Badge>
+                ) : null}
               </div>
 
               <div className="ml-auto flex items-center gap-2">

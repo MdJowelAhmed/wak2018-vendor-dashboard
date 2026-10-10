@@ -16,6 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUpdateVendorProfileMutation } from "@/services/profileApi";
+import {
+  KycDocumentsFields,
+  appendKycDocuments,
+  emptyKycFiles,
+  kycValidationError,
+  type KycFiles,
+} from "@/features/settings/components/KycDocumentsFields";
 
 const STORAGE_KEY = "vendor_onboarding_v1";
 
@@ -237,6 +244,8 @@ function Step2VendorBusiness({
   setLogo,
   cover,
   setCover,
+  kyc,
+  setKyc,
 }: {
   data: VendorData;
   setData: (patch: Partial<VendorData>) => void;
@@ -245,6 +254,8 @@ function Step2VendorBusiness({
   setLogo: (f: File | null) => void;
   cover: File | null;
   setCover: (f: File | null) => void;
+  kyc: KycFiles;
+  setKyc: (next: KycFiles) => void;
 }) {
   return (
     <div className="grid gap-6">
@@ -410,6 +421,15 @@ function Step2VendorBusiness({
           ) : null}
         </Field>
       </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white p-4">
+        <h2 className="text-base font-semibold text-gray-900">KYC documents</h2>
+        <p className="mt-1 mb-4 text-sm text-gray-500">
+          Optional now. Upload one identity document if you want verification
+          reviewed with this profile.
+        </p>
+        <KycDocumentsFields value={kyc} onChange={setKyc} />
+      </div>
     </div>
   );
 }
@@ -427,6 +447,7 @@ export function VendorOnboardingPage() {
   const [step, setStep] = useState<StepId>(2);
   const [logo, setLogo] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
+  const [kyc, setKyc] = useState<KycFiles>(emptyKycFiles);
   const [data, setDataState] = useState<VendorData>(() => {
     const stored = readStored();
     const seed = (location.state ?? {}) as {
@@ -478,6 +499,11 @@ export function VendorOnboardingPage() {
 
   async function next() {
     if (!validateCurrent()) return;
+    const kycError = step === 2 ? kycValidationError(kyc) : null;
+    if (kycError) {
+      toast.error(kycError);
+      return;
+    }
     setErrors({});
 
     if (step === 2) {
@@ -500,6 +526,7 @@ export function VendorOnboardingPage() {
         if (cover) {
           formData.append("coverImage", cover);
         }
+        appendKycDocuments(formData, kyc);
 
         await updateVendorProfile(formData).unwrap();
         toast.success("Profile updated successfully");
@@ -560,6 +587,8 @@ export function VendorOnboardingPage() {
                 setLogo={setLogo}
                 cover={cover}
                 setCover={setCover}
+                kyc={kyc}
+                setKyc={setKyc}
               />
             ) : null}
 

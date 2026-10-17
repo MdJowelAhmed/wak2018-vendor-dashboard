@@ -176,13 +176,13 @@ export function ProductsListPage() {
     setPage(1);
   }
 
-  // Handle Column Header Sort
-  function handleColumnSort(field: "stock" | "category" | "price" | "createdAt") {
+  // Handle Column Header Sort (only Stock)
+  function handleColumnSort(field: "stock") {
     if (sortBy === field) {
       setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortBy(field);
-      setSortOrder(field === "stock" || field === "price" ? "asc" : "desc");
+      setSortOrder("asc");
     }
     setPage(1);
   }
@@ -343,79 +343,11 @@ export function ProductsListPage() {
                 <SelectContent>
                   <SelectItem value="createdAt:desc">Newest Added</SelectItem>
                   <SelectItem value="createdAt:asc">Oldest Added</SelectItem>
-                  <SelectItem value="stock:asc">Stock: Low to High (Restock)</SelectItem>
+                  <SelectItem value="stock:asc">Stock: Low to High</SelectItem>
                   <SelectItem value="stock:desc">Stock: High to Low</SelectItem>
-                  <SelectItem value="price:asc">Price: Low to High</SelectItem>
-                  <SelectItem value="price:desc">Price: High to Low</SelectItem>
-                  <SelectItem value="category:asc">Category (A-Z)</SelectItem>
-                  <SelectItem value="category:desc">Category (Z-A)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          {/* Quick preset status pills */}
-          <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-            <span className="text-muted-foreground font-medium text-[11px] uppercase tracking-wider">
-              Quick Filter:
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setStatus("all");
-                setPage(1);
-              }}
-              className={`rounded-full px-3 py-1 font-medium transition-all ${
-                status === "all"
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatus("active");
-                setPage(1);
-              }}
-              className={`rounded-full px-3 py-1 font-medium transition-all ${
-                status === "active"
-                  ? "bg-emerald-600 text-white shadow-xs"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              Active Only
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setStatus("inactive");
-                setPage(1);
-              }}
-              className={`rounded-full px-3 py-1 font-medium transition-all ${
-                status === "inactive"
-                  ? "bg-slate-700 text-white shadow-xs"
-                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-              }`}
-            >
-              Inactive Only
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setSortBy("stock");
-                setSortOrder("asc");
-                setPage(1);
-              }}
-              className={`rounded-full px-3 py-1 font-medium transition-all ${
-                sortBy === "stock" && sortOrder === "asc"
-                  ? "bg-amber-600 text-white shadow-xs"
-                  : "bg-amber-50 text-amber-700 hover:bg-amber-100"
-              }`}
-            >
-              Needs Restock First
-            </button>
           </div>
         </CardHeader>
 
@@ -451,51 +383,17 @@ export function ProductsListPage() {
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-16">Image</TableHead>
-                    <TableHead>
-                      <button
-                        type="button"
-                        onClick={() => handleColumnSort("category")}
-                        className="group inline-flex items-center font-semibold text-gray-700 hover:text-gray-900"
-                      >
-                        <span>Product Name</span>
-                      </button>
-                    </TableHead>
-                    <TableHead>
-                      <button
-                        type="button"
-                        onClick={() => handleColumnSort("category")}
-                        className="group inline-flex items-center font-semibold text-gray-700 hover:text-gray-900"
-                      >
-                        <span>Category</span>
-                        <SortHeaderIcon
-                          field="category"
-                          currentSort={sortBy}
-                          currentOrder={sortOrder}
-                        />
-                      </button>
-                    </TableHead>
-                    <TableHead>
-                      <button
-                        type="button"
-                        onClick={() => handleColumnSort("price")}
-                        className="group inline-flex items-center font-semibold text-gray-700 hover:text-gray-900"
-                      >
-                        <span>Price</span>
-                        <SortHeaderIcon
-                          field="price"
-                          currentSort={sortBy}
-                          currentOrder={sortOrder}
-                        />
-                      </button>
-                    </TableHead>
+                    <TableHead>Product Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Price</TableHead>
                     <TableHead>Local Delivery</TableHead>
                     <TableHead>
                       <button
                         type="button"
                         onClick={() => handleColumnSort("stock")}
-                        className="group inline-flex items-center font-semibold text-gray-700 hover:text-gray-900"
+                        className="group inline-flex items-center font-semibold text-gray-700 hover:text-gray-900 cursor-pointer"
                       >
-                        <span>Stock Units</span>
+                        <span>Stock</span>
                         <SortHeaderIcon
                           field="stock"
                           currentSort={sortBy}

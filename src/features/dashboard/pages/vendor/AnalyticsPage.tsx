@@ -122,19 +122,25 @@ export function AnalyticsPage() {
 
       {/* Main Tabs Navigation */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="border-b border-border/80 pb-1">
-          <TabsList className="bg-muted/60 p-1">
-            <TabsTrigger value="inventory" className="gap-2 text-xs font-semibold sm:text-sm">
-              <Boxes className="size-4" />
+        <div className="flex items-center justify-between border-b border-border/80 pb-2">
+          <TabsList className="h-10 w-fit gap-1 rounded-xl bg-slate-100/90 p-1 border border-border/60 shadow-xs">
+            <TabsTrigger
+              value="inventory"
+              className="h-8 px-4 text-xs sm:text-sm font-medium whitespace-nowrap rounded-lg gap-2 shrink-0 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-xs"
+            >
+              <Boxes className="size-4 shrink-0 text-primary" />
               <span>Inventory Analytics</span>
               {totalAlerts > 0 && (
-                <span className="rounded-full bg-rose-500 text-white px-1.5 py-0.2 text-[10px] font-bold">
+                <span className="inline-flex items-center justify-center rounded-full bg-rose-500 text-white px-1.5 py-0.5 text-[10px] font-bold leading-none">
                   {totalAlerts}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="revenue" className="gap-2 text-xs font-semibold sm:text-sm">
-              <TrendingUp className="size-4" />
+            <TabsTrigger
+              value="revenue"
+              className="h-8 px-4 text-xs sm:text-sm font-medium whitespace-nowrap rounded-lg gap-2 shrink-0 transition-all data-[state=active]:bg-white data-[state=active]:text-gray-900 data-[state=active]:shadow-xs"
+            >
+              <TrendingUp className="size-4 shrink-0 text-emerald-600" />
               <span>Revenue & Sales</span>
             </TabsTrigger>
           </TabsList>

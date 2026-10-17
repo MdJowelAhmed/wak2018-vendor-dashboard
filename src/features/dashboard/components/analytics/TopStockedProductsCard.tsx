@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Award, ExternalLink, Package, TrendingUp } from "lucide-react";
+import { Award, ExternalLink, Package } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

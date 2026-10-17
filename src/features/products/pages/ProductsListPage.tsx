@@ -11,7 +11,6 @@ import {
   ArrowUp,
   ArrowDown,
   RefreshCw,
-  Filter,
   Package,
   AlertTriangle,
   RotateCcw,
@@ -25,7 +24,7 @@ import {
 } from "@/features/products";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -152,7 +151,7 @@ export function ProductsListPage() {
     ? res
     : [];
 
-  const pagination = res?.pagination || res?.meta;
+  const pagination = res?.pagination;
   const total = pagination?.total ?? products.length;
   const totalPages = pagination?.totalPage ?? Math.max(1, Math.ceil(total / limit));
 

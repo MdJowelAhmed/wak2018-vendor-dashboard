@@ -2,11 +2,9 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Boxes,
-  BarChart3,
   RefreshCw,
   Plus,
   AlertTriangle,
-  ArrowRight,
   TrendingUp,
 } from "lucide-react";
 import {

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { AlertTriangle, Boxes, CheckCircle2, DollarSign, Package, ShieldAlert } from "lucide-react";
+import { Boxes, CheckCircle2, DollarSign, Package, ShieldAlert } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";

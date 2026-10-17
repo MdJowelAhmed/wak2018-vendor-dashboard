@@ -7,9 +7,8 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  Legend,
 } from "recharts";
-import { Layers, ArrowUpDown, DollarSign, Package } from "lucide-react";
+import { Layers, DollarSign, Package } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency, useCurrency } from "@/utils/format-currency";
@@ -26,11 +25,6 @@ export function CategoryBreakdownCard({ data = [], isLoading }: Props) {
 
   const totalCatalogValue = useMemo(
     () => data.reduce((acc, cat) => acc + (cat.totalValue || 0), 0),
-    [data],
-  );
-
-  const totalCatalogStock = useMemo(
-    () => data.reduce((acc, cat) => acc + (cat.totalStock || 0), 0),
     [data],
   );
 

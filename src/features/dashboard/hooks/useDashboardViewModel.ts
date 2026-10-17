@@ -306,7 +306,7 @@ export function useDashboardViewModel(role: UserRole | null) {
           pOrdersQ.data,
           sOrdersQ.data,
           delQ.data,
-          productsQ.data,
+          productsQ.data?.data,
           servicesQ.data?.data,
           resolvedRole,
         ),
@@ -328,7 +328,7 @@ export function useDashboardViewModel(role: UserRole | null) {
         pOrdersQ.data,
         sOrdersQ.data,
         delQ.data,
-        productsQ.data,
+        productsQ.data?.data,
         resolvedRole,
       );
       return {
@@ -337,7 +337,7 @@ export function useDashboardViewModel(role: UserRole | null) {
           pOrdersQ.data,
           sOrdersQ.data,
           delQ.data,
-          productsQ.data,
+          productsQ.data?.data,
           servicesQ.data?.data,
           resolvedRole,
         ),

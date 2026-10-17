@@ -427,6 +427,64 @@ export type AnalyticsTopData = {
   topCustomers: AnalyticsTopRow[];
 };
 
+export type InventoryOverview = {
+  totalProducts: number;
+  totalStockUnits: number;
+  totalInventoryValue: number;
+  inStockCount: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  activeProducts: number;
+  inactiveProducts: number;
+};
+
+export type InventoryHealthRate = {
+  inStockRate: number;
+  lowStockRate: number;
+  outOfStockRate: number;
+};
+
+export type InventoryCategoryBreakdown = {
+  categoryId: string;
+  categoryName: string;
+  categorySlug: string;
+  productCount: number;
+  totalStock: number;
+  totalValue: number;
+};
+
+export type InventoryStockAlertItem = {
+  _id: string;
+  name: string;
+  slug: string;
+  sku: string;
+  price: number;
+  discountPrice?: number;
+  images: string[];
+  stock: number;
+  lowStockThreshold?: number;
+  status: string;
+};
+
+export type InventoryTopStockedProduct = {
+  _id: string;
+  name: string;
+  slug: string;
+  sku: string;
+  stock: number;
+  price: number;
+  images: string[];
+};
+
+export type InventoryAnalyticsData = {
+  overview: InventoryOverview;
+  healthRate: InventoryHealthRate;
+  categoryBreakdown: InventoryCategoryBreakdown[];
+  lowStockAlerts: InventoryStockAlertItem[];
+  outOfStockAlerts: InventoryStockAlertItem[];
+  topStockedProducts: InventoryTopStockedProduct[];
+};
+
 export type CustomerTag = "premium" | "vip" | "repeat_buyer";
 
 export type CustomerAddress = {

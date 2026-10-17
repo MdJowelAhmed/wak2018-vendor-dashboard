@@ -6,6 +6,7 @@ import type {
   AnalyticsSummary,
   AnalyticsTopData,
   DashboardOverview,
+  InventoryAnalyticsData,
 } from "@/types/api";
 
 const tag = { type: "Analytics" as const, id: "SUMMARY" as const };
@@ -13,6 +14,11 @@ const dashboardTag = { type: "Dashboard" as const, id: "OVERVIEW" as const };
 
 export const analyticsApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
+    getInventoryAnalytics: build.query<InventoryAnalyticsData, void>({
+      query: () => "/vendors/inventory-analytics",
+      transformResponse: (res: any) => res?.data ?? res,
+      providesTags: [tag, "Products" as any],
+    }),
     getAnalytics: build.query<AnalyticsSummary, void>({
       query: () => "/vendor/analytics/summary",
       providesTags: [tag],
@@ -140,6 +146,7 @@ export const analyticsApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetInventoryAnalyticsQuery,
   useGetAnalyticsQuery,
   useGetDashboardOverviewQuery,
   useGetDashboardStatsQuery,

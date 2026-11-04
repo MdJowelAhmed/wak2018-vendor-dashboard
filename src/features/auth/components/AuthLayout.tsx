@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Outlet, useLocation } from "react-router-dom";
-import { Package, Sparkles } from "lucide-react";
+import {  Sparkles } from "lucide-react";
 import {
   authFormColumnVariants,
   authIllustrationVariants,
@@ -36,8 +36,9 @@ export function AuthLayout() {
           aria-hidden
         >
           <div className="mx-auto max-w-md space-y-8">
-            <div className="inline-flex size-14 items-center justify-center rounded-2xl bg-[#895129]/15 text-[#895129] shadow-sm">
-              <Package className="size-7" strokeWidth={1.75} />
+            <div className="inline-flex size-14 items-center justify-center rounded-full bg-[#895129]/15 text-[#895129] shadow-sm">
+              {/* <Package className="size-7" strokeWidth={1.75} /> */}
+          <img src="/logo.png" alt="Logo" className="h-full w-full object-cover rounded-full" />      
             </div>
             <div className="space-y-3">
               <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">

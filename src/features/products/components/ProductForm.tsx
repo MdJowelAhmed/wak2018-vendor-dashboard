@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/utils/utils";
 import { type ServiceCountrySelection } from "@/components/CountryMultiSelect";
 import { ImageUploader, type ImageUploaderValue } from "./ImageUploader";
+import { VideoUploader } from "@/components/common/VideoUploader";
 import { HighlightsInput, type HighlightRow } from "./HighlightsInput";
 import {
   ProductVariantsInput,
@@ -42,6 +43,9 @@ export type ProductFormValues = {
   existingImageUrls: string[];
   newFiles: File[];
   mainImageIndex: number;
+  existingVideoUrl?: string | null;
+  videoFile?: File | null;
+  removeVideo?: boolean;
   highlights: HighlightRow[];
   brand: string;
   weight: string;
@@ -65,6 +69,9 @@ const DEFAULT_VALUES: ProductFormValues = {
   existingImageUrls: [],
   newFiles: [],
   mainImageIndex: 0,
+  existingVideoUrl: null,
+  videoFile: null,
+  removeVideo: false,
   highlights: [],
   brand: "",
   weight: "0",
@@ -256,6 +263,14 @@ export function ProductForm({
       ),
     );
     fd.append("existingImages", JSON.stringify(paths));
+
+    // 5. Product Video (optional)
+    if (v.videoFile) {
+      fd.append("video", v.videoFile);
+    } else if (v.removeVideo) {
+      fd.append("removeVideo", "true");
+    }
+
     return fd;
   }
 
@@ -589,6 +604,26 @@ export function ProductForm({
                   ? "At least 1 image is required."
                   : `${totalImages} image(s) selected.`}
               </p>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border-border/60 shadow-sm">
+            <CardContent className="p-6">
+              <VideoUploader
+                value={{
+                  file: v.videoFile ?? null,
+                  existingUrl: v.existingVideoUrl,
+                  removeVideo: v.removeVideo,
+                }}
+                onChange={(next) =>
+                  setV((s) => ({
+                    ...s,
+                    videoFile: next.file,
+                    existingVideoUrl: next.existingUrl,
+                    removeVideo: next.removeVideo,
+                  }))
+                }
+              />
             </CardContent>
           </Card>
 

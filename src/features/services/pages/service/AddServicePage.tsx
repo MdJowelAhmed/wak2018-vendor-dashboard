@@ -33,6 +33,7 @@ import {
 import { readServiceLocationFromLocalStorage } from "@/utils/service-provider-profile-storage";
 import { cn, getImageUrl } from "@/utils/utils";
 import { fetchErrorMessage } from "@/utils/fetch-error";
+import { VideoUploader } from "@/components/common/VideoUploader";
 
 type FormState = {
   title: string;
@@ -43,6 +44,7 @@ type FormState = {
   technologies: string[];
   imageFile: File | null;
   imagePreviewUrl: string;
+  videoFile: File | null;
   price: string;
   packageDetails: string[];
   deliveryTime: string;
@@ -92,6 +94,7 @@ export function AddServicePage() {
     technologies: [],
     imageFile: null,
     imagePreviewUrl: "",
+    videoFile: null,
     price: "",
     packageDetails: [],
     deliveryTime: "3",
@@ -186,6 +189,10 @@ export function AddServicePage() {
 
       if (v.imageFile) {
         formData.append("image", v.imageFile);
+      }
+
+      if (v.videoFile) {
+        formData.append("video", v.videoFile);
       }
 
       await createService(formData).unwrap();
@@ -449,6 +456,26 @@ export function AddServicePage() {
                   )}
                 </div>
               </button>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border-border/60 shadow-sm">
+            <CardContent className="p-6">
+              <VideoUploader
+                title="Service Video"
+                description="Upload an introduction or demo video for this service."
+                value={{
+                  file: v.videoFile,
+                  existingUrl: null,
+                  removeVideo: false,
+                }}
+                onChange={(next) =>
+                  setV((s) => ({
+                    ...s,
+                    videoFile: next.file,
+                  }))
+                }
+              />
             </CardContent>
           </Card>
         </div>

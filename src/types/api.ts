@@ -25,6 +25,7 @@ export type Product = {
   stock: number;
   active: boolean;
   imageUrls: string[];
+  video?: string | null;
   /** Index within `imageUrls` */
   mainImageIndex?: number;
   rating?: number;
@@ -76,6 +77,7 @@ export type Service = {
   category: string;
   price: number;
   image: string;
+  video?: string | null;
   description: string;
   technologies: string[];
   serviceIncludes: string[];

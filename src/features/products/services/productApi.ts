@@ -1,6 +1,6 @@
 import { baseApi } from "@/services/baseApi";
 import type { Product } from "@/types/api";
-import { getImageUrl } from "@/utils/utils";
+import { getImageUrl, getMediaUrl } from "@/utils/utils";
 
 export type GetProductsParams = {
   page?: number;
@@ -94,6 +94,7 @@ export const productApi = baseApi.injectEndpoints({
           active: p.status === "active",
           status: p.status,
           imageUrls: (p.images || []).map((img: string) => getImageUrl(img)),
+          video: p.video ? getMediaUrl(p.video) : null,
           highlights: (p.topHighlights || []).map((h: any) => ({
             title: h.name,
             value: h.value,
@@ -160,6 +161,7 @@ export const productApi = baseApi.injectEndpoints({
           active: p.status === "active",
           status: p.status,
           imageUrls: (p.images || []).map((img: string) => getImageUrl(img)),
+          video: p.video ? getMediaUrl(p.video) : null,
           highlights: (p.topHighlights || []).map((h: any) => ({
             title: h.name,
             value: h.value,

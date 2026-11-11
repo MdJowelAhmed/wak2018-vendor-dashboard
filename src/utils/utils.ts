@@ -23,3 +23,5 @@ export function getImageUrl(path?: string) {
 
   return `${origin}${path.startsWith("/") ? "" : "/"}${path}`;
 }
+
+export const getMediaUrl = getImageUrl;

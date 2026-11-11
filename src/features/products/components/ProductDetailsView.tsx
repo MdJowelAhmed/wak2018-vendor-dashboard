@@ -17,6 +17,8 @@ import {
   Ruler,
   Weight,
   Sparkles,
+  Video,
+  Film,
 } from "lucide-react";
 import type { Product } from "@/types/api";
 import { Button } from "@/components/ui/button";
@@ -72,6 +74,7 @@ export function ProductDetailsView({
   }, [product.imageUrls, product.variants]);
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [viewingVideo, setViewingVideo] = useState(false);
 
   const activeImage = allImages[activeImageIndex]?.url || allImages[0]?.url;
 
@@ -153,7 +156,21 @@ export function ProductDetailsView({
         <div className="space-y-3 lg:col-span-5">
           <Card className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm p-0">
             <div className="relative aspect-square w-full bg-gray-50 flex items-center justify-center overflow-hidden">
-              {activeImage ? (
+              {viewingVideo && product.video ? (
+                <div className="size-full bg-black flex items-center justify-center">
+                  <video
+                    key={product.video}
+                    src={product.video}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="size-full object-contain"
+                  />
+                  <span className="absolute bottom-3 left-3 rounded-lg bg-black/70 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white flex items-center gap-1.5">
+                    <Video className="size-3 text-[#895129]" /> Product Video
+                  </span>
+                </div>
+              ) : activeImage ? (
                 <img
                   src={activeImage}
                   alt={product.name}
@@ -166,7 +183,7 @@ export function ProductDetailsView({
                 </div>
               )}
 
-              {allImages[activeImageIndex]?.label && (
+              {!viewingVideo && allImages[activeImageIndex]?.label && (
                 <span className="absolute bottom-3 left-3 rounded-lg bg-black/70 backdrop-blur-md px-2.5 py-1 text-[11px] font-medium text-white">
                   {allImages[activeImageIndex].label}
                 </span>
@@ -175,17 +192,37 @@ export function ProductDetailsView({
           </Card>
 
           {/* Thumbnail list */}
-          {allImages.length > 1 && (
+          {(allImages.length > 1 || product.video) && (
             <div className="flex gap-2.5 overflow-x-auto pb-1">
+              {product.video && (
+                <button
+                  type="button"
+                  onClick={() => setViewingVideo(true)}
+                  className={cn(
+                    "relative size-16 shrink-0 rounded-xl overflow-hidden border-2 bg-gray-900 flex flex-col items-center justify-center transition-all cursor-pointer",
+                    viewingVideo
+                      ? "border-[#895129] ring-2 ring-[#895129]/20"
+                      : "border-gray-200 hover:border-gray-300 opacity-80 hover:opacity-100",
+                  )}
+                  title="Watch Product Video"
+                >
+                  <Film className="size-5 text-white mb-0.5" />
+                  <span className="text-[9px] text-white font-medium">Video</span>
+                </button>
+              )}
+
               {allImages.map((img, idx) => {
-                const isSelected = idx === activeImageIndex;
+                const isSelected = !viewingVideo && idx === activeImageIndex;
                 return (
                   <button
                     key={`${img.url}-${idx}`}
                     type="button"
-                    onClick={() => setActiveImageIndex(idx)}
+                    onClick={() => {
+                      setActiveImageIndex(idx);
+                      setViewingVideo(false);
+                    }}
                     className={cn(
-                      "relative size-16 shrink-0 rounded-xl overflow-hidden border-2 bg-gray-50 transition-all",
+                      "relative size-16 shrink-0 rounded-xl overflow-hidden border-2 bg-gray-50 transition-all cursor-pointer",
                       isSelected
                         ? "border-[#895129] ring-2 ring-[#895129]/20"
                         : "border-gray-200 hover:border-gray-300 opacity-70 hover:opacity-100",

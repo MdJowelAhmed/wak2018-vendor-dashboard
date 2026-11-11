@@ -16,7 +16,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useGetServiceByIdQuery } from "@/features/services";
-import { cn, getImageUrl } from "@/utils/utils";
+import { cn, getImageUrl, getMediaUrl } from "@/utils/utils";
+import { Film } from "lucide-react";
 import {
   servicePageLoadTransition,
   serviceStatCardHover,
@@ -226,6 +227,27 @@ export function ServiceDetails() {
           initial="hidden"
           animate="visible"
         >
+          {service.video && (
+            <Card className="rounded-xl border-border/60 shadow-sm overflow-hidden">
+              <CardHeader className="py-3 px-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
+                  <Film className="size-4 text-[#895129]" /> Service Video
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="aspect-video w-full bg-black">
+                  <video
+                    src={getMediaUrl(service.video)}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="size-full object-contain"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {statItems.map((item) => (
             <motion.div
               key={item.title}

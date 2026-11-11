@@ -1,9 +1,10 @@
-import { Star, MessageCircle } from "lucide-react";
+import { useState } from "react";
+import { Star, MessageCircle, Film, Image as ImageIcon } from "lucide-react";
 import type { Service } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { cn, getImageUrl } from "@/utils/utils";
+import { cn, getImageUrl, getMediaUrl } from "@/utils/utils";
 import { ServicePricingCard } from "./ServicePricingCard";
 
 export function ServiceDetailsView({
@@ -15,13 +16,25 @@ export function ServiceDetailsView({
   onEdit: () => void;
   className?: string;
 }) {
+  const [activeMedia, setActiveMedia] = useState<"image" | "video">("image");
+  const videoUrl = service.video ? getMediaUrl(service.video) : null;
+
   return (
     <div className={cn("w-full space-y-6", className)}>
       <div className="grid w-full grid-cols-1 gap-6 lg:grid-cols-2">
         <Card className="rounded-xl border-border/60 shadow-sm">
           <CardContent className="p-6 space-y-4">
-            <div className="border-border/60 bg-muted/20 aspect-video overflow-hidden rounded-xl border">
-              {service.image ? (
+            <div className="border-border/60 bg-muted/20 aspect-video overflow-hidden rounded-xl border relative">
+              {activeMedia === "video" && videoUrl ? (
+                <video
+                  key={videoUrl}
+                  src={videoUrl}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="h-full w-full object-contain bg-black"
+                />
+              ) : service.image ? (
                 <img
                   src={getImageUrl(service.image)}
                   alt=""
@@ -29,6 +42,31 @@ export function ServiceDetailsView({
                 />
               ) : null}
             </div>
+
+            {videoUrl && (
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant={activeMedia === "image" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveMedia("image")}
+                  className="text-xs h-8"
+                >
+                  <ImageIcon className="mr-1.5 size-3.5" />
+                  Cover Photo
+                </Button>
+                <Button
+                  type="button"
+                  variant={activeMedia === "video" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setActiveMedia("video")}
+                  className="text-xs h-8"
+                >
+                  <Film className="mr-1.5 size-3.5" />
+                  Demo Video
+                </Button>
+              </div>
+            )}
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold tracking-tight">
                 {service.name}

@@ -83,6 +83,7 @@ export function ProductFormPage({ mode }: Props) {
           existingImageUrls: data.imageUrls ?? [],
           newFiles: [],
           mainImageIndex: data.mainImageIndex ?? 0,
+          existingVideoUrl: data.video ?? null,
           highlights: data.highlights ?? [],
           brand: data.brand ?? "",
           weight: String(data.weight ?? 0),

@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Film } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { formatCurrency, useCurrency } from "@/utils/format-currency";
 import { cn, getImageUrl } from "@/utils/utils";
@@ -147,6 +147,14 @@ export function ServicesPage() {
                           />
                         )}
                         <span>{s.name}</span>
+                        {s.video && (
+                          <span
+                            className="inline-flex items-center gap-1 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-normal shrink-0"
+                            title="Has promotional video"
+                          >
+                            <Film className="size-3" /> Video
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="font-semibold tabular-nums">

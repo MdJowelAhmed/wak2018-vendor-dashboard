@@ -14,6 +14,7 @@ import {
   Package,
   AlertTriangle,
   RotateCcw,
+  Film,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -418,14 +419,24 @@ export function ProductsListPage() {
 
                         {/* Name & SKU */}
                         <TableCell className="max-w-xs font-medium">
-                          <Link
-                            to={`/vendor/products/${p.id}`}
-                            className="font-semibold text-gray-900 hover:text-primary transition-colors block truncate"
-                          >
-                            {p.name}
-                          </Link>
+                          <div className="flex items-center gap-1.5">
+                            <Link
+                              to={`/vendor/products/${p.id}`}
+                              className="font-semibold text-gray-900 hover:text-primary transition-colors block truncate"
+                            >
+                              {p.name}
+                            </Link>
+                            {p.video && (
+                              <span
+                                className="inline-flex items-center gap-1 text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-normal shrink-0"
+                                title="Has promotional video"
+                              >
+                                <Film className="size-3" /> Video
+                              </span>
+                            )}
+                          </div>
                           {p.sku && (
-                            <span className="font-mono text-[10px] text-muted-foreground">
+                            <span className="font-mono text-[10px] text-muted-foreground block">
                               SKU: {p.sku}
                             </span>
                           )}

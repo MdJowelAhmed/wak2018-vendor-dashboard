@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/utils/utils";
 import { DynamicListInput } from "./DynamicListInput";
+import { VideoUploader } from "@/components/common/VideoUploader";
 
 export type ServiceFormValues = {
   title: string;
@@ -25,6 +26,9 @@ export type ServiceFormValues = {
   about: string;
   imageFile: File | null;
   imagePreviewUrl: string;
+  videoFile?: File | null;
+  existingVideoUrl?: string | null;
+  removeVideo?: boolean;
   services: string[];
   technologies: string[];
   benefits: string[];
@@ -39,6 +43,9 @@ const DEFAULT: ServiceFormValues = {
   about: "",
   imageFile: null,
   imagePreviewUrl: "",
+  videoFile: null,
+  existingVideoUrl: null,
+  removeVideo: false,
   services: [],
   technologies: [],
   benefits: [],
@@ -96,6 +103,14 @@ export function ServiceForm({
     v.services.forEach((s) => fd.append("serviceIncludes", s.trim()));
     v.technologies.forEach((t) => fd.append("technologies", t.trim()));
     v.benefits.forEach((b) => fd.append("packageDetails", b.trim()));
+
+    // Service Video (optional)
+    if (v.videoFile) {
+      fd.append("video", v.videoFile);
+    } else if (v.removeVideo) {
+      fd.append("removeVideo", "true");
+    }
+
     return fd;
   }
 
@@ -304,6 +319,28 @@ export function ServiceForm({
                   Upload image
                 </Button>
               </label>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border-border/60 shadow-sm">
+            <CardContent className="p-6">
+              <VideoUploader
+                title="Service Video"
+                description="Upload an introduction or demo video for this service."
+                value={{
+                  file: v.videoFile ?? null,
+                  existingUrl: v.existingVideoUrl,
+                  removeVideo: v.removeVideo,
+                }}
+                onChange={(next) =>
+                  setV((s) => ({
+                    ...s,
+                    videoFile: next.file,
+                    existingVideoUrl: next.existingUrl,
+                    removeVideo: next.removeVideo,
+                  }))
+                }
+              />
             </CardContent>
           </Card>
 

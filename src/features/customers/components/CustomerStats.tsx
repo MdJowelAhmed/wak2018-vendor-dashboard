@@ -8,12 +8,7 @@ import {
   staggerParentVariants,
 } from "@/features/customers/motion/customer-details-variants";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
@@ -58,6 +53,7 @@ function StatMotionWrap({ children }: { children: ReactNode }) {
 }
 
 export function CustomerStats({ ltv }: { ltv: CustomerLifetimeValue }) {
+  useCurrency();
   return (
     <div className="space-y-6">
       <StatGrid>

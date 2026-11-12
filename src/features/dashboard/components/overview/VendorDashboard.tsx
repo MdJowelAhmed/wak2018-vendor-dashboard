@@ -3,18 +3,20 @@ import { Banknote, Package, ShoppingCart, Truck } from "lucide-react";
 import type { DashboardOverview } from "@/types/api";
 // import { ProductsOverview } from "@/features/dashboard/components/ProductsOverview";
 import { cn } from "@/utils/utils";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 import { StatsCards, type StatCard } from "./StatsCards";
 import { RevenueChart } from "./RevenueChart";
 import { OrdersTable } from "./OrdersTable";
 import { DeliveriesCard } from "./DeliveriesCard";
 
 export function VendorDashboard({ data }: { data: DashboardOverview }) {
+  useCurrency();
   const stats: StatCard[] = [
     {
       key: "rev",
       label: "Total Revenue",
       value: formatCurrency(data.totalRevenue),
+      amount: data.totalRevenue,
       icon: Banknote,
     },
     {

@@ -55,6 +55,19 @@ export const profileApi = baseApi.injectEndpoints({
         method: "GET",
       }),
     }),
+    getCountries: build.query<
+      {
+        success: boolean;
+        message?: string;
+        data: { name: string; countryCode: string }[];
+      },
+      void
+    >({
+      query: () => ({
+        url: "/meta/countries",
+        method: "GET",
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -65,4 +78,5 @@ export const {
   useUpdateUserProfileMutation,
   useGetUserProfileQuery,
   useGetLanguagesQuery,
+  useGetCountriesQuery,
 } = profileApi;

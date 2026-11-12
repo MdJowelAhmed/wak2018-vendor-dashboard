@@ -83,9 +83,30 @@ export function ProductFormPage({ mode }: Props) {
           existingImageUrls: data.imageUrls ?? [],
           newFiles: [],
           mainImageIndex: data.mainImageIndex ?? 0,
+          existingVideoUrl: data.video ?? null,
           highlights: data.highlights ?? [],
           brand: data.brand ?? "",
           weight: String(data.weight ?? 0),
+          variants:
+            data.variants && data.variants.length > 0
+              ? data.variants.map((vr, i) => ({
+                  id: vr._id || vr.id || `var-${i}-${Date.now()}`,
+                  _id: vr._id,
+                  color: vr.color ?? "",
+                  stock: String(vr.stock ?? 0),
+                  sizes: vr.sizes ?? [],
+                  image: vr.image,
+                }))
+              : data.colors && data.colors.length > 0
+                ? data.colors.map((c, i) => ({
+                    id: `legacy-${i}-${Date.now()}`,
+                    color: c,
+                    stock: String(
+                      Math.floor((data.stock ?? 0) / data.colors!.length),
+                    ),
+                    sizes: data.sizes ?? [],
+                  }))
+                : [],
           dimensions: {
             length: String(data.dimensions?.length ?? 0),
             width: String(data.dimensions?.width ?? 0),
@@ -98,6 +119,7 @@ export function ProductFormPage({ mode }: Props) {
 
   return (
     <ProductForm
+      key={mode === "edit" ? (data?.id ?? "edit") : "create"}
       mode={mode}
       isBusy={isBusy}
       initialValues={initialValues}

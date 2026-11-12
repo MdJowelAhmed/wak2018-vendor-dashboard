@@ -59,6 +59,8 @@ export function LoginPage() {
         let appRole = "vendor";
         if (apiRole === "service_provider") {
           appRole = "service";
+        } else if (apiRole === "admin" || apiRole === "super_admin") {
+          appRole = "admin";
         } else if (apiRole === "staff") {
           const resDataAny = res.data as any;
           const actualStaffType = resDataAny.staffType || resDataAny.staff?.staffType;
@@ -92,7 +94,9 @@ export function LoginPage() {
 
         toast.success(res.message || "User logged in successfully.");
 
-        if (appRole === "vendor") {
+        if (appRole === "admin") {
+          void navigate("/admin/verification", { replace: true });
+        } else if (appRole === "vendor") {
           void navigate(
             from && from.startsWith("/vendor") ? from : "/vendor/dashboard",
             { replace: true },

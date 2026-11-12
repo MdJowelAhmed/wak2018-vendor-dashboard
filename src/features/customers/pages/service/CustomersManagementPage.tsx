@@ -21,12 +21,7 @@ import type { CustomerTag } from "@/types/api";
 import { useGetCustomersQuery } from "@/features/customers/services/customerApi";
 import { getImageUrl } from "@/utils/utils";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function tagLabel(t: CustomerTag) {
   if (t === "premium") return "Premium";
@@ -35,6 +30,7 @@ function tagLabel(t: CustomerTag) {
 }
 
 export function CustomersManagementPage() {
+  useCurrency();
   const { data: rows = [], isLoading, isError } = useGetCustomersQuery({
     role: "service",
   });

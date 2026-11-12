@@ -26,6 +26,7 @@ import {
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { ChatMessage as APIMessage } from "@/types/api";
 import { type OfferFormValues } from "@/features/chat/components/SendOfferModal";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 type PendingAttachment = {
   id: string;
@@ -36,6 +37,7 @@ type PendingAttachment = {
 };
 
 export function MessagesPage() {
+  useCurrency();
   const { data: profileRes } = useGetUserProfileQuery();
   const sessionUser = profileRes?.data;
 
@@ -477,7 +479,7 @@ export function MessagesPage() {
 
                                   {m.customOffer?.price !== undefined ? (
                                     <div className="text-2xl font-bold text-[#E65100]">
-                                      ${m.customOffer.price}
+                                      {formatCurrency(m.customOffer.price)}
                                     </div>
                                   ) : null}
 

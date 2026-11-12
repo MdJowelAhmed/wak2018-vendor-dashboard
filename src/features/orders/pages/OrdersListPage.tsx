@@ -33,7 +33,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { OrderStatusBadge } from "@/components/status-badge";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 type StatusFilter = "all" | `${PRODUCT_ORDER_STATUS}`;
 type DeliveryTypeFilter = "all" | `${PRODUCT_ORDER_DELIVERY_TYPE}`;
@@ -46,7 +48,40 @@ function formatDate(iso: string) {
   }
 }
 
+function renderVariantInfo(o: Order) {
+  if (o.type !== "product") {
+    return <span className="text-muted-foreground text-sm">{formatDate(o.createdAt)}</span>;
+  }
+
+  const items = o.items ?? [];
+  const itemsWithVariant = items.filter((it) => it.color || it.size);
+
+  if (!itemsWithVariant.length) {
+    return <span className="text-muted-foreground text-sm">—</span>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1 text-xs">
+      {itemsWithVariant.map((it, idx) => (
+        <div key={it._id || idx} className="flex flex-wrap items-center gap-1">
+          {it.color ? (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+              Color: {it.color}
+            </Badge>
+          ) : null}
+          {it.size ? (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0 font-normal">
+              Size: {it.size}
+            </Badge>
+          ) : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function OrdersListPage() {
+  useCurrency();
   const authRole: UserRole | undefined = useSelector(
     (s: RootState) => s.auth.user?.role,
   );
@@ -160,9 +195,9 @@ export function OrdersListPage() {
                     <TableHead>Customer</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Delivery Type</TableHead>
+                    <TableHead>Delivery</TableHead>
                     <TableHead>Total</TableHead>
-                    <TableHead>Date</TableHead>
+                    <TableHead>{role === "vendor" ? "Color & Size" : "Date"}</TableHead>
                     <TableHead className="w-[1%] text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -178,16 +213,15 @@ export function OrdersListPage() {
                         <OrderStatusBadge status={o.status as any} />
                       </TableCell>
                       <TableCell className="capitalize">
-                        {o.deliveryType ?? "—"}
+                        {[o.deliveryType, "deliveryOption" in o ? o.deliveryOption : null]
+                          .filter(Boolean)
+                          .join(" · ") || "—"}
                       </TableCell>
                       <TableCell>
-                        {new Intl.NumberFormat(undefined, {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(o.total)}
+                        {formatCurrency(o.total)}
                       </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {formatDate(o.createdAt)}
+                      <TableCell>
+                        {renderVariantInfo(o)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button asChild size="sm" variant="outline">

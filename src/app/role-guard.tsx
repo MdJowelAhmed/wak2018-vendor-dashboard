@@ -7,6 +7,7 @@ type AppRole = UserRole;
 const roleHome: Record<AppRole, string> = {
   vendor: "/vendor/dashboard",
   service: "/service/dashboard",
+  admin: "/admin/verification",
 };
 
 export function RequireRole({ role }: { role: AppRole }) {

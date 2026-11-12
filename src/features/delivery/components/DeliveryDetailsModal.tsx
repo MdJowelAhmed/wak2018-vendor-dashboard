@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { MessageCircle, Phone, Truck } from "lucide-react";
+import { MessageCircle, Phone, Truck, Download } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,13 +18,10 @@ import { badgeClassFor, labelFor } from "../utils/deliveryStatusUi";
 import { DeliveryTimeline } from "./DeliveryTimeline";
 import { LiveTrackingMap } from "./LiveTrackingMap";
 import { useUpdateDeliveryStatusMutation } from "@/features/delivery";
+import { OrderStatusBadge } from "@/components/status-badge";
+import { getImageUrl } from "@/utils/utils";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function fmtEta(minutes?: number) {
   if (minutes == null || !Number.isFinite(minutes)) return "—";
@@ -59,6 +56,7 @@ export function DeliveryDetailsModal({
   onOpenChange: (v: boolean) => void;
   delivery: Delivery | null;
 }) {
+  useCurrency();
   const navigate = useNavigate();
   const [updateStatus, { isLoading: markingDone }] =
     useUpdateDeliveryStatusMutation();
@@ -67,7 +65,9 @@ export function DeliveryDetailsModal({
 
   const d = delivery;
   const isIntl = d.type === "international";
-  const canMarkDelivered = d.deliveryStatus !== "delivered";
+  const isPickup = d.deliveryOption === "pickup";
+  const hasLocalRider = Boolean(d.driverName);
+  const canMarkDelivered = !isIntl && hasLocalRider && d.deliveryStatus !== "delivered";
   const driverPhone = d.driverPhone?.trim();
 
   async function markDelivered() {
@@ -166,14 +166,53 @@ export function DeliveryDetailsModal({
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="capitalize">
                   {d.type === "international" ? "International" : "Local"}
+                  {d.deliveryOption ? ` · ${d.deliveryOption}` : ""}
                 </Badge>
-                <Badge className={badgeClassFor(d.type, d.deliveryStatus)}>
-                  {labelFor(d.type, d.deliveryStatus)}
-                </Badge>
+                {d.orderStatus ? <OrderStatusBadge status={d.orderStatus} /> : (
+                  <Badge className={badgeClassFor(d.type, d.deliveryStatus)}>
+                    {labelFor(d.type, d.deliveryStatus)}
+                  </Badge>
+                )}
+                {d.paymentStatus ? <OrderStatusBadge status={d.paymentStatus} /> : null}
+                {d.trackingStatus ? <OrderStatusBadge status={d.trackingStatus} /> : null}
               </div>
+              {d.items?.length ? (
+                <div className="space-y-2 rounded-xl border border-border/60 p-3">
+                  {d.items.map((item, idx) => (
+                    <div key={`${item.product?._id ?? idx}`} className="flex items-center gap-3">
+                      <div className="bg-muted size-12 overflow-hidden rounded-lg">
+                        {item.product?.images?.[0] ? (
+                          <img
+                            src={getImageUrl(item.product.images[0])}
+                            alt=""
+                            className="size-full object-cover"
+                          />
+                        ) : null}
+                      </div>
+                      <div className="min-w-0 flex-1 text-sm">
+                        <div className="truncate font-medium">{item.product?.name ?? "Item"}</div>
+                        <div className="text-muted-foreground text-xs">
+                          Qty {item.quantity} × {fmtMoney(item.unitPrice)}
+                          {item.color || item.size ? (
+                            <span className="ml-1 text-[#895129]">
+                              ({[item.color && `Color: ${item.color}`, item.size && `Size: ${item.size}`].filter(Boolean).join(", ")})
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className="text-sm font-semibold tabular-nums">
+                        {fmtMoney(item.unitTotal)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Field label="Pickup address" value={d.pickupLocation} />
-                <Field label="Drop address" value={d.dropLocation} />
+                <Field label="Pickup address" value={d.pickupLocation || "—"} />
+                <Field
+                  label={isPickup ? "Fulfillment" : "Drop address"}
+                  value={isPickup ? "Customer pickup" : d.dropLocation || "—"}
+                />
                 <Field
                   label="Distance"
                   value={d.distanceKm != null ? `${d.distanceKm} km` : "—"}
@@ -199,6 +238,26 @@ export function DeliveryDetailsModal({
                       value={d.trackingStatus ?? "—"}
                     />
                   </div>
+                  {d.labelUrl || d.commercialInvoiceUrl ? (
+                    <div className="flex flex-wrap gap-2 sm:col-span-2">
+                      {d.labelUrl ? (
+                        <Button asChild type="button" variant="outline" size="sm">
+                          <a href={d.labelUrl} target="_blank" rel="noreferrer">
+                            <Download className="mr-2 size-3.5" />
+                            Shipping label
+                          </a>
+                        </Button>
+                      ) : null}
+                      {d.commercialInvoiceUrl ? (
+                        <Button asChild type="button" variant="outline" size="sm">
+                          <a href={d.commercialInvoiceUrl} target="_blank" rel="noreferrer">
+                            <Download className="mr-2 size-3.5" />
+                            Commercial invoice
+                          </a>
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>

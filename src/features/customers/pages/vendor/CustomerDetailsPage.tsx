@@ -17,12 +17,7 @@ import {
   timelineItemVariants,
 } from "@/features/customers/motion/customer-details-variants";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function fmtDate(iso?: string) {
   if (!iso) return "—";
@@ -52,6 +47,7 @@ function statusBadgeClass(status: string) {
 }
 
 export function CustomerDetailsPage() {
+  useCurrency();
   const { id } = useParams();
   const navigate = useNavigate();
 

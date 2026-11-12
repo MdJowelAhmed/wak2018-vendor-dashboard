@@ -20,12 +20,7 @@ import {
 import { cn } from "@/utils/utils";
 import { SERVICE_BOOKINGS_DEMO, SERVICE_DEMO } from "@/features/services";
 
-const fmtUsd = (n: number) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
+import { formatCurrency as fmtUsd, useCurrency } from "@/utils/format-currency";
 
 function StatusBadge({ status }: { status: "Active" | "Draft" | "Disabled" }) {
   const cls =
@@ -42,6 +37,7 @@ function StatusBadge({ status }: { status: "Active" | "Draft" | "Disabled" }) {
 }
 
 export function ServiceDetailsPage() {
+  useCurrency();
   const { id } = useParams();
   const serviceId = Number(id);
   const service = useMemo(

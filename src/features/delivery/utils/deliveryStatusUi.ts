@@ -16,6 +16,7 @@ const localSteps: DeliveryUiStatus[] = [
 
 const intlLabels: Record<DeliveryDriverStatus, string> = {
   requested: 'Shipment Created',
+  assigned: 'Assigned',
   accepted: 'Picked',
   picked_up: 'In Transit',
   in_transit: 'Out for Delivery',

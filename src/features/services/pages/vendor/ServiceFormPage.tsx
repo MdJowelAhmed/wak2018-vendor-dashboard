@@ -16,6 +16,7 @@ import {
   type ServiceFormValues,
 } from "@/features/services/components/ServiceForm";
 import type { UserRole } from "@/features/auth/types/authTypes";
+import { getMediaUrl } from "@/utils/utils";
 
 type Props = { mode: "create" | "edit" };
 
@@ -77,6 +78,7 @@ export function ServiceFormPage({ mode }: Props) {
               : "1",
           about: svcQ.data.description ?? "",
           imagePreviewUrl: svcQ.data.image ?? "",
+          existingVideoUrl: svcQ.data.video ? getMediaUrl(svcQ.data.video) : null,
           services: svcQ.data.serviceIncludes ?? [],
           technologies: svcQ.data.technologies ?? [],
           benefits: svcQ.data.packageDetails ?? [],

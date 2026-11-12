@@ -2,6 +2,7 @@ import { CalendarClock, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils/utils";
+import { formatCurrency as fmtUsd, useCurrency } from "@/utils/format-currency";
 
 export type OfferStatus = "pending" | "accepted" | "rejected" | "withdrawn";
 
@@ -25,13 +26,6 @@ type ChatOfferMessageProps = {
   onReject: () => void;
   onWithdraw: () => void;
 };
-
-const fmtUsd = (n: number) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(n);
 
 function StatusBadge({ status }: { status: OfferStatus }) {
   if (status === "pending") {
@@ -83,6 +77,7 @@ export function ChatOfferMessage({
   onReject,
   onWithdraw,
 }: ChatOfferMessageProps) {
+  useCurrency();
   const pending = offer.status === "pending";
 
   return (

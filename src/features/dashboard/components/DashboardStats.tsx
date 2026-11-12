@@ -3,7 +3,7 @@ import { Banknote, ShoppingCart, Truck, Wrench } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/utils/utils";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 
 type Stat = {
   key: string;
@@ -30,6 +30,7 @@ export function DashboardStats({
   isLoading,
   className,
 }: Props) {
+  useCurrency();
   const items: Stat[] = [
     {
       key: "rev",

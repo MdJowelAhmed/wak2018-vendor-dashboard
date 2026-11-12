@@ -16,9 +16,17 @@ import {
 import type { RootState } from "@/app/store";
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import type { UserRole } from "@/features/auth/types/authTypes";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
+
+import { useState } from "react";
 
 export function ServicesListPage() {
-  const { data: res, isLoading, isError } = useGetMyServicesQuery();
+  useCurrency();
+  const [page, setPage] = useState(1);
+  const { data: res, isLoading, isFetching, isError } = useGetMyServicesQuery({
+    page,
+    limit: 10,
+  });
   const authRole: UserRole | undefined = useSelector(
     (s: RootState) => s.auth.user?.role,
   );
@@ -26,6 +34,7 @@ export function ServicesListPage() {
   const profile = profileRes?.data;
   const role: UserRole | null = authRole ?? profile?.role ?? null;
   const data = res?.data || [];
+  const pagination = res?.pagination;
 
   return (
     <div className="space-y-4">
@@ -94,10 +103,7 @@ export function ServicesListPage() {
                       {s.deliveryTime} Days
                     </TableCell>
                     <TableCell className="text-right">
-                      {new Intl.NumberFormat(undefined, {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(s.price)}
+                      {formatCurrency(s.price)}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -114,6 +120,37 @@ export function ServicesListPage() {
                 )}
               </TableBody>
             </Table>
+          )}
+
+          {pagination && pagination.totalPage > 1 && (
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4">
+              <span className="text-sm text-muted-foreground">
+                Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+                {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
+                of {pagination.total} services
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1 || isFetching}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  Previous
+                </Button>
+                <span className="text-sm font-medium">
+                  Page {page} of {pagination.totalPage}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= pagination.totalPage || isFetching}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

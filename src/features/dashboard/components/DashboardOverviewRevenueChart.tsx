@@ -25,6 +25,11 @@ import {
 } from "recharts";
 import { fadeUp, hoverLift } from "@/components/ui/motion";
 import { RevenueStatsModal } from "@/features/dashboard/components/RevenueStatsModal";
+import {
+  convertFromUsd,
+  formatCurrency,
+  useCurrency,
+} from "@/utils/format-currency";
 
 type Props = {
   weekly?: RevenueChartPoint[]; // Kept for backwards compatibility if needed elsewhere
@@ -35,7 +40,8 @@ type Props = {
 };
 
 function MoneyTick(v: unknown) {
-  const n = typeof v === "number" ? v : Number(v);
+  const raw = typeof v === "number" ? v : Number(v);
+  const n = convertFromUsd(Number.isFinite(raw) ? raw : 0);
   if (!Number.isFinite(n)) return "";
   if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
   if (n >= 1000) return `${Math.round(n / 1000)}k`;
@@ -56,13 +62,10 @@ function RevenueTooltip({
   }>;
   label?: unknown;
 }) {
+  useCurrency();
   if (!active || !payload?.length) return null;
 
-  const fmtMoney = (n: number) =>
-    new Intl.NumberFormat(undefined, {
-      style: "currency",
-      currency: "USD",
-    }).format(n);
+  const fmtMoney = (n: number) => formatCurrency(n);
 
   return (
     <div className="rounded-2xl border border-gray-100 bg-white/95 px-3 py-2 shadow-lg backdrop-blur">
@@ -95,6 +98,7 @@ function RevenueTooltip({
 }
 
 export function RevenueChart({ mode = "both", isLoading, className }: Props) {
+  useCurrency();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number>(currentYear);
   const [openStats, setOpenStats] = useState(false);

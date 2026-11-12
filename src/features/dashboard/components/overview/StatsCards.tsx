@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { cn } from "@/utils/utils";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 import { fadeUp, hoverLift, staggerContainer } from "@/components/ui/motion";
 
 export type StatCard = {
@@ -11,6 +12,7 @@ export type StatCard = {
   label: string;
   value: string;
   sub?: string;
+  amount?: number;
   icon: ComponentType<{ className?: string }>;
 };
 
@@ -25,12 +27,7 @@ function formatterFromTemplate(template: string) {
   const hasDollar = template.includes("$");
 
   if (hasPct) return (n: number) => `${n.toFixed(0)}%`;
-  if (hasDollar)
-    return (n: number) =>
-      new Intl.NumberFormat(undefined, {
-        style: "currency",
-        currency: "USD",
-      }).format(n);
+  if (hasDollar) return (n: number) => formatCurrency(n);
 
   return (n: number) => new Intl.NumberFormat().format(Math.round(n));
 }
@@ -44,6 +41,7 @@ export function StatsCards({
   isLoading?: boolean;
   className?: string;
 }) {
+  useCurrency();
   return (
     <motion.div
       className={cn(
@@ -75,19 +73,26 @@ export function StatsCards({
                 ) : (
                   <>
                     <p className="text-3xl font-bold tracking-tight text-gray-900">
-                      {(() => {
-                        const n = parseNumberLike(s.value);
-                        if (n == null)
+                      {s.amount != null ? (
+                        <AnimatedNumber
+                          value={s.amount}
+                          format={formatCurrency}
+                        />
+                      ) : (
+                        (() => {
+                          const n = parseNumberLike(s.value);
+                          if (n == null)
+                            return (
+                              <span className="tabular-nums">{s.value}</span>
+                            );
                           return (
-                            <span className="tabular-nums">{s.value}</span>
+                            <AnimatedNumber
+                              value={n}
+                              format={formatterFromTemplate(s.value)}
+                            />
                           );
-                        return (
-                          <AnimatedNumber
-                            value={n}
-                            format={formatterFromTemplate(s.value)}
-                          />
-                        );
-                      })()}
+                        })()
+                      )}
                     </p>
                     {s.sub && <p className="text-xs text-gray-500">{s.sub}</p>}
                   </>

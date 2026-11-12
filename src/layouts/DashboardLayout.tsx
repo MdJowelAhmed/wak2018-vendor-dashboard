@@ -42,7 +42,9 @@ import { logout } from "@/features/auth/authSlice";
 import { useGetUserProfileQuery } from "@/services/profileApi";
 import { connectSocket } from "@/utils/socket";
 import { NotificationDropdown } from "@/features/notifications/components/NotificationDropdown";
+import { CurrencySelect } from "@/features/currency/CurrencySelect";
 import { cn, getImageUrl } from "@/utils/utils";
+import { vendorVerificationLabel } from "@/features/settings/components/KycDocumentsFields";
 
 type MenuItem = { to: string; label: string; icon: typeof Home };
 
@@ -62,7 +64,7 @@ export function VendorLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { data: profileResponse, isError } = useGetUserProfileQuery();
+  const { data: profileResponse } = useGetUserProfileQuery();
   const data = profileResponse?.data;
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -73,6 +75,7 @@ export function VendorLayout() {
   }, []);
 
   const settingsActive = location.pathname.startsWith("/vendor/settings");
+  const verification = vendorVerificationLabel(data);
 
   useEffect(() => {
     if (settingsActive) setOpenSettings(true);
@@ -129,30 +132,24 @@ export function VendorLayout() {
               className="flex items-center gap-2 font-semibold text-primary"
               onClick={() => setMobileOpen(false)}
             >
-              <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground shadow-sm overflow-hidden">
-                {data?.vendor?.logo || data?.profileImage ? (
+              <span className="flex size-18 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground shadow-sm overflow-hidden">
+              
                   <img
-                    src={getImageUrl(data?.vendor?.logo || data?.profileImage)}
+                    src='/logo.png'
                     alt="Logo"
                     className="h-full w-full object-cover"
                   />
-                ) : (
-                  (
-                    data?.vendor?.businessName?.[0] ||
-                    data?.name?.[0] ||
-                    "W"
-                  ).toUpperCase()
-                )}
+                
               </span>
               <span className="truncate w-40">
                 {data?.name || data?.vendor?.businessName || "Unified vendor"}
               </span>
             </Link>
-            {isError && (
+            {/* {isError && (
               <p className="text-muted-foreground mt-1 text-xs">
                 Set auth token in Settings to load your profile.
               </p>
-            )}
+            )} */}
           </div>
           <div className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 overflow-y-auto">
@@ -334,9 +331,15 @@ export function VendorLayout() {
                   <span className="size-2 rounded-full bg-blue-500 animate-pulse" />
                   Vendor Dashboard
                 </Badge>
+                {verification ? (
+                  <Badge className={verification.className}>
+                    {verification.label}
+                  </Badge>
+                ) : null}
               </div>
 
               <div className="ml-auto flex items-center gap-2">
+                <CurrencySelect />
                 <NotificationDropdown
                   role="vendor"
                   viewAllUrl="/vendor/notifications"

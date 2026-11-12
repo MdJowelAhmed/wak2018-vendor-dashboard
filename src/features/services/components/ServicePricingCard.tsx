@@ -2,11 +2,7 @@ import type { Service } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const fmt = (n: number) =>
-  new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
+import { formatCurrency as fmt, useCurrency } from "@/utils/format-currency";
 
 export function ServicePricingCard({
   service,
@@ -15,6 +11,7 @@ export function ServicePricingCard({
   service: Service;
   onEdit: () => void;
 }) {
+  useCurrency();
   const price = service.price ?? 0;
 
   return (

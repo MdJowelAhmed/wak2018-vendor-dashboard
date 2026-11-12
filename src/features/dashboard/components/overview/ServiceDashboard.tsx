@@ -1,7 +1,7 @@
 import { Banknote, CheckCircle2, Timer, Wrench } from "lucide-react";
 import type { DashboardOverview } from "@/types/api";
 import { ServicesOverview } from "@/features/dashboard/components/ServicesOverview";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 import { StatsCards, type StatCard } from "./StatsCards";
 import { RevenueChart } from "./RevenueChart";
 import { OrdersTable } from "./OrdersTable";
@@ -21,6 +21,7 @@ export function ServiceDashboard({
     serviceCompletedCount: number;
   };
 }) {
+  useCurrency();
   const totalJobs = meta.serviceOrdersCount;
   const completionRate = totalJobs ? meta.serviceCompletedCount / totalJobs : 0;
   const inProgress = Math.max(0, totalJobs - meta.serviceCompletedCount);
@@ -30,6 +31,7 @@ export function ServiceDashboard({
       key: "rev",
       label: "Total Revenue",
       value: formatCurrency(data.totalRevenue),
+      amount: data.totalRevenue,
       icon: Banknote,
     },
     {

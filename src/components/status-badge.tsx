@@ -74,6 +74,26 @@ const statusStyles: Record<string, { label: string; className: string }> = {
     label: "In Transit",
     className: "border-transparent bg-[#895129] text-white",
   },
+  paid: {
+    label: "Paid",
+    className: "border-transparent bg-emerald-600 text-white",
+  },
+  unpaid: {
+    label: "Unpaid",
+    className: "border-transparent bg-amber-500 text-white",
+  },
+  failed: {
+    label: "Failed",
+    className: "border-transparent bg-rose-600 text-white",
+  },
+  assigned: {
+    label: "Assigned",
+    className: "border-transparent bg-blue-600 text-white",
+  },
+  not_requested: {
+    label: "Not Requested",
+    className: "border-transparent bg-slate-500 text-white",
+  },
 };
 
 type StatusBadgeProps = {
@@ -93,15 +113,22 @@ export function OrderStatusBadge({ status, className }: StatusBadgeProps) {
   );
 }
 
-export function getOrderStatusOptions(isProduct: boolean) {
+export function getOrderStatusOptions(isProduct: boolean, deliveryOption?: string) {
   if (isProduct) {
+    if (deliveryOption === "pickup") {
+      return [
+        { value: "pending" as const, label: "Pending" },
+        { value: "confirmed" as const, label: "Confirmed" },
+        { value: "ready_for_pickup" as const, label: "Ready for pickup" },
+        { value: "delivered" as const, label: "Delivered" },
+      ];
+    }
     return [
       { value: "pending" as const, label: "Pending" },
       { value: "confirmed" as const, label: "Confirmed" },
       { value: "processing" as const, label: "Processing" },
-      { value: "ready" as const, label: "Ready" },
-      { value: "delivery_requested" as const, label: "Delivery requested" },
-      { value: "shipment_created" as const, label: "Shipment created" },
+      { value: "shipped" as const, label: "Shipped" },
+      { value: "out_for_delivery" as const, label: "Out for delivery" },
       { value: "delivered" as const, label: "Delivered" },
     ];
   }

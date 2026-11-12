@@ -18,7 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import type { DashboardRecentOrder } from "@/types/api";
 import { DashboardOrderStatusBadge } from "@/features/dashboard/components/dashboard-status-badge";
 import { cn } from "@/utils/utils";
-import { formatCurrency } from "@/utils/format-currency";
+import { formatCurrency, useCurrency } from "@/utils/format-currency";
 import { motion } from "framer-motion";
 import { fadeUp, hoverLift } from "@/components/ui/motion";
 
@@ -29,6 +29,7 @@ type Props = {
 };
 
 export function RecentOrders({ orders, isLoading, className }: Props) {
+  useCurrency();
   return (
     <motion.div
       variants={fadeUp}

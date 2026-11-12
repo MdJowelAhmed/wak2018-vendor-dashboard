@@ -213,6 +213,11 @@ const NotificationsPage = lazy(() =>
     default: m.NotificationsPage,
   })),
 );
+const VerificationRequestsPage = lazy(() =>
+  import("@/features/admin/pages/VerificationRequestsPage").then((m) => ({
+    default: m.VerificationRequestsPage,
+  })),
+);
 
 import {
   createBrowserRouter,
@@ -250,6 +255,24 @@ const router = createBrowserRouter([
       { index: true, element: <Navigate to="/service/dashboard" replace /> },
       { path: "onboarding/service", element: <ServiceOnboardingPage /> },
       { path: "onboarding/vendor", element: <VendorOnboardingPage /> },
+      {
+        element: <RequireRole role="admin" />,
+        children: [
+          {
+            path: "admin",
+            children: [
+              {
+                index: true,
+                element: <Navigate to="verification" replace />,
+              },
+              {
+                path: "verification",
+                element: <VerificationRequestsPage />,
+              },
+            ],
+          },
+        ],
+      },
       {
         element: <VendorLayout />,
         children: [

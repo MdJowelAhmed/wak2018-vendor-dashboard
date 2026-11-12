@@ -22,12 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { CustomerTag } from "@/types/api";
 
-function fmtMoney(n: number) {
-  return new Intl.NumberFormat(undefined, {
-    style: "currency",
-    currency: "USD",
-  }).format(n);
-}
+import { formatCurrency as fmtMoney, useCurrency } from "@/utils/format-currency";
 
 function tagLabel(t: CustomerTag) {
   if (t === "premium") return "Premium";
@@ -36,6 +31,7 @@ function tagLabel(t: CustomerTag) {
 }
 
 export function CustomersManagementPage() {
+  useCurrency();
   const q = useGetCustomersQuery();
   const rows = useMemo(() => (q.data ?? []).slice(), [q.data]);
 

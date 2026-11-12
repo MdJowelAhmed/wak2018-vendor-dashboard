@@ -64,6 +64,7 @@ export const authApi = baseApi.injectEndpoints({
         phone: string;
         password: string;
         role: string;
+        countryCode?: string;
       }
     >({
       query: (body) => ({ url: "/users/", method: "POST", body }),

@@ -16,6 +16,7 @@ export type Product = {
   id: string;
   name: string;
   category?: string;
+  categoryId?: string;
   brand?: string;
   description: string;
   productDetails?: string;
@@ -24,6 +25,7 @@ export type Product = {
   stock: number;
   active: boolean;
   imageUrls: string[];
+  video?: string | null;
   /** Index within `imageUrls` */
   mainImageIndex?: number;
   rating?: number;
@@ -35,8 +37,28 @@ export type Product = {
   productCountries?: string[];
   weight?: number;
   dimensions?: { length: number; width: number; height: number };
+  localDeliveryFee?: number;
+  variants?: ProductVariant[];
+  colors?: string[];
+  sizes?: string[];
   status?: "active" | "inactive";
   discountPrice?: number;
+  sku?: string;
+  lowStockThreshold?: number;
+  ratingAverage?: number;
+  ratingCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  slug?: string;
+};
+
+export type ProductVariant = {
+  _id?: string;
+  id?: string;
+  color?: string;
+  stock: number;
+  sizes: string[];
+  image?: string;
 };
 
 export type ServicePackage = {
@@ -55,6 +77,7 @@ export type Service = {
   category: string;
   price: number;
   image: string;
+  video?: string | null;
   description: string;
   technologies: string[];
   serviceIncludes: string[];
@@ -91,6 +114,25 @@ export const PRODUCT_ORDER_DELIVERY_TYPE = {
 export type PRODUCT_ORDER_DELIVERY_TYPE =
   (typeof PRODUCT_ORDER_DELIVERY_TYPE)[keyof typeof PRODUCT_ORDER_DELIVERY_TYPE];
 
+export const PRODUCT_ORDER_PAYMENT_STATUS = {
+  PENDING: "pending",
+  PAID: "paid",
+  UNPAID: "unpaid",
+  FAILED: "failed",
+  REFUNDED: "refunded",
+} as const;
+
+export type PRODUCT_ORDER_PAYMENT_STATUS =
+  (typeof PRODUCT_ORDER_PAYMENT_STATUS)[keyof typeof PRODUCT_ORDER_PAYMENT_STATUS];
+
+export const PRODUCT_ORDER_DELIVERY_OPTION = {
+  DELIVERY: "delivery",
+  PICKUP: "pickup",
+} as const;
+
+export type PRODUCT_ORDER_DELIVERY_OPTION =
+  (typeof PRODUCT_ORDER_DELIVERY_OPTION)[keyof typeof PRODUCT_ORDER_DELIVERY_OPTION];
+
 export type ProductOrderStatus =
   | PRODUCT_ORDER_STATUS
   | "ready"
@@ -102,6 +144,44 @@ export type ServiceOrderStatus =
   | "accepted"
   | "in_progress"
   | "completed";
+
+export type OrderStatusLog = {
+  status: string;
+  timestamp: string;
+  note?: string;
+};
+
+export type ProductOrderItemProduct = {
+  _id: string;
+  name: string;
+  price?: number;
+  discountPrice?: number;
+  images?: string[];
+  slug?: string;
+};
+
+export type ProductOrderItem = {
+  _id?: string;
+  quantity: number;
+  unitPrice: number;
+  unitTotal: number;
+  color?: string;
+  size?: string;
+  product: string | ProductOrderItemProduct;
+};
+
+export type ProductOrderAddress = {
+  fullName: string;
+  phone: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  countryCode: string;
+  postalCode: string;
+  latitude?: number;
+  longitude?: number;
+};
 
 export type ProductOrder = {
   id: string;
@@ -117,43 +197,48 @@ export type ProductOrder = {
     email?: string;
     address?: string;
   };
-  shippingAddress?: {
-    fullName: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    country: string;
-    countryCode: string;
-    postalCode: string;
-    latitude?: number;
-    longitude?: number;
-  };
+  shippingAddress?: ProductOrderAddress;
+  pickupAddress?: ProductOrderAddress;
   shipment?: {
-    trackingStatus: string;
+    carrier?: string;
+    trackingId?: string;
+    trackingUrl?: string;
+    trackingStatus?: string;
+    labelUrl?: string;
+    commercialInvoiceUrl?: string;
+    requestedAt?: string;
+    lastSyncedAt?: string;
   };
   vendor?: string;
   paymentMethod?: string;
-  paymentStatus?: string;
-  items?: {
-    product: string;
-    quantity: number;
-    unitPrice: number;
-    unitTotal: number;
-    _id?: string;
-  }[];
+  paymentStatus?: PRODUCT_ORDER_PAYMENT_STATUS | string;
+  items?: ProductOrderItem[];
   deliveryType?: "local" | "international" | null;
+  deliveryOption?: PRODUCT_ORDER_DELIVERY_OPTION | string;
   subTotal?: number;
   shippingFee?: number;
   discount?: number;
   totalQuantity?: number;
   grandTotal?: number;
+  grandTotalUSD?: number;
+  grandTotalLocal?: number;
+  baseCurrency?: string;
+  paymentCurrency?: string;
+  exchangeRate?: number;
   total: number;
   quantity: number;
   status: ProductOrderStatus;
   createdAt: string;
   updatedAt?: string;
   stripeSessionId?: string;
+  shippoRateId?: string;
+  shippoShipmentId?: string;
+  stockReservationStatus?: string;
+  stockReservedAt?: string;
+  localDelivery?: unknown;
+  localDeliveryStatus?: string;
+  payoutSettled?: boolean;
+  statusLog?: OrderStatusLog[];
 };
 
 export type ServiceOrder = {
@@ -183,47 +268,109 @@ export type DeliveryDriverStatus =
   | "accepted"
   | "picked_up"
   | "in_transit"
-  | "delivered";
+  | "delivered"
+  | "assigned";
+
+export type DeliveryShipment = {
+  carrier?: string;
+  trackingId?: string;
+  trackingUrl?: string;
+  trackingStatus?: string;
+  labelUrl?: string;
+  commercialInvoiceUrl?: string;
+  requestedAt?: string;
+  lastSyncedAt?: string;
+};
+
+export type DeliveryLocalRider = {
+  _id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  profileImage?: string;
+  vehicleType?: string;
+  vehicleNumberPlate?: string;
+};
+
+export type DeliveryLocal = {
+  _id?: string;
+  deliveryNumber?: string;
+  pickup?: { address?: string };
+  dropoff?: { address?: string };
+  deliveryFee?: number;
+  status?: string;
+  paymentStatus?: string;
+  assignedRider?: DeliveryLocalRider;
+  acceptedAt?: string;
+  pickedUpAt?: string | null;
+  deliveredAt?: string | null;
+};
+
+export type DeliveryItem = {
+  quantity: number;
+  unitPrice: number;
+  unitTotal: number;
+  color?: string;
+  size?: string;
+  product?: {
+    _id?: string;
+    name?: string;
+    price?: number;
+    images?: string[];
+  };
+};
 
 export type Delivery = {
   id: string;
   orderId: string;
   vendorId: string;
   type?: "local" | "international";
+  deliveryOption?: string;
+  orderStatus?: string;
+  paymentStatus?: string;
+  localDeliveryStatus?: string;
   driverId?: string;
-  /** When provided by the API, shown in driver-facing UIs */
   driverName?: string;
   driverStatus: DeliveryDriverStatus;
   deliveryStatus: DeliveryDriverStatus;
   pickupLocation: string;
   dropLocation: string;
   etaMinutes?: number;
-  courier?: "DHL" | "FedEx" | "UPS";
+  courier?: string;
   trackingId?: string;
   trackingStatus?: string;
+  trackingUrl?: string;
+  labelUrl?: string;
+  commercialInvoiceUrl?: string;
   createdAt: string;
-  /** Approximate route distance in km */
   distanceKm?: number;
   driverPhone?: string;
   vehicleType?: string;
   vehicleNumber?: string;
-  /** Live driver position (when available) */
   currentLat?: number;
   currentLng?: number;
   currentAddress?: string;
   lastLocationUpdatedAt?: string;
-  /** ISO time per lifecycle step */
   timelineAt?: Partial<Record<DeliveryDriverStatus, string>>;
   deliveryFee?: number;
   deliveryPaid?: boolean;
   paymentMethod?: string;
   customerNote?: string;
   deliveryInstructions?: string;
-  /** Denormalized order summary for delivery UIs */
   orderLineItemName?: string;
   orderCustomerName?: string;
   orderCustomerPhone?: string;
   orderCustomerEmail?: string;
+  shippingAddress?: ProductOrder["shippingAddress"];
+  items?: DeliveryItem[];
+  shipment?: DeliveryShipment;
+  localDelivery?: DeliveryLocal;
+  customer?: {
+    _id?: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
 };
 
 export type AnalyticsSummary = {
@@ -281,6 +428,64 @@ export type AnalyticsTopData = {
   topProducts: AnalyticsTopRow[];
   topServices: AnalyticsTopRow[];
   topCustomers: AnalyticsTopRow[];
+};
+
+export type InventoryOverview = {
+  totalProducts: number;
+  totalStockUnits: number;
+  totalInventoryValue: number;
+  inStockCount: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+  activeProducts: number;
+  inactiveProducts: number;
+};
+
+export type InventoryHealthRate = {
+  inStockRate: number;
+  lowStockRate: number;
+  outOfStockRate: number;
+};
+
+export type InventoryCategoryBreakdown = {
+  categoryId: string;
+  categoryName: string;
+  categorySlug: string;
+  productCount: number;
+  totalStock: number;
+  totalValue: number;
+};
+
+export type InventoryStockAlertItem = {
+  _id: string;
+  name: string;
+  slug: string;
+  sku: string;
+  price: number;
+  discountPrice?: number;
+  images: string[];
+  stock: number;
+  lowStockThreshold?: number;
+  status: string;
+};
+
+export type InventoryTopStockedProduct = {
+  _id: string;
+  name: string;
+  slug: string;
+  sku: string;
+  stock: number;
+  price: number;
+  images: string[];
+};
+
+export type InventoryAnalyticsData = {
+  overview: InventoryOverview;
+  healthRate: InventoryHealthRate;
+  categoryBreakdown: InventoryCategoryBreakdown[];
+  lowStockAlerts: InventoryStockAlertItem[];
+  outOfStockAlerts: InventoryStockAlertItem[];
+  topStockedProducts: InventoryTopStockedProduct[];
 };
 
 export type CustomerTag = "premium" | "vip" | "repeat_buyer";
@@ -405,7 +610,7 @@ export type DashboardActiveDelivery = {
   id: string;
   orderId: string;
   driverName: string;
-  status: "requested" | "accepted" | "in_transit" | "picked_up" | "delivered";
+  status: DeliveryDriverStatus;
 };
 
 export type RevenueChartPoint = {
@@ -509,6 +714,28 @@ export type StripeConnectDetails = {
   payoutsEnabled: boolean;
 };
 
+export type WithdrawMethod =
+  | "stripe"
+  | "paychangu_bank"
+  | "paychangu_mobile_money";
+
+export type PaychanguBankDetails = {
+  bankUuid: string;
+  bankAccountName: string;
+  bankAccountNumber: string;
+};
+
+export type PaychanguMobileMoneyDetails = {
+  mobile: string;
+  mobileMoneyOperatorRefId: string;
+};
+
+export type CreateWithdrawRequestPayload = {
+  amount: number;
+  method: WithdrawMethod;
+  payoutDetails?: PaychanguBankDetails | PaychanguMobileMoneyDetails;
+};
+
 export type Wallet = {
   _id: string;
   user: string;
@@ -518,7 +745,7 @@ export type Wallet = {
   holdBalance: number;
   totalEarnings: number;
   currency: string;
-  stripeConnect: StripeConnectDetails;
+  stripeConnect?: StripeConnectDetails;
   createdAt: string;
   updatedAt: string;
   __v?: number;

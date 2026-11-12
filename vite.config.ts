@@ -17,7 +17,7 @@ export default defineConfig({
   },
   preview: {
     host: "0.0.0.0",
-    port: 4173,
+    port: 4006,
     allowedHosts: ["business.worthworld.app"],
 
   }

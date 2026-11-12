@@ -18,6 +18,7 @@ export interface VideoUploaderProps {
   description?: string;
   className?: string;
   disabled?: boolean;
+  videoHeightClass?: string;
 }
 
 const ALLOWED_EXTENSIONS = [".mp4", ".webm", ".mov", ".mkv"];
@@ -45,6 +46,7 @@ export function VideoUploader({
   description = "Upload a video (MP4, WebM, MOV, or MKV up to 100MB). Optional.",
   className,
   disabled = false,
+  videoHeightClass,
 }: VideoUploaderProps) {
   const inputId = useId();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -212,7 +214,12 @@ export function VideoUploader({
 
       {hasVideo && previewUrl ? (
         <div className="space-y-2">
-          <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-border/70 bg-black/90 shadow-inner">
+          <div
+            className={cn(
+              "relative w-full overflow-hidden rounded-xl border border-border/70 bg-black/90 shadow-inner flex items-center justify-center",
+              videoHeightClass || "h-[180px] sm:h-[195px]",
+            )}
+          >
             <video
               key={previewUrl}
               src={previewUrl}
@@ -253,14 +260,14 @@ export function VideoUploader({
           onDrop={handleDrop}
           onClick={() => !disabled && fileInputRef.current?.click()}
           className={cn(
-            "border-border/60 bg-muted/10 hover:bg-muted/30 cursor-pointer rounded-xl border-2 border-dashed p-6 text-center transition-all",
+            "border-border/60 bg-muted/10 hover:bg-muted/30 cursor-pointer rounded-xl border-2 border-dashed py-4 px-4 text-center transition-all",
             isDragging && "border-primary bg-primary/5 ring-2 ring-primary/20",
             disabled && "cursor-not-allowed opacity-60",
           )}
         >
-          <div className="space-y-2">
-            <div className="bg-primary/10 text-primary mx-auto flex size-10 items-center justify-center rounded-lg">
-              <UploadCloud className="size-5" />
+          <div className="space-y-1.5">
+            <div className="bg-primary/10 text-primary mx-auto flex size-9 items-center justify-center rounded-lg">
+              <UploadCloud className="size-4.5" />
             </div>
             <div className="space-y-0.5">
               <p className="text-sm font-medium">

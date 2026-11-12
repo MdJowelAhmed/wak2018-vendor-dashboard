@@ -575,7 +575,14 @@ export function ProductForm({
             </CardContent>
           </Card>
 
-        
+          <Card className="rounded-xl border-border/60 shadow-sm">
+            <CardContent className="p-6">
+              <HighlightsInput
+                value={v.highlights}
+                onChange={(h) => setV((s) => ({ ...s, highlights: h }))}
+              />
+            </CardContent>
+          </Card>
         </div>
 
         <div className="space-y-6">
@@ -608,8 +615,9 @@ export function ProductForm({
           </Card>
 
           <Card className="rounded-xl border-border/60 shadow-sm">
-            <CardContent className="p-6">
+            <CardContent className="p-5">
               <VideoUploader
+                videoHeightClass="h-[175px] sm:h-[190px]"
                 value={{
                   file: v.videoFile ?? null,
                   existingUrl: v.existingVideoUrl,
@@ -626,16 +634,6 @@ export function ProductForm({
               />
             </CardContent>
           </Card>
-
-          <Card className="rounded-xl border-border/60 shadow-sm">
-            <CardContent className="p-6">
-              <HighlightsInput
-                value={v.highlights}
-                onChange={(h) => setV((s) => ({ ...s, highlights: h }))}
-              />
-            </CardContent>
-          </Card>
-
         </div>
       </div>
 
